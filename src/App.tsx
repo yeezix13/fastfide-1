@@ -10,6 +10,8 @@ import MerchantSpace from "./pages/MerchantSpace";
 import CustomerSpace from "./pages/CustomerSpace";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import MerchantDashboard from "./pages/MerchantDashboard";
+import CustomerMerchantDetails from "./pages/CustomerMerchantDetails";
+import CustomerPreferences from "./pages/CustomerPreferences";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +27,8 @@ const App = () => (
           <Route path="/connexion-client" element={<CustomerSpace />} />
           <Route path="/tableau-de-bord-client" element={<CustomerDashboard />} />
           <Route path="/tableau-de-bord-commercant" element={<MerchantDashboard />} />
+          <Route path="/tableau-de-bord-client/commercant/:merchantId" element={<CustomerMerchantDetails />} />
+          <Route path="/tableau-de-bord-client/preferences" element={<CustomerPreferences />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
