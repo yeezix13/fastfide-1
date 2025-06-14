@@ -119,7 +119,7 @@ const CustomerMerchantDetails = () => {
 
   const isLoading = isLoadingAccount || isLoadingRewards || isLoadingVisits || isLoadingRedemptions;
 
-  // Fusionner les visites et rewards dans un seul tableau trié par date
+  // Fusionner visites et rewards dans un seul tableau trié par date
   const historique = (() => {
     if (!visits && !rewardRedemptions) return [];
     const visitesMap = (visits || []).map(visit => ({
@@ -208,8 +208,8 @@ const CustomerMerchantDetails = () => {
                             <TableCell>{new Date(entry.date).toLocaleDateString('fr-FR')}</TableCell>
                             <TableCell>
                               {entry.type === 'visit'
-                                ? (entry.montant !== null ? `${entry.montant} €` : "")
-                                : (entry.rewardName ?? '')}
+                                ? (entry.montant !== null ? `${entry.montant} €` : '')
+                                : (`-- €${entry.rewardName ? ` (${entry.rewardName})` : ''}`)}
                             </TableCell>
                             <TableCell className={`text-right font-medium ${entry.points > 0 ? 'text-green-600' : 'text-red-600'}`}>
                               {entry.points > 0 ? `+${entry.points}` : entry.points}
