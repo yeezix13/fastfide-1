@@ -14,34 +14,34 @@ interface CustomerListProps {
 
 interface CustomerWithProfile {
   loyalty_points: number;
-  profiles: Profile | null;
+  profile: Profile | null;
 }
 
 const CustomerList = ({ merchant }: CustomerListProps) => {
+  // On utilise une seule query "customers" qui fait deux fetchs
   const { data, isLoading, error } = useQuery({
     queryKey: ['merchantCustomers', merchant.id],
-    queryFn: async () => {
-      // ATTENTION: il faut bien faire la jointure sur customer_id avec l'alias profiles:customer_id !
-      const { data, error } = await supabase
+    queryFn: async (): Promise<CustomerWithProfile[]> => {
+      // 1. Récupérer tous les liens client <-> marchand pour ce marchand
+      const { data: links, error: linkError } = await supabase
         .from('customer_merchant_link')
-        .select(`
-          loyalty_points,
-          profiles:customer_id (
-            id,
-            first_name,
-            last_name,
-            phone
-          )
-        `)
+        .select('customer_id, loyalty_points')
         .eq('merchant_id', merchant.id);
-
-      if (error) throw error;
-
-      // On vérifie qu'on a bien un tableau dont chaque élément a .profiles en objet ou null
-      // Si la jointure échoue, .profiles sera potentiellement une string avec un champ error. On filtre uniquement les bons résultats.
-      return (data as unknown as CustomerWithProfile[]).filter(
-        c => c.profiles && typeof c.profiles === "object" && "id" in c.profiles
-      );
+      if (linkError) throw linkError;
+      if (!links || links.length === 0) return [];
+      // 2. Extraire la liste des IDs client
+      const customerIds = links.map(link => link.customer_id).filter(Boolean);
+      // 3. Charger tous les profils pour ces IDs (batch)
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', customerIds);
+      if (profilesError) throw profilesError;
+      // 4. Associer les profils aux liens
+      return links.map(link => ({
+        loyalty_points: link.loyalty_points,
+        profile: profiles?.find(p => p.id === link.customer_id) ?? null
+      }));
     },
   });
 
@@ -67,8 +67,8 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map(customer => {
-              const profile = customer.profiles;
+            {data.map((customer, idx) => {
+              const profile = customer.profile;
               if (!profile) return null;
               return (
                 <TableRow key={profile.id}>
