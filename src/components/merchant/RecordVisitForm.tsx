@@ -18,9 +18,10 @@ const formSchema = z.object({
 
 interface RecordVisitFormProps {
   merchant: Merchant;
+  themeColor?: string;
 }
 
-const RecordVisitForm = ({ merchant }: RecordVisitFormProps) => {
+const RecordVisitForm = ({ merchant, themeColor }: RecordVisitFormProps) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [currentCustomer, setCurrentCustomer] = useState<{
@@ -79,14 +80,24 @@ const RecordVisitForm = ({ merchant }: RecordVisitFormProps) => {
   return (
     <div>
       <div className="border rounded p-3 mb-4 bg-muted/50">
-        <div className="font-medium text-base">
+        <div
+          className="font-medium text-base"
+          style={themeColor ? { color: themeColor } : undefined}
+        >
           {currentCustomer.first_name} {currentCustomer.last_name}
         </div>
         <div className="text-xs text-muted-foreground">
           <span>Tél: {currentCustomer.phone || "-"}</span> &nbsp; | &nbsp;
           <span>Email: {currentCustomer.email || "-"}</span>
         </div>
-        <Button variant="ghost" size="sm" className="mt-2" type="button" onClick={() => setCurrentCustomer(null)}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mt-2"
+          type="button"
+          onClick={() => setCurrentCustomer(null)}
+          style={themeColor ? { color: themeColor } : undefined}
+        >
           Changer de client
         </Button>
       </div>
@@ -97,7 +108,7 @@ const RecordVisitForm = ({ merchant }: RecordVisitFormProps) => {
             name="amount"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Montant dépensé (€)</FormLabel>
+                <FormLabel style={themeColor ? { color: themeColor } : undefined}>Montant dépensé (€)</FormLabel>
                 <FormControl>
                   <Input type="number" step="0.01" placeholder="Ex: 25.50" {...field} />
                 </FormControl>
@@ -105,7 +116,12 @@ const RecordVisitForm = ({ merchant }: RecordVisitFormProps) => {
               </FormItem>
             )}
           />
-          <Button type="submit" disabled={isLoading} className="w-full">
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full"
+            style={themeColor ? { backgroundColor: themeColor, borderColor: themeColor } : undefined}
+          >
             {isLoading ? 'Enregistrement...' : 'Enregistrer la visite'}
           </Button>
         </form>

@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,9 +23,10 @@ const newRewardSchema = z.object({
 
 interface LoyaltySettingsProps {
   merchant: Merchant;
+  themeColor?: string;
 }
 
-const LoyaltySettings = ({ merchant }: LoyaltySettingsProps) => {
+const LoyaltySettings = ({ merchant, themeColor }: LoyaltySettingsProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -106,7 +106,9 @@ const LoyaltySettings = ({ merchant }: LoyaltySettingsProps) => {
             name="points_per_euro"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Points gagnés par Euro dépensé</FormLabel>
+                <FormLabel style={themeColor ? { color: themeColor } : undefined}>
+                  Points gagnés par Euro dépensé
+                </FormLabel>
                 <FormControl>
                   <Input type="number" step="0.1" {...field} />
                 </FormControl>
@@ -114,7 +116,11 @@ const LoyaltySettings = ({ merchant }: LoyaltySettingsProps) => {
               </FormItem>
             )}
           />
-          <Button type="submit" disabled={updatePointsRuleMutation.isPending}>
+          <Button
+            type="submit"
+            disabled={updatePointsRuleMutation.isPending}
+            style={themeColor ? { backgroundColor: themeColor, borderColor: themeColor } : undefined}
+          >
             {updatePointsRuleMutation.isPending ? 'Sauvegarde...' : 'Sauvegarder la règle'}
           </Button>
         </form>
@@ -123,57 +129,67 @@ const LoyaltySettings = ({ merchant }: LoyaltySettingsProps) => {
       <hr />
 
       <div>
-        <h4 className="text-lg font-semibold mb-4">Vos récompenses</h4>
+        <h4
+          className="text-lg font-semibold mb-4"
+          style={themeColor ? { color: themeColor } : undefined}
+        >
+          Vos récompenses
+        </h4>
         {isLoadingRewards ? <p>Chargement...</p> : (
           <ul className="space-y-2 mb-6">
             {rewards?.map(reward => (
               <li key={reward.id} className="flex items-center justify-between p-2 bg-muted rounded-md text-sm">
                 <span>{reward.name} ({reward.points_required} pts)</span>
                 <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={() => deleteRewardMutation.mutate(reward.id)}
-                    disabled={deleteRewardMutation.isPending && deleteRewardMutation.variables === reward.id}
-                    aria-label="Supprimer la récompense"
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => deleteRewardMutation.mutate(reward.id)}
+                  disabled={deleteRewardMutation.isPending && deleteRewardMutation.variables === reward.id}
+                  aria-label="Supprimer la récompense"
+                  style={themeColor ? { color: themeColor } : undefined}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </li>
             ))}
-             {rewards?.length === 0 && <p className="text-sm text-muted-foreground">Aucune récompense configurée.</p>}
+            {rewards?.length === 0 && <p className="text-sm text-muted-foreground">Aucune récompense configurée.</p>}
           </ul>
         )}
         
         <Form {...rewardForm}>
           <form onSubmit={rewardForm.handleSubmit(values => addRewardMutation.mutate(values))} className="space-y-4 border-t pt-6">
-             <h5 className="font-semibold">Ajouter une récompense</h5>
-             <FormField
-                control={rewardForm.control}
-                name="name"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Nom</FormLabel>
-                        <FormControl>
-                            <Input placeholder="Ex: Café offert" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )}
+            <h5 className="font-semibold" style={themeColor ? { color: themeColor } : undefined}>Ajouter une récompense</h5>
+            <FormField
+              control={rewardForm.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel style={themeColor ? { color: themeColor } : undefined}>Nom</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: Café offert" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
             <FormField
-                control={rewardForm.control}
-                name="points_required"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Points requis</FormLabel>
-                        <FormControl>
-                            <Input type="number" placeholder="Ex: 100" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )}
+              control={rewardForm.control}
+              name="points_required"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel style={themeColor ? { color: themeColor } : undefined}>Points requis</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="Ex: 100" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            <Button type="submit" disabled={addRewardMutation.isPending}>
+            <Button
+              type="submit"
+              disabled={addRewardMutation.isPending}
+              style={themeColor ? { backgroundColor: themeColor, borderColor: themeColor } : undefined}
+            >
               {addRewardMutation.isPending ? 'Ajout...' : 'Ajouter la récompense'}
             </Button>
           </form>

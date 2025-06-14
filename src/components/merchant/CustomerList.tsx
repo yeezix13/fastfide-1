@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
@@ -13,6 +12,7 @@ type Profile = Database['public']['Tables']['profiles']['Row'];
 
 interface CustomerListProps {
   merchant: Merchant;
+  themeColor?: string;
 }
 
 interface CustomerWithProfile {
@@ -22,7 +22,7 @@ interface CustomerWithProfile {
   raw_link?: any;
 }
 
-const CustomerList = ({ merchant }: CustomerListProps) => {
+const CustomerList = ({ merchant, themeColor }: CustomerListProps) => {
   const navigate = useNavigate();
 
   const { data, isLoading, error } = useQuery({
@@ -93,7 +93,7 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Vos Clients Fidèles</CardTitle>
+        <CardTitle style={themeColor ? { color: themeColor } : undefined}>Vos Clients Fidèles</CardTitle>
         <CardDescription>Liste de tous les clients ayant rejoint votre programme.</CardDescription>
       </CardHeader>
       <CardContent>
@@ -120,6 +120,7 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
                         onClick={() =>
                           navigate(`/tableau-de-bord-commercant/visites-client/${merchant.id}/${profile.id}`)
                         }
+                        style={themeColor ? { color: themeColor } : undefined}
                       >
                         {`${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim() || <span className="text-destructive italic">Profil manquant</span>}
                       </button>
@@ -154,4 +155,3 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
 };
 
 export default CustomerList;
-

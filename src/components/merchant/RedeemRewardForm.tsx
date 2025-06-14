@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,7 @@ type CustomerProfile = {
   email: string | null;
 };
 
-const RedeemRewardForm = ({ merchant }: { merchant: Merchant }) => {
+const RedeemRewardForm = ({ merchant, themeColor }: { merchant: Merchant; themeColor?: string }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [currentCustomer, setCurrentCustomer] = useState<CustomerProfile | null>(null);
@@ -163,17 +162,29 @@ const RedeemRewardForm = ({ merchant }: { merchant: Merchant }) => {
   return (
     <div>
       <div className="border rounded p-3 mb-4 bg-muted/50">
-        <div className="font-medium text-base">
+        <div
+          className="font-medium text-base"
+          style={themeColor ? { color: themeColor } : undefined}
+        >
           {currentCustomer.first_name} {currentCustomer.last_name}
         </div>
         <div className="text-xs text-muted-foreground">
           <span>Tél: {currentCustomer.phone || "-"}</span> &nbsp; | &nbsp;
           <span>Email: {currentCustomer.email || "-"}</span>
         </div>
-        <Button variant="ghost" size="sm" className="mt-2" type="button" onClick={() => setCurrentCustomer(null)}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mt-2"
+          type="button"
+          onClick={() => setCurrentCustomer(null)}
+          style={themeColor ? { color: themeColor } : undefined}
+        >
           Changer de client
         </Button>
-        <div className="text-sm mt-2">Solde de points : <b>{customerPoints ?? "..."}</b></div>
+        <div className="text-sm mt-2">
+          Solde de points : <b style={themeColor ? { color: themeColor } : undefined}>{customerPoints ?? "..."}</b>
+        </div>
       </div>
       {customerPoints === 0 ? (
         <p className="mt-4 text-sm text-muted-foreground">Ce client n'a pas encore de points chez vous.</p>
@@ -181,19 +192,24 @@ const RedeemRewardForm = ({ merchant }: { merchant: Merchant }) => {
         availableRewards.length > 0 ? (
           <div className="space-y-4">
             <Select onValueChange={setSelectedReward} value={selectedReward}>
-              <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une récompense" />
+              <SelectTrigger style={themeColor ? { borderColor: themeColor } : undefined}>
+                <SelectValue placeholder="Sélectionner une récompense" />
               </SelectTrigger>
               <SelectContent>
-                  {availableRewards.map(reward => (
-                      <SelectItem key={reward.id} value={reward.id}>
-                          {reward.name} ({reward.points_required} pts)
-                      </SelectItem>
-                  ))}
+                {availableRewards.map(reward => (
+                  <SelectItem key={reward.id} value={reward.id}>
+                    {reward.name} ({reward.points_required} pts)
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            <Button onClick={handleRedeem} disabled={isLoading || !selectedReward} className="w-full">
-                {isLoading ? 'Utilisation...' : 'Utiliser la récompense'}
+            <Button
+              onClick={handleRedeem}
+              disabled={isLoading || !selectedReward}
+              className="w-full"
+              style={themeColor ? { backgroundColor: themeColor, borderColor: themeColor } : undefined}
+            >
+              {isLoading ? 'Utilisation...' : 'Utiliser la récompense'}
             </Button>
           </div>
         ) : (

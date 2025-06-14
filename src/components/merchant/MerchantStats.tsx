@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
@@ -9,9 +8,10 @@ type Merchant = Database['public']['Tables']['merchants']['Row'];
 
 interface MerchantStatsProps {
   merchant: Merchant;
+  themeColor?: string;
 }
 
-const MerchantStats = ({ merchant }: MerchantStatsProps) => {
+const MerchantStats = ({ merchant, themeColor }: MerchantStatsProps) => {
   const { data: customerCount, isLoading: isLoadingCustomers } = useQuery({
     queryKey: ['customerCount', merchant.id],
     queryFn: async () => {
@@ -45,7 +45,12 @@ const MerchantStats = ({ merchant }: MerchantStatsProps) => {
     <div className="grid gap-4 md:grid-cols-3">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Clients fidèles</CardTitle>
+          <CardTitle
+            className="text-sm font-medium"
+            style={themeColor ? { color: themeColor } : undefined}
+          >
+            Clients fidèles
+          </CardTitle>
           <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -54,7 +59,12 @@ const MerchantStats = ({ merchant }: MerchantStatsProps) => {
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Visites enregistrées</CardTitle>
+          <CardTitle
+            className="text-sm font-medium"
+            style={themeColor ? { color: themeColor } : undefined}
+          >
+            Visites enregistrées
+          </CardTitle>
           <ShoppingCart className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -63,7 +73,12 @@ const MerchantStats = ({ merchant }: MerchantStatsProps) => {
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Points distribués</CardTitle>
+          <CardTitle
+            className="text-sm font-medium"
+            style={themeColor ? { color: themeColor } : undefined}
+          >
+            Points distribués
+          </CardTitle>
           <Star className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
