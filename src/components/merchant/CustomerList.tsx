@@ -112,3 +112,4 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
 };
 
 export default CustomerList;
+
