@@ -122,26 +122,28 @@ const CustomerMerchantDetails = () => {
 
   const isLoading = isLoadingAccount || isLoadingRewards || isLoadingVisits || isLoadingRedemptions;
 
-  // Fusion visites et redemptions
+  // Fusion visites et redemptions (combine visits and redemptions history into one array)
   const historique = (() => {
     if (!visits && !rewardRedemptions) return [];
     const visitesMap = (visits || []).map(visit => ({
-      type: "visit",
+      type: "visit" as const,
       id: visit.id,
       date: visit.created_at,
-      montant: visit.amount_spent,
+      montant: typeof visit.amount_spent === "number" ? visit.amount_spent : null,
       rewardName: null,
       points: visit.points_earned,
     }));
     const redemptionsMap = (rewardRedemptions || []).map(redemption => ({
-      type: "redemption",
+      type: "redemption" as const,
       id: redemption.id,
       date: redemption.redeemed_at,
       montant: null,
       rewardName: redemption.rewards ? redemption.rewards.name : null,
       points: -Math.abs(redemption.points_spent),
     }));
-    return [...visitesMap, ...redemptionsMap].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return [...visitesMap, ...redemptionsMap].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
   })();
 
   return (
