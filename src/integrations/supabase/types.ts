@@ -152,7 +152,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      record_visit: {
+        Args: {
+          customer_phone_number: string
+          merchant_user_id: string
+          spent_amount: number
+        }
+        Returns: Json
+      }
+      redeem_reward: {
+        Args: {
+          customer_phone_number: string
+          merchant_user_id: string
+          reward_id_to_redeem: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
