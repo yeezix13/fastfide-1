@@ -18,7 +18,6 @@ interface CustomerWithProfile {
 }
 
 const CustomerList = ({ merchant }: CustomerListProps) => {
-  // On utilise une seule query "customers" qui fait deux fetchs
   const { data, isLoading, error } = useQuery({
     queryKey: ['merchantCustomers', merchant.id],
     queryFn: async (): Promise<CustomerWithProfile[]> => {
@@ -27,21 +26,43 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
         .from('customer_merchant_link')
         .select('customer_id, loyalty_points')
         .eq('merchant_id', merchant.id);
+
+      console.log('customer_merchant_link results:', links, 'error:', linkError);
+
       if (linkError) throw linkError;
-      if (!links || links.length === 0) return [];
+      if (!links || links.length === 0) {
+        console.log('No links found for this merchant');
+        return [];
+      }
       // 2. Extraire la liste des IDs client
       const customerIds = links.map(link => link.customer_id).filter(Boolean);
+
+      console.log('customerIds:', customerIds);
+
       // 3. Charger tous les profils pour ces IDs (batch)
+      if (customerIds.length === 0) {
+        console.log('No customer IDs to fetch profiles for');
+        return [];
+      }
+
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
         .in('id', customerIds);
+
+      console.log('profiles results:', profiles, 'error:', profilesError);
+
       if (profilesError) throw profilesError;
+
       // 4. Associer les profils aux liens
-      return links.map(link => ({
+      const customersWithProfiles = links.map(link => ({
         loyalty_points: link.loyalty_points,
         profile: profiles?.find(p => p.id === link.customer_id) ?? null
       }));
+
+      console.log('customersWithProfiles:', customersWithProfiles);
+
+      return customersWithProfiles;
     },
   });
 
@@ -86,3 +107,4 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
 };
 
 export default CustomerList;
+
