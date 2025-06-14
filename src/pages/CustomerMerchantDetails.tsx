@@ -1,26 +1,187 @@
 
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MapPin, Award, Clock } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useState } from 'react';
+import type { User } from '@supabase/supabase-js';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const CustomerMerchantDetails = () => {
-  const { merchantId } = useParams();
+  const { merchantId } = useParams<{ merchantId: string }>();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const getUserSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setUser(session.user);
+      }
+    };
+    getUserSession();
+  }, []);
+
+  const { data: loyaltyAccount, isLoading: isLoadingAccount } = useQuery({
+    queryKey: ['loyaltyAccount', user?.id, merchantId],
+    queryFn: async () => {
+      if (!user || !merchantId) return null;
+      const { data, error } = await supabase
+        .from('customer_merchant_link')
+        .select(`
+          loyalty_points,
+          merchants (
+            id,
+            name,
+            address
+          )
+        `)
+        .eq('customer_id', user.id)
+        .eq('merchant_id', merchantId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error fetching loyalty account details:", error);
+        throw error;
+      }
+      return data;
+    },
+    enabled: !!user && !!merchantId,
+  });
+
+  const { data: rewards, isLoading: isLoadingRewards } = useQuery({
+    queryKey: ['rewards', merchantId],
+    queryFn: async () => {
+      if (!merchantId) return [];
+      const { data, error } = await supabase
+        .from('rewards')
+        .select('id, name, points_required')
+        .eq('merchant_id', merchantId)
+        .order('points_required', { ascending: true });
+      if (error) {
+        console.error("Error fetching rewards:", error);
+        throw error;
+      }
+      return data || [];
+    },
+    enabled: !!merchantId,
+  });
+
+  const { data: visits, isLoading: isLoadingVisits } = useQuery({
+    queryKey: ['visits', user?.id, merchantId],
+    queryFn: async () => {
+      if (!user || !merchantId) return [];
+      const { data, error } = await supabase
+        .from('visits')
+        .select('id, created_at, amount_spent, points_earned')
+        .eq('customer_id', user.id)
+        .eq('merchant_id', merchantId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching visits:", error);
+        throw error;
+      }
+      return data || [];
+    },
+    enabled: !!user && !!merchantId,
+  });
+
+  const isLoading = isLoadingAccount || isLoadingRewards || isLoadingVisits;
 
   return (
     <div className="container mx-auto p-4 md:p-8">
-       <div className="mb-4">
+      <div className="mb-4">
         <Button variant="outline" asChild>
           <Link to="/tableau-de-bord-client">
             <ArrowLeft className="mr-2 h-4 w-4" /> Retour
           </Link>
         </Button>
       </div>
-      <h1 className="text-2xl font-bold">Détails du commerçant</h1>
-      <p>ID du commerçant : {merchantId}</p>
-      <div className="my-8 p-8 border-dashed border-2 rounded-lg text-center text-muted-foreground">
-        <p>Le contenu de cette page sera bientôt disponible.</p>
-        <p>Ici s'afficheront les récompenses, l'historique des visites et les coordonnées du commerçant.</p>
-      </div>
+      
+      {isLoading ? (
+        <p>Chargement des informations du commerçant...</p>
+      ) : !loyaltyAccount || !loyaltyAccount.merchants ? (
+         <p>Impossible de trouver les informations pour ce commerçant.</p>
+      ) : (
+        <>
+          <h1 className="text-3xl font-bold mb-6">{loyaltyAccount.merchants.name}</h1>
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2 space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center"><Award className="mr-2 h-5 w-5" /> Vos Récompenses</CardTitle>
+                  <CardDescription>Utilisez vos points pour obtenir ces avantages.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {rewards && rewards.length > 0 ? (
+                    <ul className="space-y-3">
+                      {rewards.map(reward => (
+                        <li key={reward.id} className={`flex justify-between items-center p-3 rounded-lg ${loyaltyAccount.loyalty_points >= reward.points_required ? 'bg-green-100' : 'bg-gray-100'}`}>
+                          <span>{reward.name}</span>
+                          <span className="font-bold">{reward.points_required} pts</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-muted-foreground">Aucune récompense n'est configurée par ce commerçant pour le moment.</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center"><Clock className="mr-2 h-5 w-5" /> Historique des Visites</CardTitle>
+                  <CardDescription>Retrouvez ici le détail de vos passages.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {visits && visits.length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Montant dépensé</TableHead>
+                          <TableHead className="text-right">Points gagnés</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {visits.map(visit => (
+                          <TableRow key={visit.id}>
+                            <TableCell>{new Date(visit.created_at).toLocaleDateString('fr-FR')}</TableCell>
+                            <TableCell>{visit.amount_spent} €</TableCell>
+                            <TableCell className="text-right font-medium text-green-600">+{visit.points_earned}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                     <p className="text-muted-foreground">Vous n'avez pas encore de visite enregistrée chez ce commerçant.</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="lg:col-span-1">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Mes Points & Infos</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-center bg-primary/10 p-4 rounded-lg">
+                    <p className="text-sm text-muted-foreground">Solde de points</p>
+                    <p className="text-4xl font-bold">{loyaltyAccount.loyalty_points}</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold flex items-center mb-2"><MapPin className="mr-2 h-4 w-4" /> Coordonnées</h3>
+                    <p className="text-muted-foreground">{loyaltyAccount.merchants.address}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
