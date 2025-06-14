@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
 const formSchema = z.object({
@@ -50,6 +50,7 @@ const CustomerSignUpForm = () => {
       return;
     }
 
+    // Nouvelle inscription avec email obligatoire
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email: values.email,
       password: values.password,
@@ -58,6 +59,7 @@ const CustomerSignUpForm = () => {
           first_name: values.firstName,
           last_name: values.lastName,
           phone: values.phone,
+          email: values.email,
         },
         emailRedirectTo: `${window.location.origin}/tableau-de-bord-client`,
       },
@@ -81,10 +83,10 @@ const CustomerSignUpForm = () => {
     }
 
     if (authData.user && authData.session) {
-       const { error: linkError } = await supabase
+      const { error: linkError } = await supabase
         .from('customer_merchant_link')
         .insert({ customer_id: authData.user.id, merchant_id: merchant.id });
-      
+
       if (linkError) {
         toast({
           title: "Erreur lors de l'association",
@@ -114,7 +116,7 @@ const CustomerSignUpForm = () => {
           <FormItem><FormLabel>N° de téléphone *</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
         <FormField control={form.control} name="email" render={({ field }) => (
-          <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
+          <FormItem><FormLabel>Email *</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
         <FormField control={form.control} name="merchantCode" render={({ field }) => (
           <FormItem><FormLabel>Code commerçant *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>

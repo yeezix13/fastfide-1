@@ -70,18 +70,21 @@ export type Database = {
       }
       profiles: {
         Row: {
+          email: string
           first_name: string | null
           id: string
           last_name: string | null
           phone: string | null
         }
         Insert: {
+          email?: string
           first_name?: string | null
           id: string
           last_name?: string | null
           phone?: string | null
         }
         Update: {
+          email?: string
           first_name?: string | null
           id?: string
           last_name?: string | null
