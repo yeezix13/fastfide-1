@@ -7,6 +7,9 @@ import { useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import CustomerRewardsList from "@/components/customer/CustomerRewardsList";
+import CustomerLoyaltyHistoryTable from "@/components/customer/CustomerLoyaltyHistoryTable";
+import CustomerLoyaltyInfoCard from "@/components/customer/CustomerLoyaltyInfoCard";
 
 const CustomerMerchantDetails = () => {
   const { merchantId } = useParams<{ merchantId: string }>();
@@ -119,11 +122,11 @@ const CustomerMerchantDetails = () => {
 
   const isLoading = isLoadingAccount || isLoadingRewards || isLoadingVisits || isLoadingRedemptions;
 
-  // Fusionner visites et rewards dans un seul tableau trié par date
+  // Fusion visites et redemptions
   const historique = (() => {
     if (!visits && !rewardRedemptions) return [];
     const visitesMap = (visits || []).map(visit => ({
-      type: 'visit',
+      type: "visit",
       id: visit.id,
       date: visit.created_at,
       montant: visit.amount_spent,
@@ -131,17 +134,14 @@ const CustomerMerchantDetails = () => {
       points: visit.points_earned,
     }));
     const redemptionsMap = (rewardRedemptions || []).map(redemption => ({
-      type: 'redemption',
+      type: "redemption",
       id: redemption.id,
       date: redemption.redeemed_at,
       montant: null,
       rewardName: redemption.rewards ? redemption.rewards.name : null,
       points: -Math.abs(redemption.points_spent),
     }));
-    // Fusionner et trier par date décroissante
-    return [...visitesMap, ...redemptionsMap].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
+    return [...visitesMap, ...redemptionsMap].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   })();
 
   return (
@@ -153,100 +153,34 @@ const CustomerMerchantDetails = () => {
           </Link>
         </Button>
       </div>
-      
+
       {isLoading ? (
         <p>Chargement des informations du commerçant...</p>
       ) : !loyaltyAccount || !loyaltyAccount.merchants ? (
-         <p>Impossible de trouver les informations pour ce commerçant.</p>
+        <p>Impossible de trouver les informations pour ce commerçant.</p>
       ) : (
         <>
           <h1 className="text-3xl font-bold mb-6">{loyaltyAccount.merchants.name}</h1>
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center"><Award className="mr-2 h-5 w-5" /> Vos Récompenses</CardTitle>
-                  <CardDescription>Utilisez vos points pour obtenir ces avantages.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {rewards && rewards.length > 0 ? (
-                    <ul className="space-y-3">
-                      {rewards.map(reward => (
-                        <li key={reward.id} className={`flex justify-between items-center p-3 rounded-lg ${loyaltyAccount.loyalty_points >= reward.points_required ? 'bg-green-100' : 'bg-gray-100'}`}>
-                          <span>{reward.name}</span>
-                          <span className="font-bold">{reward.points_required} pts</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-muted-foreground">Aucune récompense n'est configurée par ce commerçant pour le moment.</p>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Unique tableau : visites + récompenses utilisées */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center"><Clock className="mr-2 h-5 w-5" /> Historique des Visites et Récompenses</CardTitle>
-                  <CardDescription>Vos passages et les récompenses utilisées, regroupés.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingVisits || isLoadingRedemptions ? (
-                    <div className="text-sm text-gray-500">Chargement de l’historique…</div>
-                  ) : historique.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Montant dépensé / Récompense</TableHead>
-                          <TableHead className="text-right">Points</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {historique.map(entry => (
-                          <TableRow key={entry.type + '-' + entry.id}>
-                            <TableCell>{new Date(entry.date).toLocaleDateString('fr-FR')}</TableCell>
-                            <TableCell>
-                              {entry.type === 'visit'
-                                ? (entry.montant !== null ? `${entry.montant} €` : '')
-                                : (`-- €${entry.rewardName ? ` (${entry.rewardName})` : ''}`)}
-                            </TableCell>
-                            <TableCell className={`text-right font-medium ${entry.points > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              {entry.points > 0 ? `+${entry.points}` : entry.points}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <p className="text-muted-foreground">Aucun historique trouvé chez ce commerçant.</p>
-                  )}
-                </CardContent>
-              </Card>
+              <CustomerRewardsList
+                rewards={rewards || []}
+                currentPoints={loyaltyAccount.loyalty_points}
+              />
+              <CustomerLoyaltyHistoryTable
+                historique={historique}
+                isLoading={isLoadingVisits || isLoadingRedemptions}
+              />
             </div>
-
             <div className="lg:col-span-1">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Mes Points & Infos</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-center bg-primary/10 p-4 rounded-lg">
-                    <p className="text-sm text-muted-foreground">Solde de points</p>
-                    <p className="text-4xl font-bold">{loyaltyAccount.loyalty_points}</p>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <h3 className="font-semibold flex items-center mb-2">Coordonnées</h3>
-                    <p className="flex items-start text-muted-foreground"><MapPin className="mr-2 h-4 w-4 mt-0.5 flex-shrink-0" /> <span>{loyaltyAccount.merchants.address}</span></p>
-                    {loyaltyAccount.merchants.phone && (
-                        <p className="flex items-center text-muted-foreground"><Phone className="mr-2 h-4 w-4" /> <span>{loyaltyAccount.merchants.phone}</span></p>
-                    )}
-                    {loyaltyAccount.merchants.contact_email && (
-                         <p className="flex items-center text-muted-foreground"><Mail className="mr-2 h-4 w-4" /> <span>{loyaltyAccount.merchants.contact_email}</span></p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              <CustomerLoyaltyInfoCard
+                points={loyaltyAccount.loyalty_points}
+                merchantInfo={{
+                  address: loyaltyAccount.merchants.address,
+                  phone: loyaltyAccount.merchants.phone,
+                  contact_email: loyaltyAccount.merchants.contact_email,
+                }}
+              />
             </div>
           </div>
         </>
