@@ -60,7 +60,11 @@ const LoyaltySettings = ({ merchant }: LoyaltySettingsProps) => {
 
   const addRewardMutation = useMutation({
     mutationFn: async (newReward: z.infer<typeof newRewardSchema>) => {
-      const { error } = await supabase.from('rewards').insert({ ...newReward, merchant_id: merchant.id });
+      const { error } = await supabase.from('rewards').insert({
+        name: newReward.name,
+        points_required: newReward.points_required,
+        merchant_id: merchant.id,
+      });
       if (error) throw error;
     },
     onSuccess: () => {

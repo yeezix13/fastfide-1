@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -95,16 +94,16 @@ const RedeemRewardForm = ({ merchant }: RedeemRewardFormProps) => {
     });
 
     setIsLoading(false);
-    if (error || data.error) {
+    if (error || (data as any)?.error) {
        toast({
         title: 'Erreur',
-        description: data?.error || error?.message || "Une erreur s'est produite.",
+        description: (data as any)?.error || error?.message || "Une erreur s'est produite.",
         variant: 'destructive',
       });
-    } else if (data.success) {
+    } else if ((data as any)?.success) {
       toast({
         title: 'Succès !',
-        description: `La récompense a été utilisée pour ${data.customer.first_name} ${data.customer.last_name}.`,
+        description: `La récompense a été utilisée pour ${(data as any).customer.first_name} ${(data as any).customer.last_name}.`,
       });
       searchForm.reset();
       setCustomer(null);

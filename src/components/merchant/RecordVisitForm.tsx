@@ -43,16 +43,16 @@ const RecordVisitForm = ({ merchant }: RecordVisitFormProps) => {
     
     setIsLoading(false);
 
-    if (error || data.error) {
+    if (error || (data as any)?.error) {
       toast({
         title: 'Erreur',
-        description: data?.error || error?.message || "Une erreur s'est produite.",
+        description: (data as any)?.error || error?.message || "Une erreur s'est produite.",
         variant: 'destructive',
       });
-    } else if (data.success) {
+    } else if ((data as any)?.success) {
       toast({
         title: 'Succès !',
-        description: `${data.points_earned} points ont été ajoutés pour ${data.customer.first_name} ${data.customer.last_name}.`,
+        description: `${(data as any).points_earned} points ont été ajoutés pour ${(data as any).customer.first_name} ${(data as any).customer.last_name}.`,
       });
       form.reset();
     }
