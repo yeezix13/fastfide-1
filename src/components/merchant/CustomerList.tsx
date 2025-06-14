@@ -88,11 +88,11 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
                 <TableRow key={profile?.id ?? customer.raw_link?.customer_id ?? idx}>
                   <TableCell>
                     {profile
-                      ? `${profile.first_name ?? ''} ${profile.last_name ?? ''}`
+                      ? `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim() || <span className="text-destructive italic">Profil manquant</span>
                       : <span className="text-destructive italic">Profil manquant</span>}
                   </TableCell>
                   <TableCell>
-                    {profile?.email
+                    {profile?.email 
                       ? profile.email
                       : <span className="text-destructive italic">-</span>
                     }
