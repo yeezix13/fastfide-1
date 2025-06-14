@@ -12,6 +12,7 @@ import MerchantDashboard from "./pages/MerchantDashboard";
 import CustomerMerchantDetails from "./pages/CustomerMerchantDetails";
 import CustomerPreferences from "./pages/CustomerPreferences";
 import CustomerVisits from "./pages/CustomerVisits";
+import CustomerSignUpPage from "./pages/CustomerSignUpPage";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/tableau-de-bord-client/commercant/:merchantId" element={<CustomerMerchantDetails />} />
           <Route path="/tableau-de-bord-client/preferences" element={<CustomerPreferences />} />
           <Route path="/tableau-de-bord-commercant/visites-client/:merchantId/:customerId" element={<CustomerVisits />} />
+          <Route path="/inscription" element={<CustomerSignUpPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

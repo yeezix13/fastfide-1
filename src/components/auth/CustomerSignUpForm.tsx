@@ -8,20 +8,34 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
-const formSchema = z.object({
+const baseSchema = {
   firstName: z.string().min(1, { message: "Le prénom est requis." }),
   lastName: z.string().min(1, { message: "Le nom est requis." }),
   phone: z.string().min(1, { message: "Le numéro de téléphone est requis." }),
   email: z.string().email({ message: "Veuillez saisir une adresse e-mail valide." }),
-  merchantCode: z.string().min(1, { message: "Le code commerçant est requis." }),
   password: z.string().min(6, { message: "Le mot de passe doit contenir au moins 6 caractères." }),
-});
+};
 
-const CustomerSignUpForm = () => {
+type Props = {
+  merchantId?: string;
+};
+
+const CustomerSignUpForm = ({ merchantId }: Props) => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [formLoading, setFormLoading] = useState(false);
 
+  // Si merchantId est fourni, le code commerçant n'est pas demandé
+  const formSchema = z.object({
+    ...baseSchema,
+    ...(merchantId ? {} : {
+      merchantCode: z.string().min(1, { message: "Le code commerçant est requis." }),
+    }),
+  });
+
+  // React hook form
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -29,25 +43,33 @@ const CustomerSignUpForm = () => {
       lastName: "",
       phone: "",
       email: "",
-      merchantCode: "",
       password: "",
-    },
+      ...(merchantId ? {} : { merchantCode: "" }),
+    } as any,
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const { data: merchant, error: merchantError } = await supabase
-      .from("merchants")
-      .select("id")
-      .eq("signup_code", values.merchantCode)
-      .single();
-
-    if (merchantError || !merchant) {
-      toast({
-        title: "Erreur",
-        description: "Code commerçant invalide ou introuvable.",
-        variant: "destructive",
-      });
-      return;
+    setFormLoading(true);
+    // Trouver le commerçant à associer
+    let merchant: { id: string } | null = null;
+    if (merchantId) {
+      merchant = { id: merchantId };
+    } else {
+      const { data, error } = await supabase
+        .from("merchants")
+        .select("id")
+        .eq("signup_code", values.merchantCode)
+        .maybeSingle();
+      if (error || !data) {
+        toast({
+          title: "Erreur",
+          description: "Code commerçant invalide ou introuvable.",
+          variant: "destructive",
+        });
+        setFormLoading(false);
+        return;
+      }
+      merchant = { id: data.id };
     }
 
     // Nouvelle inscription avec email obligatoire
@@ -71,6 +93,7 @@ const CustomerSignUpForm = () => {
         description: signUpError.message,
         variant: "destructive",
       });
+      setFormLoading(false);
       return;
     }
 
@@ -79,10 +102,12 @@ const CustomerSignUpForm = () => {
         title: "Inscription réussie !",
         description: "Veuillez vérifier votre boîte de réception pour confirmer votre adresse e-mail.",
       });
+      setFormLoading(false);
       return;
     }
 
     if (authData.user && authData.session) {
+      // Associer au commerçant immédiatement
       const { error: linkError } = await supabase
         .from('customer_merchant_link')
         .insert({ customer_id: authData.user.id, merchant_id: merchant.id });
@@ -93,14 +118,17 @@ const CustomerSignUpForm = () => {
           description: "Nous n'avons pas pu vous associer au commerçant. Veuillez réessayer plus tard.",
           variant: "destructive",
         });
+        setFormLoading(false);
         return;
       }
       toast({
         title: "Bienvenue !",
         description: "Votre compte a été créé avec succès.",
       });
+      setFormLoading(false);
       navigate("/tableau-de-bord-client");
     }
+    setFormLoading(false);
   }
 
   return (
@@ -118,13 +146,17 @@ const CustomerSignUpForm = () => {
         <FormField control={form.control} name="email" render={({ field }) => (
           <FormItem><FormLabel>Email *</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
-        <FormField control={form.control} name="merchantCode" render={({ field }) => (
-          <FormItem><FormLabel>Code commerçant *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
+        {!merchantId && (
+          <FormField control={form.control} name="merchantCode" render={({ field }) => (
+            <FormItem><FormLabel>Code commerçant *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+          )} />
+        )}
         <FormField control={form.control} name="password" render={({ field }) => (
           <FormItem><FormLabel>Mot de passe</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
-        <Button type="submit" className="w-full">Je m'inscris</Button>
+        <Button type="submit" className="w-full" disabled={formLoading}>
+          {formLoading ? "Chargement..." : "Je m'inscris"}
+        </Button>
       </form>
     </Form>
   );
