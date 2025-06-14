@@ -45,13 +45,16 @@ const CustomerSignUpPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
-      <div className="absolute top-4 left-4">
-        <Button variant="outline" asChild>
-          <Link to="/">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Retour à l'accueil
-          </Link>
-        </Button>
-      </div>
+      {/* On affiche le bouton retour uniquement s'il n'y a pas de code commerçant dans l'URL */}
+      {!merchantParam && (
+        <div className="absolute top-4 left-4">
+          <Button variant="outline" asChild>
+            <Link to="/">
+              <ArrowLeft className="mr-2 h-4 w-4" /> Retour à l'accueil
+            </Link>
+          </Button>
+        </div>
+      )}
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Inscription Client</CardTitle>
