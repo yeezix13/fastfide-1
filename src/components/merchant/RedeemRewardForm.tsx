@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -38,12 +39,16 @@ const RedeemRewardForm = ({ merchant }: RedeemRewardFormProps) => {
     setCustomer(null);
     setAvailableRewards([]);
     setSelectedReward('');
+    console.log("Recherche de client avec le téléphone :", values.phone);
 
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('id, first_name, last_name')
       .eq('phone', values.phone)
       .single();
+    
+    console.log("Résultat de la recherche - data:", profileData);
+    console.log("Résultat de la recherche - error:", profileError);
 
     if (profileError || !profileData) {
       toast({ title: 'Erreur', description: 'Client non trouvé.', variant: 'destructive' });
