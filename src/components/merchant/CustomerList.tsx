@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React from 'react';
 
 type Merchant = Database['public']['Tables']['merchants']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -15,65 +16,49 @@ interface CustomerListProps {
 interface CustomerWithProfile {
   loyalty_points: number;
   profile: Profile | null;
-  // debug info
   raw_link?: any;
 }
 
 const CustomerList = ({ merchant }: CustomerListProps) => {
   const { data, isLoading, error } = useQuery({
     queryKey: ['merchantCustomers', merchant.id],
-    queryFn: async (): Promise<CustomerWithProfile[]> => {
-      // 1. Récupérer tous les liens client <-> marchand pour ce marchand
+    queryFn: async (): Promise<{ customers: CustomerWithProfile[], customerIds: string[], rawProfiles: any[] }> => {
       const { data: links, error: linkError } = await supabase
         .from('customer_merchant_link')
         .select('customer_id, loyalty_points')
         .eq('merchant_id', merchant.id);
 
-      console.log('customer_merchant_link results:', links, 'error:', linkError);
-
       if (linkError) throw linkError;
       if (!links || links.length === 0) {
-        console.log('No links found for this merchant');
-        return [];
+        return { customers: [], customerIds: [], rawProfiles: [] };
       }
-      // 2. Extraire la liste des IDs client
       const customerIds = links.map(link => link.customer_id).filter(Boolean);
 
-      console.log('customerIds:', customerIds);
-
-      // Affichage debug
       if (!customerIds || customerIds.length === 0) {
-        console.log('No customer IDs to fetch profiles for');
-        return [];
+        return { customers: [], customerIds: [], rawProfiles: [] };
       }
 
-      // Affichons la vraie requête SQL brute (conversion UUID <-> string si besoin)
+      // Affichage debug : profil brut chargé avec ces IDs
       const { data: rawProfiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
         .in('id', customerIds);
 
-      console.log('profiles results:', rawProfiles, 'error:', profilesError);
-
       if (profilesError) throw profilesError;
 
-      // On mappe les liens à leur profil (ou null s'il n'existe pas)
       const customersWithProfiles: CustomerWithProfile[] = links.map(link => ({
         loyalty_points: link.loyalty_points,
         profile: rawProfiles?.find((p) => p.id === link.customer_id) ?? null,
-        raw_link: link, // debug
+        raw_link: link,
       }));
 
-      console.log('customersWithProfiles for UI:', customersWithProfiles);
-
-      return customersWithProfiles;
+      return { customers: customersWithProfiles, customerIds, rawProfiles: rawProfiles || [] };
     },
   });
 
   if (isLoading) return <p>Chargement des clients...</p>;
   if (error) return <p className="text-destructive">Erreur: {error.message}</p>;
-  if (!data || data.length === 0) {
-    // Ajout debug : listons les liens / customerIds si jamais !
+  if (!data || data.customers.length === 0) {
     return (
       <div>
         <p className="text-muted-foreground">Aucun client n'a encore rejoint votre programme de fidélité.</p>
@@ -100,7 +85,7 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((customer, idx) => {
+            {data.customers.map((customer, idx) => {
               const profile = customer.profile;
               return (
                 <TableRow key={profile?.id ?? customer.raw_link?.customer_id ?? idx}>
@@ -116,13 +101,18 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
             })}
           </TableBody>
         </Table>
-        <pre className="text-xs bg-muted border rounded p-2 mt-2">
-          {/* Affichons toutes les datas pour debug */}
-          {JSON.stringify(data, null, 2)}
-        </pre>
+        <div>
+          <div className="mt-2 mb-1 font-bold text-sm">Debug - customerIds utilisés :</div>
+          <pre className="text-xs bg-muted border rounded p-2 mb-2">{JSON.stringify(data.customerIds, null, 2)}</pre>
+          <div className="mb-1 font-bold text-sm">Debug - résultats bruts de profiles :</div>
+          <pre className="text-xs bg-muted border rounded p-2">{JSON.stringify(data.rawProfiles, null, 2)}</pre>
+          <div className="mb-1 font-bold text-sm">Debug - données finale (customers) :</div>
+          <pre className="text-xs bg-muted border rounded p-2">{JSON.stringify(data.customers, null, 2)}</pre>
+        </div>
       </CardContent>
     </Card>
   );
 };
 
 export default CustomerList;
+
