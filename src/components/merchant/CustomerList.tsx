@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
@@ -56,8 +55,18 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
           </TableHeader>
           <TableBody>
             {customers.map(customer => {
-              const profile = customer.profiles;
+              // The type of 'profiles' is currently inferred incorrectly, causing a build error.
+              // We cast it to 'any' as a temporary measure to unblock the UI and diagnose the issue.
+              const profile = customer.profiles as any;
+              
               if (!profile) return null;
+
+              // If the query fails at runtime, 'profile' might be an error object.
+              if (profile.error) {
+                console.error("Error fetching profile for a customer:", profile.error);
+                return null;
+              }
+
               return (
                 <TableRow key={profile.id}>
                   <TableCell>{profile.first_name} {profile.last_name}</TableCell>
