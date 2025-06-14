@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +11,7 @@ import CustomerDashboard from "./pages/CustomerDashboard";
 import MerchantDashboard from "./pages/MerchantDashboard";
 import CustomerMerchantDetails from "./pages/CustomerMerchantDetails";
 import CustomerPreferences from "./pages/CustomerPreferences";
+import CustomerVisits from "./pages/CustomerVisits";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +29,7 @@ const App = () => (
           <Route path="/tableau-de-bord-commercant" element={<MerchantDashboard />} />
           <Route path="/tableau-de-bord-client/commercant/:merchantId" element={<CustomerMerchantDetails />} />
           <Route path="/tableau-de-bord-client/preferences" element={<CustomerPreferences />} />
+          <Route path="/tableau-de-bord-commercant/visites-client/:merchantId/:customerId" element={<CustomerVisits />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
