@@ -87,40 +87,84 @@ const MerchantDashboard = () => {
     );
   }
 
+  // On récupère la couleur du theme, fallback si absent
+  const themeColor = merchant.theme_color || "#2563eb";
+
   return (
     <div className="container mx-auto p-4">
        <header className="flex justify-between items-center py-4">
-        <h1 className="text-2xl font-bold">{merchant.name}</h1>
-        <Button onClick={handleLogout} variant="outline">Déconnexion</Button>
+        <h1
+          className="text-2xl font-bold"
+          style={{ color: themeColor }}
+        >
+          {merchant.name}
+        </h1>
+        <Button
+          onClick={handleLogout}
+          variant="outline"
+          style={{
+            color: themeColor,
+            borderColor: themeColor,
+          }}
+          className="hover:bg-opacity-10"
+        >
+          Déconnexion
+        </Button>
       </header>
       <main>
         <p className="text-muted-foreground mb-6">Bienvenue sur votre tableau de bord.</p>
         
         <Tabs defaultValue="actions" className="w-full">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
-            <TabsTrigger value="actions">Actions</TabsTrigger>
-            <TabsTrigger value="stats">Statistiques</TabsTrigger>
-            <TabsTrigger value="customers">Clients</TabsTrigger>
-            <TabsTrigger value="settings">Réglages</TabsTrigger>
+            <TabsTrigger
+              value="actions"
+              style={{ color: themeColor }}
+              className="data-[state=active]:font-bold"
+            >
+              Actions
+            </TabsTrigger>
+            <TabsTrigger
+              value="stats"
+              style={{ color: themeColor }}
+              className="data-[state=active]:font-bold"
+            >
+              Statistiques
+            </TabsTrigger>
+            <TabsTrigger
+              value="customers"
+              style={{ color: themeColor }}
+              className="data-[state=active]:font-bold"
+            >
+              Clients
+            </TabsTrigger>
+            <TabsTrigger
+              value="settings"
+              style={{ color: themeColor }}
+              className="data-[state=active]:font-bold"
+            >
+              Réglages
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="actions" className="mt-6">
             <div className="grid md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Enregistrer une visite</CardTitle>
+                  <CardTitle style={{ color: themeColor }}>
+                    Enregistrer une visite
+                  </CardTitle>
                   <CardDescription>Ajoutez des points à un client après un achat.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <RecordVisitForm merchant={merchant} />
+                  <RecordVisitForm merchant={merchant} themeColor={themeColor} />
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader>
-                  <CardTitle>Utiliser une récompense</CardTitle>
+                  <CardTitle style={{ color: themeColor }}>Utiliser une récompense</CardTitle>
                   <CardDescription>Permettez à un client d'utiliser ses points.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                   <RedeemRewardForm merchant={merchant} />
+                  <RedeemRewardForm merchant={merchant} themeColor={themeColor} />
                 </CardContent>
               </Card>
             </div>
@@ -133,7 +177,7 @@ const MerchantDashboard = () => {
                         <CardDescription>Gérez comment vos clients gagnent et utilisent des points.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <LoyaltySettings merchant={merchant} />
+                        <LoyaltySettings merchant={merchant} themeColor={themeColor} />
                     </CardContent>
                 </Card>
                 <Card>
@@ -148,10 +192,10 @@ const MerchantDashboard = () => {
             </div>
           </TabsContent>
           <TabsContent value="customers" className="mt-6">
-            <CustomerList merchant={merchant} />
+            <CustomerList merchant={merchant} themeColor={themeColor} />
           </TabsContent>
           <TabsContent value="stats" className="mt-6">
-             <MerchantStats merchant={merchant} />
+             <MerchantStats merchant={merchant} themeColor={themeColor} />
           </TabsContent>
         </Tabs>
       </main>
