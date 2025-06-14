@@ -89,7 +89,6 @@ const CustomerMerchantDetails = () => {
     enabled: !!user && !!merchantId,
   });
 
-  // Query to fetch reward redemptions of customer for this merchant
   const { data: rewardRedemptions, isLoading: isLoadingRedemptions } = useQuery({
     queryKey: ['rewardRedemptions', user?.id, merchantId],
     queryFn: async () => {
@@ -112,13 +111,38 @@ const CustomerMerchantDetails = () => {
         console.error("Error fetching reward redemptions:", error);
         throw error;
       }
-      // Some older redemptions might have null for 'rewards', filter them
+      // On filtre les rewards supprimées pour éviter le "null"
       return (data || []).filter(r => r.rewards && r.rewards.name);
     },
     enabled: !!user && !!merchantId,
   });
 
   const isLoading = isLoadingAccount || isLoadingRewards || isLoadingVisits || isLoadingRedemptions;
+
+  // Fusionner les visites et rewards dans un seul tableau trié par date
+  const historique = (() => {
+    if (!visits && !rewardRedemptions) return [];
+    const visitesMap = (visits || []).map(visit => ({
+      type: 'visit',
+      id: visit.id,
+      date: visit.created_at,
+      montant: visit.amount_spent,
+      rewardName: null,
+      points: visit.points_earned,
+    }));
+    const redemptionsMap = (rewardRedemptions || []).map(redemption => ({
+      type: 'redemption',
+      id: redemption.id,
+      date: redemption.redeemed_at,
+      montant: null,
+      rewardName: redemption.rewards ? redemption.rewards.name : null,
+      points: -Math.abs(redemption.points_spent),
+    }));
+    // Fusionner et trier par date décroissante
+    return [...visitesMap, ...redemptionsMap].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+  })();
 
   return (
     <div className="container mx-auto p-4 md:p-8">
@@ -160,63 +184,43 @@ const CustomerMerchantDetails = () => {
                 </CardContent>
               </Card>
 
+              {/* Unique tableau : visites + récompenses utilisées */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center"><Clock className="mr-2 h-5 w-5" /> Historique des Visites</CardTitle>
-                  <CardDescription>Retrouvez ici le détail de vos passages et des récompenses utilisées.</CardDescription>
+                  <CardTitle className="flex items-center"><Clock className="mr-2 h-5 w-5" /> Historique des Visites et Récompenses</CardTitle>
+                  <CardDescription>Vos passages et les récompenses utilisées, regroupés.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {visits && visits.length > 0 ? (
+                  {isLoadingVisits || isLoadingRedemptions ? (
+                    <div className="text-sm text-gray-500">Chargement de l’historique…</div>
+                  ) : historique.length > 0 ? (
                     <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>Date</TableHead>
-                          <TableHead>Montant dépensé</TableHead>
-                          <TableHead className="text-right">Points gagnés</TableHead>
+                          <TableHead>Montant dépensé / Récompense</TableHead>
+                          <TableHead className="text-right">Points</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {visits.map(visit => (
-                          <TableRow key={visit.id}>
-                            <TableCell>{new Date(visit.created_at).toLocaleDateString('fr-FR')}</TableCell>
-                            <TableCell>{visit.amount_spent} €</TableCell>
-                            <TableCell className="text-right font-medium text-green-600">+{visit.points_earned}</TableCell>
+                        {historique.map(entry => (
+                          <TableRow key={entry.type + '-' + entry.id}>
+                            <TableCell>{new Date(entry.date).toLocaleDateString('fr-FR')}</TableCell>
+                            <TableCell>
+                              {entry.type === 'visit'
+                                ? (entry.montant !== null ? `${entry.montant} €` : "")
+                                : (entry.rewardName ?? '')}
+                            </TableCell>
+                            <TableCell className={`text-right font-medium ${entry.points > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {entry.points > 0 ? `+${entry.points}` : entry.points}
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
                   ) : (
-                    <p className="text-muted-foreground">Vous n'avez pas encore de visite enregistrée chez ce commerçant.</p>
+                    <p className="text-muted-foreground">Aucun historique trouvé chez ce commerçant.</p>
                   )}
-
-                  {/* Historique des récompenses utilisées */}
-                  <div className="mt-8">
-                    <h4 className="font-semibold flex items-center mb-3 text-base"><Gift className="mr-2 h-4 w-4" /> Récompenses utilisées</h4>
-                    {isLoadingRedemptions ? (
-                      <div className="text-sm text-gray-500">Chargement des récompenses utilisées…</div>
-                    ) : rewardRedemptions && rewardRedemptions.length > 0 ? (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Nom de la récompense</TableHead>
-                            <TableHead className="text-right">Points dépensés</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {rewardRedemptions.map(redemption => (
-                            <TableRow key={redemption.id}>
-                              <TableCell>{new Date(redemption.redeemed_at).toLocaleDateString('fr-FR')}</TableCell>
-                              <TableCell>{redemption.rewards?.name || "Récompense supprimée"}</TableCell>
-                              <TableCell className="text-right font-medium text-red-600">-{redemption.points_spent}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    ) : (
-                      <p className="text-muted-foreground">Aucune récompense utilisée chez ce commerçant pour l’instant.</p>
-                    )}
-                  </div>
                 </CardContent>
               </Card>
             </div>
