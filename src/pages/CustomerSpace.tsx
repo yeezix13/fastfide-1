@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CustomerLoginForm from "@/components/auth/CustomerLoginForm";
+import CustomerSignUpForm from "@/components/auth/CustomerSignUpForm";
 
 const CustomerSpace = () => {
   return (
@@ -17,12 +20,21 @@ const CustomerSpace = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Espace Client</CardTitle>
-          <CardDescription>Connectez-vous ou inscrivez-vous avec un code commerçant.</CardDescription>
+          <CardDescription>Connectez-vous ou inscrivez-vous pour accéder à votre espace fidélité.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center text-sm text-muted-foreground p-8 border-dashed border-2 rounded-lg">
-            <p>Le formulaire de connexion et d'inscription (avec code commerçant) sera ajouté ici une fois l'intégration Supabase activée.</p>
-          </div>
+          <Tabs defaultValue="connexion" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="connexion">Connexion</TabsTrigger>
+              <TabsTrigger value="inscription">Inscription</TabsTrigger>
+            </TabsList>
+            <TabsContent value="connexion">
+              <CustomerLoginForm />
+            </TabsContent>
+            <TabsContent value="inscription">
+              <CustomerSignUpForm />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>

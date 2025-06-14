@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
+import MerchantLoginForm from "@/components/auth/MerchantLoginForm";
 
 const MerchantSpace = () => {
   return (
@@ -20,9 +21,7 @@ const MerchantSpace = () => {
           <CardDescription>Connectez-vous pour accéder à votre tableau de bord.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center text-sm text-muted-foreground p-8 border-dashed border-2 rounded-lg">
-            <p>Le formulaire de connexion et d'inscription sera ajouté ici une fois l'intégration Supabase activée.</p>
-          </div>
+          <MerchantLoginForm />
         </CardContent>
       </Card>
     </div>

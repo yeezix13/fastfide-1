@@ -9,7 +9,144 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      customer_merchant_link: {
+        Row: {
+          customer_id: string
+          loyalty_points: number
+          merchant_id: string
+        }
+        Insert: {
+          customer_id: string
+          loyalty_points?: number
+          merchant_id: string
+        }
+        Update: {
+          customer_id?: string
+          loyalty_points?: number
+          merchant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_merchant_link_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchants: {
+        Row: {
+          address: string | null
+          id: string
+          name: string
+          points_per_euro: number | null
+          signup_code: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          id?: string
+          name: string
+          points_per_euro?: number | null
+          signup_code: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          id?: string
+          name?: string
+          points_per_euro?: number | null
+          signup_code?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          first_name: string | null
+          id: string
+          last_name: string | null
+          phone: string | null
+        }
+        Insert: {
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          phone?: string | null
+        }
+        Update: {
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+        }
+        Relationships: []
+      }
+      rewards: {
+        Row: {
+          id: string
+          merchant_id: string
+          name: string
+          points_required: number
+        }
+        Insert: {
+          id?: string
+          merchant_id: string
+          name: string
+          points_required: number
+        }
+        Update: {
+          id?: string
+          merchant_id?: string
+          name?: string
+          points_required?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rewards_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visits: {
+        Row: {
+          amount_spent: number
+          created_at: string
+          customer_id: string
+          id: string
+          merchant_id: string
+          points_earned: number
+        }
+        Insert: {
+          amount_spent: number
+          created_at?: string
+          customer_id: string
+          id?: string
+          merchant_id: string
+          points_earned: number
+        }
+        Update: {
+          amount_spent?: number
+          created_at?: string
+          customer_id?: string
+          id?: string
+          merchant_id?: string
+          points_earned?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visits_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

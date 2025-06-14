@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import MerchantSpace from "./pages/MerchantSpace";
 import CustomerSpace from "./pages/CustomerSpace";
+import CustomerDashboard from "./pages/CustomerDashboard";
+import MerchantDashboard from "./pages/MerchantDashboard";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +23,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/connexion-commercant" element={<MerchantSpace />} />
           <Route path="/connexion-client" element={<CustomerSpace />} />
+          <Route path="/tableau-de-bord-client" element={<CustomerDashboard />} />
+          <Route path="/tableau-de-bord-commercant" element={<MerchantDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
