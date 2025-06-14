@@ -75,12 +75,12 @@ const CustomerVisits = () => {
   // Fusion visites et redemptions (combine visits and redemptions history into one array)
   const historique = React.useMemo(() => {
     const visitesMap = (visits || []).map(visit => {
-      // Show both points earned and spent (negative)
+      // Afficher à la fois les points gagnés ET dépensés (points dépensés affichés en négatif)
       const pointsList: { value: number; label: string }[] = [];
       if (typeof visit.points_earned === "number" && visit.points_earned !== 0) {
         pointsList.push({ value: visit.points_earned, label: "gagnés" });
       }
-      if (typeof visit.points_spent === "number" && visit.points_spent !== 0) {
+      if (typeof visit.points_spent === "number" && visit.points_spent > 0) {
         pointsList.push({ value: -Math.abs(visit.points_spent), label: "dépensés" });
       }
       return {
