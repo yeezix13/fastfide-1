@@ -15,6 +15,8 @@ interface CustomerListProps {
 interface CustomerWithProfile {
   loyalty_points: number;
   profile: Profile | null;
+  // debug info
+  raw_link?: any;
 }
 
 const CustomerList = ({ merchant }: CustomerListProps) => {
@@ -39,28 +41,30 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
 
       console.log('customerIds:', customerIds);
 
-      // 3. Charger tous les profils pour ces IDs (batch)
-      if (customerIds.length === 0) {
+      // Affichage debug
+      if (!customerIds || customerIds.length === 0) {
         console.log('No customer IDs to fetch profiles for');
         return [];
       }
 
-      const { data: profiles, error: profilesError } = await supabase
+      // Affichons la vraie requête SQL brute (conversion UUID <-> string si besoin)
+      const { data: rawProfiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
         .in('id', customerIds);
 
-      console.log('profiles results:', profiles, 'error:', profilesError);
+      console.log('profiles results:', rawProfiles, 'error:', profilesError);
 
       if (profilesError) throw profilesError;
 
-      // 4. Associer les profils aux liens
-      const customersWithProfiles = links.map(link => ({
+      // On mappe les liens à leur profil (ou null s'il n'existe pas)
+      const customersWithProfiles: CustomerWithProfile[] = links.map(link => ({
         loyalty_points: link.loyalty_points,
-        profile: profiles?.find(p => p.id === link.customer_id) ?? null
+        profile: rawProfiles?.find((p) => p.id === link.customer_id) ?? null,
+        raw_link: link, // debug
       }));
 
-      console.log('customersWithProfiles:', customersWithProfiles);
+      console.log('customersWithProfiles for UI:', customersWithProfiles);
 
       return customersWithProfiles;
     },
@@ -69,7 +73,15 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
   if (isLoading) return <p>Chargement des clients...</p>;
   if (error) return <p className="text-destructive">Erreur: {error.message}</p>;
   if (!data || data.length === 0) {
-    return <p className="text-muted-foreground">Aucun client n'a encore rejoint votre programme de fidélité.</p>;
+    // Ajout debug : listons les liens / customerIds si jamais !
+    return (
+      <div>
+        <p className="text-muted-foreground">Aucun client n'a encore rejoint votre programme de fidélité.</p>
+        <pre className="text-xs bg-muted border rounded p-2 mt-2">
+          {JSON.stringify(data, null, 2)}
+        </pre>
+      </div>
+    );
   }
 
   return (
@@ -90,21 +102,27 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
           <TableBody>
             {data.map((customer, idx) => {
               const profile = customer.profile;
-              if (!profile) return null;
               return (
-                <TableRow key={profile.id}>
-                  <TableCell>{profile.first_name ?? ''} {profile.last_name ?? ''}</TableCell>
-                  <TableCell>{profile.phone ?? ''}</TableCell>
+                <TableRow key={profile?.id ?? customer.raw_link?.customer_id ?? idx}>
+                  <TableCell>
+                    {profile
+                      ? `${profile.first_name ?? ''} ${profile.last_name ?? ''}`
+                      : <span className="text-destructive italic">Profil manquant</span>}
+                  </TableCell>
+                  <TableCell>{profile?.phone ?? <span className="text-destructive italic">-</span>}</TableCell>
                   <TableCell className="text-right font-medium">{customer.loyalty_points}</TableCell>
                 </TableRow>
               );
             })}
           </TableBody>
         </Table>
+        <pre className="text-xs bg-muted border rounded p-2 mt-2">
+          {/* Affichons toutes les datas pour debug */}
+          {JSON.stringify(data, null, 2)}
+        </pre>
       </CardContent>
     </Card>
   );
 };
 
 export default CustomerList;
-
