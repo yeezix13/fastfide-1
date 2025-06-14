@@ -122,16 +122,16 @@ const CustomerMerchantDetails = () => {
 
   const isLoading = isLoadingAccount || isLoadingRewards || isLoadingVisits || isLoadingRedemptions;
 
-  // Fusion visites et redemptions AVEC affichage des points gagnés ET dépensés
+  // Correction ici : afficher points_spent s'il est non-null ET supérieur à zéro (pour ne pas masquer les cas d'utilisation de points à zéro)
   const historique = (() => {
     if (!visits && !rewardRedemptions) return [];
-    // Chaque visite liste les points gagnés ET dépensés (négatif si utilisé sur une reward via RecordVisitForm)
     const visitesMap = (visits || []).map(visit => {
       const pointsList: { value: number; label: string }[] = [];
       if (typeof visit.points_earned === "number" && visit.points_earned !== 0) {
         pointsList.push({ value: visit.points_earned, label: "gagnés" });
       }
-      if (typeof visit.points_spent === "number" && visit.points_spent !== 0) {
+      // Correction principale : accepte points_spent > 0 (ignore undefined, zéro, ou null)
+      if (typeof visit.points_spent === "number" && visit.points_spent > 0) {
         pointsList.push({ value: -Math.abs(visit.points_spent), label: "dépensés" });
       }
       return {
@@ -204,3 +204,4 @@ const CustomerMerchantDetails = () => {
 };
 
 export default CustomerMerchantDetails;
+

@@ -36,7 +36,10 @@ const CustomerLoyaltyHistoryTable: React.FC<Props> = ({ historique, isLoading })
         <TableBody>
           {historique.map(entry => (
             <TableRow key={entry.type + "-" + entry.id}>
-              <TableCell>{new Date(entry.date).toLocaleDateString("fr-FR")} {new Date(entry.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</TableCell>
+              <TableCell>
+                {new Date(entry.date).toLocaleDateString("fr-FR")}{" "}
+                {new Date(entry.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+              </TableCell>
               <TableCell>
                 {entry.type === "visit"
                   ? entry.montant !== null ? `${entry.montant} €` : ""
