@@ -2,13 +2,15 @@
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+type PointsInfo = { value: number; label: string; };
+
 type HistoryEntry = {
   type: "visit" | "redemption";
   id: string;
   date: string;
   montant: number | null;
   rewardName: string | null;
-  points: number;
+  pointsList: PointsInfo[];
 };
 
 interface Props {
@@ -34,15 +36,26 @@ const CustomerLoyaltyHistoryTable: React.FC<Props> = ({ historique, isLoading })
         <TableBody>
           {historique.map(entry => (
             <TableRow key={entry.type + "-" + entry.id}>
-              <TableCell>{new Date(entry.date).toLocaleDateString("fr-FR")}</TableCell>
+              <TableCell>{new Date(entry.date).toLocaleDateString("fr-FR")} {new Date(entry.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</TableCell>
               <TableCell>
                 {entry.type === "visit"
                   ? entry.montant !== null ? `${entry.montant} €` : ""
                   : `-- €${entry.rewardName ? ` (${entry.rewardName})` : ""}`}
               </TableCell>
-              <TableCell
-                className={`text-right font-medium ${entry.points > 0 ? "text-green-600" : "text-red-600"}`}>
-                {entry.points > 0 ? `+${entry.points}` : entry.points}
+              <TableCell className="text-right font-medium">
+                {entry.pointsList && entry.pointsList.length > 0 ? (
+                  <div className="flex flex-col items-end gap-0.5">
+                    {entry.pointsList.map((pt, i) => (
+                      <span
+                        key={pt.label + i}
+                        className={pt.value > 0 ? "text-green-600" : "text-red-600"}
+                      >
+                        {pt.value > 0 ? `+${pt.value}` : pt.value}{" "}
+                        <span className="text-xs text-muted-foreground normal-case">{pt.label}</span>
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
               </TableCell>
             </TableRow>
           ))}

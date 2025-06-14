@@ -1,12 +1,11 @@
+
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, Award, Clock, Phone, Mail, Gift } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import CustomerRewardsList from "@/components/customer/CustomerRewardsList";
 import CustomerLoyaltyHistoryTable from "@/components/customer/CustomerLoyaltyHistoryTable";
 import CustomerLoyaltyInfoCard from "@/components/customer/CustomerLoyaltyInfoCard";
@@ -72,13 +71,14 @@ const CustomerMerchantDetails = () => {
     enabled: !!merchantId,
   });
 
+  // Ajout : on récupère points_earned ET points_spent pour les visites
   const { data: visits, isLoading: isLoadingVisits } = useQuery({
     queryKey: ['visits', user?.id, merchantId],
     queryFn: async () => {
       if (!user || !merchantId) return [];
       const { data, error } = await supabase
         .from('visits')
-        .select('id, created_at, amount_spent, points_earned')
+        .select('id, created_at, amount_spent, points_earned, points_spent')
         .eq('customer_id', user.id)
         .eq('merchant_id', merchantId)
         .order('created_at', { ascending: false });
@@ -122,24 +122,36 @@ const CustomerMerchantDetails = () => {
 
   const isLoading = isLoadingAccount || isLoadingRewards || isLoadingVisits || isLoadingRedemptions;
 
-  // Fusion visites et redemptions (combine visits and redemptions history into one array)
+  // Fusion visites et redemptions AVEC affichage des points gagnés ET dépensés
   const historique = (() => {
     if (!visits && !rewardRedemptions) return [];
-    const visitesMap = (visits || []).map(visit => ({
-      type: "visit" as const,
-      id: visit.id,
-      date: visit.created_at,
-      montant: typeof visit.amount_spent === "number" ? visit.amount_spent : null,
-      rewardName: null,
-      points: visit.points_earned,
-    }));
+    // Chaque visite liste les points gagnés ET dépensés (négatif si utilisé sur une reward via RecordVisitForm)
+    const visitesMap = (visits || []).map(visit => {
+      const pointsList: { value: number; label: string }[] = [];
+      if (typeof visit.points_earned === "number" && visit.points_earned !== 0) {
+        pointsList.push({ value: visit.points_earned, label: "gagnés" });
+      }
+      if (typeof visit.points_spent === "number" && visit.points_spent !== 0) {
+        pointsList.push({ value: -Math.abs(visit.points_spent), label: "dépensés" });
+      }
+      return {
+        type: "visit" as const,
+        id: visit.id,
+        date: visit.created_at,
+        montant: typeof visit.amount_spent === "number" ? visit.amount_spent : null,
+        rewardName: null as string | null,
+        pointsList,
+      };
+    });
     const redemptionsMap = (rewardRedemptions || []).map(redemption => ({
       type: "redemption" as const,
       id: redemption.id,
       date: redemption.redeemed_at,
-      montant: null,
+      montant: null as number | null,
       rewardName: redemption.rewards ? redemption.rewards.name : null,
-      points: -Math.abs(redemption.points_spent),
+      pointsList: [
+        { value: -Math.abs(redemption.points_spent), label: "dépensés" }
+      ],
     }));
     return [...visitesMap, ...redemptionsMap].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
