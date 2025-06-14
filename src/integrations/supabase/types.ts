@@ -92,6 +92,55 @@ export type Database = {
         }
         Relationships: []
       }
+      reward_redemptions: {
+        Row: {
+          customer_id: string
+          id: string
+          merchant_id: string
+          points_spent: number
+          redeemed_at: string
+          reward_id: string
+        }
+        Insert: {
+          customer_id: string
+          id?: string
+          merchant_id: string
+          points_spent: number
+          redeemed_at?: string
+          reward_id: string
+        }
+        Update: {
+          customer_id?: string
+          id?: string
+          merchant_id?: string
+          points_spent?: number
+          redeemed_at?: string
+          reward_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_customer"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_merchant"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_reward"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "rewards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rewards: {
         Row: {
           id: string

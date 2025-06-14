@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, Award, Clock, Phone, Mail } from 'lucide-react';
+import { ArrowLeft, MapPin, Award, Clock, Phone, Mail, Gift } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useState } from 'react';
@@ -89,7 +89,36 @@ const CustomerMerchantDetails = () => {
     enabled: !!user && !!merchantId,
   });
 
-  const isLoading = isLoadingAccount || isLoadingRewards || isLoadingVisits;
+  // Query to fetch reward redemptions of customer for this merchant
+  const { data: rewardRedemptions, isLoading: isLoadingRedemptions } = useQuery({
+    queryKey: ['rewardRedemptions', user?.id, merchantId],
+    queryFn: async () => {
+      if (!user || !merchantId) return [];
+      const { data, error } = await supabase
+        .from('reward_redemptions')
+        .select(`
+          id,
+          redeemed_at,
+          points_spent,
+          reward_id,
+          rewards (
+            name
+          )
+        `)
+        .eq('customer_id', user.id)
+        .eq('merchant_id', merchantId)
+        .order('redeemed_at', { ascending: false });
+      if (error) {
+        console.error("Error fetching reward redemptions:", error);
+        throw error;
+      }
+      // Some older redemptions might have null for 'rewards', filter them
+      return (data || []).filter(r => r.rewards && r.rewards.name);
+    },
+    enabled: !!user && !!merchantId,
+  });
+
+  const isLoading = isLoadingAccount || isLoadingRewards || isLoadingVisits || isLoadingRedemptions;
 
   return (
     <div className="container mx-auto p-4 md:p-8">
@@ -134,7 +163,7 @@ const CustomerMerchantDetails = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center"><Clock className="mr-2 h-5 w-5" /> Historique des Visites</CardTitle>
-                  <CardDescription>Retrouvez ici le détail de vos passages.</CardDescription>
+                  <CardDescription>Retrouvez ici le détail de vos passages et des récompenses utilisées.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {visits && visits.length > 0 ? (
@@ -157,8 +186,37 @@ const CustomerMerchantDetails = () => {
                       </TableBody>
                     </Table>
                   ) : (
-                     <p className="text-muted-foreground">Vous n'avez pas encore de visite enregistrée chez ce commerçant.</p>
+                    <p className="text-muted-foreground">Vous n'avez pas encore de visite enregistrée chez ce commerçant.</p>
                   )}
+
+                  {/* Historique des récompenses utilisées */}
+                  <div className="mt-8">
+                    <h4 className="font-semibold flex items-center mb-3 text-base"><Gift className="mr-2 h-4 w-4" /> Récompenses utilisées</h4>
+                    {isLoadingRedemptions ? (
+                      <div className="text-sm text-gray-500">Chargement des récompenses utilisées…</div>
+                    ) : rewardRedemptions && rewardRedemptions.length > 0 ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Nom de la récompense</TableHead>
+                            <TableHead className="text-right">Points dépensés</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {rewardRedemptions.map(redemption => (
+                            <TableRow key={redemption.id}>
+                              <TableCell>{new Date(redemption.redeemed_at).toLocaleDateString('fr-FR')}</TableCell>
+                              <TableCell>{redemption.rewards?.name || "Récompense supprimée"}</TableCell>
+                              <TableCell className="text-right font-medium text-red-600">-{redemption.points_spent}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <p className="text-muted-foreground">Aucune récompense utilisée chez ce commerçant pour l’instant.</p>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </div>
