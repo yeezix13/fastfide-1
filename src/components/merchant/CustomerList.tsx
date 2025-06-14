@@ -18,9 +18,10 @@ interface CustomerWithProfile {
 }
 
 const CustomerList = ({ merchant }: CustomerListProps) => {
-  const { data: customers, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['merchantCustomers', merchant.id],
     queryFn: async () => {
+      // ATTENTION: il faut bien faire la jointure sur customer_id avec l'alias profiles:customer_id !
       const { data, error } = await supabase
         .from('customer_merchant_link')
         .select(`
@@ -35,13 +36,18 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
         .eq('merchant_id', merchant.id);
 
       if (error) throw error;
-      return data as CustomerWithProfile[];
+
+      // On vérifie qu'on a bien un tableau dont chaque élément a .profiles en objet ou null
+      // Si la jointure échoue, .profiles sera potentiellement une string avec un champ error. On filtre uniquement les bons résultats.
+      return (data as unknown as CustomerWithProfile[]).filter(
+        c => c.profiles && typeof c.profiles === "object" && "id" in c.profiles
+      );
     },
   });
 
   if (isLoading) return <p>Chargement des clients...</p>;
   if (error) return <p className="text-destructive">Erreur: {error.message}</p>;
-  if (!customers || customers.length === 0) {
+  if (!data || data.length === 0) {
     return <p className="text-muted-foreground">Aucun client n'a encore rejoint votre programme de fidélité.</p>;
   }
 
@@ -61,7 +67,7 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {customers.map(customer => {
+            {data.map(customer => {
               const profile = customer.profiles;
               if (!profile) return null;
               return (
@@ -80,4 +86,3 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
 };
 
 export default CustomerList;
-
