@@ -94,10 +94,58 @@ const RedeemRewardForm = ({ merchant }: { merchant: Merchant }) => {
         title: 'Succès !',
         description: `La récompense a été utilisée pour ${(data as any).customer.first_name} ${(data as any).customer.last_name}.`,
       });
-      setCurrentCustomer(null);
-      setAvailableRewards([]);
-      setSelectedReward('');
-      setCustomerPoints(null);
+
+      // Rafraîchir les points et les récompenses pour le client SANS fermer le profil
+      if (currentCustomer) {
+        setSelectedReward('');
+        setIsLoading(true);
+        // On recharge points/récompenses
+        // Remis sous forme de fonction async interne pour garantir l'attente puis vérification rewards.
+        const refreshAfterRedeem = async () => {
+          let points = 0;
+          const { data: linkData } = await supabase
+            .from('customer_merchant_link')
+            .select('loyalty_points')
+            .eq('customer_id', currentCustomer.id)
+            .eq('merchant_id', merchant.id)
+            .maybeSingle();
+
+          if (linkData && linkData.loyalty_points != null) {
+            points = linkData.loyalty_points;
+            setCustomerPoints(points);
+          } else {
+            setCustomerPoints(0);
+          }
+
+          if (points > 0) {
+            const { data: rewardsData, error: rewardsError } = await supabase
+              .from('rewards')
+              .select('*')
+              .eq('merchant_id', merchant.id)
+              .lte('points_required', points)
+              .order('points_required');
+            if (rewardsError) {
+              toast({ title: 'Erreur', description: 'Impossible de charger les récompenses.', variant: 'destructive' });
+              setAvailableRewards([]);
+            } else {
+              setAvailableRewards(rewardsData || []);
+            }
+          } else {
+            setAvailableRewards([]);
+          }
+
+          setIsLoading(false);
+
+          // Si plus de récompense possible, reset tout comme avant
+          if (points === 0 || (Array.isArray(availableRewards) && availableRewards.length === 0)) {
+            setCurrentCustomer(null);
+            setAvailableRewards([]);
+            setSelectedReward('');
+            setCustomerPoints(null);
+          }
+        };
+        await refreshAfterRedeem();
+      }
     }
   }
 
@@ -157,4 +205,3 @@ const RedeemRewardForm = ({ merchant }: { merchant: Merchant }) => {
 };
 
 export default RedeemRewardForm;
-
