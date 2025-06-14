@@ -1,99 +1,83 @@
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useToast } from '@/components/ui/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Database } from '@/integrations/supabase/types';
+import { useToast } from '@/components/ui/use-toast';
+import CustomerFinder from './CustomerFinder';
 
 type Merchant = Database['public']['Tables']['merchants']['Row'];
 type Reward = Database['public']['Tables']['rewards']['Row'];
+type CustomerProfile = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  email: string | null;
+};
 
-const searchSchema = z.object({
-  phone: z.string().min(1, 'Le numéro de téléphone est requis.'),
-});
-
-interface RedeemRewardFormProps {
-  merchant: Merchant;
-}
-
-const RedeemRewardForm = ({ merchant }: RedeemRewardFormProps) => {
+const RedeemRewardForm = ({ merchant }: { merchant: Merchant }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [customer, setCustomer] = useState<{ id: string; points: number; first_name: string; last_name: string } | null>(null);
+  const [currentCustomer, setCurrentCustomer] = useState<CustomerProfile | null>(null);
   const [availableRewards, setAvailableRewards] = useState<Reward[]>([]);
   const [selectedReward, setSelectedReward] = useState<string>('');
+  const [customerPoints, setCustomerPoints] = useState<number | null>(null);
 
-  const searchForm = useForm<z.infer<typeof searchSchema>>({
-    resolver: zodResolver(searchSchema),
-    defaultValues: { phone: '' },
-  });
-
-  async function handleSearch(values: z.infer<typeof searchSchema>) {
-    setIsLoading(true);
-    setCustomer(null);
+  // Recherche les points et récompenses quand currentCustomer change
+  const fetchCustomerRewards = async (customer: CustomerProfile) => {
+    setCustomerPoints(null);
     setAvailableRewards([]);
     setSelectedReward('');
-    console.log("Recherche de client avec le téléphone :", values.phone);
 
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('id, first_name, last_name')
-      .eq('phone', values.phone)
-      .single();
-    
-    console.log("Résultat de la recherche - data:", profileData);
-    console.log("Résultat de la recherche - error:", profileError);
-
-    if (profileError || !profileData) {
-      toast({ title: 'Erreur', description: 'Client non trouvé.', variant: 'destructive' });
-      setIsLoading(false);
-      return;
-    }
-
+    setIsLoading(true);
+    // 1. Trouver le lien de fidélité
     const { data: linkData, error: linkError } = await supabase
       .from('customer_merchant_link')
       .select('loyalty_points')
-      .eq('customer_id', profileData.id)
+      .eq('customer_id', customer.id)
       .eq('merchant_id', merchant.id)
-      .single();
-    
-    if (linkError || !linkData) {
-      toast({ title: 'Information', description: 'Ce client n\'a pas encore de points chez vous.' });
-      setCustomer({ id: profileData.id, points: 0, first_name: profileData.first_name, last_name: profileData.last_name });
-      setIsLoading(false);
-      return;
-    }
+      .maybeSingle();
 
-    setCustomer({ id: profileData.id, points: linkData.loyalty_points, first_name: profileData.first_name, last_name: profileData.last_name });
-    
-    const { data: rewardsData, error: rewardsError } = await supabase
-      .from('rewards')
-      .select('*')
-      .eq('merchant_id', merchant.id)
-      .lte('points_required', linkData.loyalty_points)
-      .order('points_required');
-
-    if (rewardsError) {
-      toast({ title: 'Erreur', description: 'Impossible de charger les récompenses.', variant: 'destructive' });
+    let points = 0;
+    if (linkData && linkData.loyalty_points != null) {
+      points = linkData.loyalty_points;
+      setCustomerPoints(points);
     } else {
-      setAvailableRewards(rewardsData || []);
+      setCustomerPoints(0);
     }
-    
-    setIsLoading(false);
-  }
 
+    // 2. Charger les récompenses disponibles
+    if (points > 0) {
+      const { data: rewardsData, error: rewardsError } = await supabase
+        .from('rewards')
+        .select('*')
+        .eq('merchant_id', merchant.id)
+        .lte('points_required', points)
+        .order('points_required');
+      if (rewardsError) {
+        toast({ title: 'Erreur', description: 'Impossible de charger les récompenses.', variant: 'destructive' });
+      } else {
+        setAvailableRewards(rewardsData || []);
+      }
+    }
+    setIsLoading(false);
+  };
+
+  // Lors de la sélection d'un client, charger ses infos
+  const handleSelectCustomer = (customer: CustomerProfile) => {
+    setCurrentCustomer(customer);
+    fetchCustomerRewards(customer);
+  };
+
+  // Gérer l'utilisation d'une récompense
   async function handleRedeem() {
-    if (!selectedReward) return;
+    if (!selectedReward || !currentCustomer) return;
     setIsLoading(true);
-    
+
     const { data, error } = await supabase.rpc('redeem_reward', {
-      customer_phone_number: searchForm.getValues('phone'),
+      customer_phone_number: currentCustomer.phone,
       merchant_user_id: merchant.user_id,
       reward_id_to_redeem: selectedReward,
     });
@@ -110,66 +94,67 @@ const RedeemRewardForm = ({ merchant }: RedeemRewardFormProps) => {
         title: 'Succès !',
         description: `La récompense a été utilisée pour ${(data as any).customer.first_name} ${(data as any).customer.last_name}.`,
       });
-      searchForm.reset();
-      setCustomer(null);
+      setCurrentCustomer(null);
       setAvailableRewards([]);
       setSelectedReward('');
+      setCustomerPoints(null);
     }
   }
 
-  return (
-    <div className="space-y-6">
-      <Form {...searchForm}>
-        <form onSubmit={searchForm.handleSubmit(handleSearch)} className="flex items-end gap-2">
-          <FormField
-            control={searchForm.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem className="flex-grow">
-                <FormLabel>Numéro de téléphone du client</FormLabel>
-                <FormControl>
-                  <Input placeholder="Ex: 0612345678" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? '...' : 'Chercher'}
-          </Button>
-        </form>
-      </Form>
+  // 1. ETAPE DE RECHERCHE CLIENT
+  if (!currentCustomer) {
+    return (
+      <div>
+        <p className="mb-2 text-sm">Recherchez le client par <b>téléphone, nom ou prénom</b> :</p>
+        <CustomerFinder onSelect={handleSelectCustomer} />
+      </div>
+    );
+  }
 
-      {customer && (
-        <div className="border-t pt-4">
-          <h4 className="font-semibold">{customer.first_name} {customer.last_name}</h4>
-          <p className="text-sm text-muted-foreground">Solde de points: {customer.points}</p>
-          
-          {availableRewards.length > 0 ? (
-             <div className="mt-4 space-y-4">
-                <Select onValueChange={setSelectedReward} value={selectedReward}>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner une récompense" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {availableRewards.map(reward => (
-                            <SelectItem key={reward.id} value={reward.id}>
-                                {reward.name} ({reward.points_required} pts)
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <Button onClick={handleRedeem} disabled={isLoading || !selectedReward} className="w-full">
-                    {isLoading ? 'Utilisation...' : 'Utiliser la récompense'}
-                </Button>
-             </div>
-          ) : (
-            <p className="mt-4 text-sm text-muted-foreground">Ce client n'a pas assez de points pour une récompense.</p>
-          )}
+  // 2. ETAPE AFFICHAGE CLIENT & RECOMPENSES
+  return (
+    <div>
+      <div className="border rounded p-3 mb-4 bg-muted/50">
+        <div className="font-medium text-base">
+          {currentCustomer.first_name} {currentCustomer.last_name}
         </div>
+        <div className="text-xs text-muted-foreground">
+          <span>Tél: {currentCustomer.phone || "-"}</span> &nbsp; | &nbsp;
+          <span>Email: {currentCustomer.email || "-"}</span>
+        </div>
+        <Button variant="ghost" size="sm" className="mt-2" type="button" onClick={() => setCurrentCustomer(null)}>
+          Changer de client
+        </Button>
+        <div className="text-sm mt-2">Solde de points : <b>{customerPoints ?? "..."}</b></div>
+      </div>
+      {customerPoints === 0 ? (
+        <p className="mt-4 text-sm text-muted-foreground">Ce client n'a pas encore de points chez vous.</p>
+      ) : (
+        availableRewards.length > 0 ? (
+          <div className="space-y-4">
+            <Select onValueChange={setSelectedReward} value={selectedReward}>
+              <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une récompense" />
+              </SelectTrigger>
+              <SelectContent>
+                  {availableRewards.map(reward => (
+                      <SelectItem key={reward.id} value={reward.id}>
+                          {reward.name} ({reward.points_required} pts)
+                      </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={handleRedeem} disabled={isLoading || !selectedReward} className="w-full">
+                {isLoading ? 'Utilisation...' : 'Utiliser la récompense'}
+            </Button>
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-muted-foreground">Aucune récompense disponible pour ce client.</p>
+        )
       )}
     </div>
   );
 };
 
 export default RedeemRewardForm;
+
