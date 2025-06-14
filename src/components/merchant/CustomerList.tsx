@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
@@ -5,9 +6,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 type Merchant = Database['public']['Tables']['merchants']['Row'];
+type Profile = Database['public']['Tables']['profiles']['Row'];
 
 interface CustomerListProps {
   merchant: Merchant;
+}
+
+interface CustomerWithProfile {
+  loyalty_points: number;
+  profiles: Profile | null;
 }
 
 const CustomerList = ({ merchant }: CustomerListProps) => {
@@ -18,7 +25,7 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
         .from('customer_merchant_link')
         .select(`
           loyalty_points,
-          profiles (
+          profiles:customer_id (
             id,
             first_name,
             last_name,
@@ -28,7 +35,7 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
         .eq('merchant_id', merchant.id);
 
       if (error) throw error;
-      return data;
+      return data as CustomerWithProfile[];
     },
   });
 
@@ -55,22 +62,12 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
           </TableHeader>
           <TableBody>
             {customers.map(customer => {
-              // The type of 'profiles' is currently inferred incorrectly, causing a build error.
-              // We cast it to 'any' as a temporary measure to unblock the UI and diagnose the issue.
-              const profile = customer.profiles as any;
-              
+              const profile = customer.profiles;
               if (!profile) return null;
-
-              // If the query fails at runtime, 'profile' might be an error object.
-              if (profile.error) {
-                console.error("Error fetching profile for a customer:", profile.error);
-                return null;
-              }
-
               return (
                 <TableRow key={profile.id}>
-                  <TableCell>{profile.first_name} {profile.last_name}</TableCell>
-                  <TableCell>{profile.phone}</TableCell>
+                  <TableCell>{profile.first_name ?? ''} {profile.last_name ?? ''}</TableCell>
+                  <TableCell>{profile.phone ?? ''}</TableCell>
                   <TableCell className="text-right font-medium">{customer.loyalty_points}</TableCell>
                 </TableRow>
               );
@@ -83,3 +80,4 @@ const CustomerList = ({ merchant }: CustomerListProps) => {
 };
 
 export default CustomerList;
+
