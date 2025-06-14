@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import RecordVisitForm from '@/components/merchant/RecordVisitForm';
 import RedeemRewardForm from '@/components/merchant/RedeemRewardForm';
 import LoyaltySettings from '@/components/merchant/LoyaltySettings';
+import MerchantProfileForm from '@/components/merchant/MerchantProfileForm';
+import CustomerList from '@/components/merchant/CustomerList';
+import MerchantStats from '@/components/merchant/MerchantStats';
 
 const MerchantDashboard = () => {
   const navigate = useNavigate();
@@ -92,14 +94,14 @@ const MerchantDashboard = () => {
         <Button onClick={handleLogout} variant="outline">Déconnexion</Button>
       </header>
       <main>
-        <p className="text-muted-foreground mb-6">Bienvenue sur votre tableau de bord, {user.email}</p>
+        <p className="text-muted-foreground mb-6">Bienvenue sur votre tableau de bord.</p>
         
         <Tabs defaultValue="actions" className="w-full">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
             <TabsTrigger value="actions">Actions</TabsTrigger>
-            <TabsTrigger value="settings">Réglages</TabsTrigger>
-            <TabsTrigger value="customers">Clients</TabsTrigger>
             <TabsTrigger value="stats">Statistiques</TabsTrigger>
+            <TabsTrigger value="customers">Clients</TabsTrigger>
+            <TabsTrigger value="settings">Réglages</TabsTrigger>
           </TabsList>
           <TabsContent value="actions" className="mt-6">
             <div className="grid md:grid-cols-2 gap-6">
@@ -137,25 +139,19 @@ const MerchantDashboard = () => {
                 <Card>
                     <CardHeader>
                         <CardTitle>Informations du commerce</CardTitle>
-                        <CardDescription>Vos coordonnées (bientôt modifiables ici).</CardDescription>
+                        <CardDescription>Modifiez vos coordonnées ici.</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-2 text-sm text-muted-foreground">
-                        <p><span className="font-medium text-foreground">Nom:</span> {merchant.name}</p>
-                        <p><span className="font-medium text-foreground">Adresse:</span> {merchant.address}</p>
-                        <p><span className="font-medium text-foreground">Email de contact:</span> {user.email}</p>
+                    <CardContent>
+                        <MerchantProfileForm merchant={merchant} />
                     </CardContent>
                 </Card>
             </div>
           </TabsContent>
           <TabsContent value="customers" className="mt-6">
-            <div className="my-8 p-8 border-dashed border-2 rounded-lg text-center text-muted-foreground">
-              <p>La liste de vos clients sera affichée ici.</p>
-            </div>
+            <CustomerList merchant={merchant} />
           </TabsContent>
           <TabsContent value="stats" className="mt-6">
-            <div className="my-8 p-8 border-dashed border-2 rounded-lg text-center text-muted-foreground">
-              <p>Les statistiques sur la fidélité seront affichées ici.</p>
-            </div>
+             <MerchantStats merchant={merchant} />
           </TabsContent>
         </Tabs>
       </main>

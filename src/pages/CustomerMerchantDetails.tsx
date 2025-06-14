@@ -1,7 +1,6 @@
-
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, Award, Clock } from 'lucide-react';
+import { ArrowLeft, MapPin, Award, Clock, Phone, Mail } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useState } from 'react';
@@ -34,7 +33,9 @@ const CustomerMerchantDetails = () => {
           merchants (
             id,
             name,
-            address
+            address,
+            phone,
+            contact_email
           )
         `)
         .eq('customer_id', user.id)
@@ -172,9 +173,15 @@ const CustomerMerchantDetails = () => {
                     <p className="text-sm text-muted-foreground">Solde de points</p>
                     <p className="text-4xl font-bold">{loyaltyAccount.loyalty_points}</p>
                   </div>
-                  <div>
-                    <h3 className="font-semibold flex items-center mb-2"><MapPin className="mr-2 h-4 w-4" /> Coordonnées</h3>
-                    <p className="text-muted-foreground">{loyaltyAccount.merchants.address}</p>
+                  <div className="space-y-2 text-sm">
+                    <h3 className="font-semibold flex items-center mb-2">Coordonnées</h3>
+                    <p className="flex items-start text-muted-foreground"><MapPin className="mr-2 h-4 w-4 mt-0.5 flex-shrink-0" /> <span>{loyaltyAccount.merchants.address}</span></p>
+                    {loyaltyAccount.merchants.phone && (
+                        <p className="flex items-center text-muted-foreground"><Phone className="mr-2 h-4 w-4" /> <span>{loyaltyAccount.merchants.phone}</span></p>
+                    )}
+                    {loyaltyAccount.merchants.contact_email && (
+                         <p className="flex items-center text-muted-foreground"><Mail className="mr-2 h-4 w-4" /> <span>{loyaltyAccount.merchants.contact_email}</span></p>
+                    )}
                   </div>
                 </CardContent>
               </Card>

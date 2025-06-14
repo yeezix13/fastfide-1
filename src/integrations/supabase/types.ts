@@ -38,24 +38,30 @@ export type Database = {
       merchants: {
         Row: {
           address: string | null
+          contact_email: string | null
           id: string
           name: string
+          phone: string | null
           points_per_euro: number | null
           signup_code: string
           user_id: string
         }
         Insert: {
           address?: string | null
+          contact_email?: string | null
           id?: string
           name: string
+          phone?: string | null
           points_per_euro?: number | null
           signup_code: string
           user_id: string
         }
         Update: {
           address?: string | null
+          contact_email?: string | null
           id?: string
           name?: string
+          phone?: string | null
           points_per_euro?: number | null
           signup_code?: string
           user_id?: string
