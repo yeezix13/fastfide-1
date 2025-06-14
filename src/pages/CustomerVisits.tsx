@@ -1,4 +1,3 @@
-
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,7 +32,7 @@ const CustomerVisits = () => {
       if (!merchantId || !customerId) return [];
       const { data, error } = await supabase
         .from("visits")
-        .select("id, created_at, points_earned, amount_spent")
+        .select("id, created_at, points_earned, amount_spent, points_spent")
         .eq("merchant_id", merchantId)
         .eq("customer_id", customerId)
         .order('created_at', { ascending: false });
@@ -75,22 +74,36 @@ const CustomerVisits = () => {
 
   // Fusion visites et redemptions (combine visits and redemptions history into one array)
   const historique = React.useMemo(() => {
-    const visitesMap = (visits || []).map(visit => ({
-      type: "visit" as const,
-      id: visit.id,
-      date: visit.created_at,
-      montant: typeof visit.amount_spent === "number" ? visit.amount_spent : null,
-      rewardName: null as string | null,
-      points: visit.points_earned,
-    }));
+    const visitesMap = (visits || []).map(visit => {
+      // Show both points earned and spent (negative)
+      const pointsList: { value: number; label: string }[] = [];
+      if (typeof visit.points_earned === "number" && visit.points_earned !== 0) {
+        pointsList.push({ value: visit.points_earned, label: "gagnés" });
+      }
+      if (typeof visit.points_spent === "number" && visit.points_spent !== 0) {
+        pointsList.push({ value: -Math.abs(visit.points_spent), label: "dépensés" });
+      }
+      return {
+        type: "visit" as const,
+        id: visit.id,
+        date: visit.created_at,
+        montant: typeof visit.amount_spent === "number" ? visit.amount_spent : null,
+        rewardName: null as string | null,
+        pointsList,
+      };
+    });
     const redemptionsMap = (rewardRedemptions || []).map(redemption => ({
       type: "redemption" as const,
       id: redemption.id,
       date: redemption.redeemed_at,
       montant: null as number | null,
       rewardName: redemption.rewards ? redemption.rewards.name : null,
-      points: -Math.abs(redemption.points_spent),
+      pointsList: [
+        { value: -Math.abs(redemption.points_spent), label: "dépensés" }
+      ],
     }));
+
+    // Combine and sort all
     return [...visitesMap, ...redemptionsMap].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
@@ -141,9 +154,20 @@ const CustomerVisits = () => {
                           : ""
                         : `-- €${entry.rewardName ? ` (${entry.rewardName})` : ""}`}
                     </TableCell>
-                    <TableCell
-                      className={`text-right font-medium ${entry.points > 0 ? "text-green-600" : "text-red-600"}`}>
-                      {entry.points > 0 ? `+${entry.points}` : entry.points}
+                    <TableCell className="text-right font-medium">
+                      {entry.pointsList && entry.pointsList.length > 0 ? (
+                        <div className="flex flex-col items-end gap-0.5">
+                          {entry.pointsList.map((pt, i) => (
+                            <span
+                              key={pt.label + i}
+                              className={pt.value > 0 ? "text-green-600" : "text-red-600"}
+                            >
+                              {pt.value > 0 ? `+${pt.value}` : pt.value}{" "}
+                              <span className="text-xs text-muted-foreground normal-case">{pt.label}</span>
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -157,4 +181,3 @@ const CustomerVisits = () => {
 };
 
 export default CustomerVisits;
-

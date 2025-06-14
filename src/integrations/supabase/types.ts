@@ -178,6 +178,7 @@ export type Database = {
           id: string
           merchant_id: string
           points_earned: number
+          points_spent: number | null
         }
         Insert: {
           amount_spent: number
@@ -186,6 +187,7 @@ export type Database = {
           id?: string
           merchant_id: string
           points_earned: number
+          points_spent?: number | null
         }
         Update: {
           amount_spent?: number
@@ -194,6 +196,7 @@ export type Database = {
           id?: string
           merchant_id?: string
           points_earned?: number
+          points_spent?: number | null
         }
         Relationships: [
           {
