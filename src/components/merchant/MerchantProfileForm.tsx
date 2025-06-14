@@ -17,6 +17,7 @@ const formSchema = z.object({
   address: z.string().optional(),
   phone: z.string().optional(),
   contact_email: z.string().email('Adresse e-mail invalide.').optional().or(z.literal('')),
+  theme_color: z.string().min(4).max(20).regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, 'Couleur hexadécimale invalide.').optional(),
 });
 
 interface MerchantProfileFormProps {
@@ -34,6 +35,7 @@ const MerchantProfileForm = ({ merchant }: MerchantProfileFormProps) => {
       address: merchant.address || '',
       phone: merchant.phone || '',
       contact_email: merchant.contact_email || '',
+      theme_color: merchant.theme_color || '#2563eb',
     },
   });
 
@@ -46,6 +48,7 @@ const MerchantProfileForm = ({ merchant }: MerchantProfileFormProps) => {
           address: values.address,
           phone: values.phone,
           contact_email: values.contact_email,
+          theme_color: values.theme_color,
         })
         .eq('id', merchant.id);
       if (error) throw error;
@@ -106,6 +109,34 @@ const MerchantProfileForm = ({ merchant }: MerchantProfileFormProps) => {
             <FormItem>
               <FormLabel>Email de contact</FormLabel>
               <FormControl><Input {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="theme_color"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Couleur du thème</FormLabel>
+              <FormControl>
+                <div className="flex items-center gap-2">
+                  <input
+                    {...field}
+                    type="color"
+                    className="w-8 h-8 p-0 border-none bg-transparent cursor-pointer"
+                    value={field.value || "#2563eb"}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    aria-label="Choisissez votre couleur"
+                  />
+                  <Input
+                    value={field.value || "#2563eb"}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    className="w-28"
+                    maxLength={20}
+                  />
+                </div>
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

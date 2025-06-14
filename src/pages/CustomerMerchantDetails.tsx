@@ -36,7 +36,8 @@ const CustomerMerchantDetails = () => {
             name,
             address,
             phone,
-            contact_email
+            contact_email,
+            theme_color
           )
         `)
         .eq('customer_id', user.id)
@@ -197,6 +198,7 @@ const CustomerMerchantDetails = () => {
                   phone: loyaltyAccount.merchants.phone,
                   contact_email: loyaltyAccount.merchants.contact_email,
                 }}
+                themeColor={loyaltyAccount.merchants.theme_color || "#2563eb"}
               />
             </div>
           </div>

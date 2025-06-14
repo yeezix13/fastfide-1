@@ -44,6 +44,7 @@ export type Database = {
           phone: string | null
           points_per_euro: number | null
           signup_code: string
+          theme_color: string | null
           user_id: string
         }
         Insert: {
@@ -54,6 +55,7 @@ export type Database = {
           phone?: string | null
           points_per_euro?: number | null
           signup_code: string
+          theme_color?: string | null
           user_id: string
         }
         Update: {
@@ -64,6 +66,7 @@ export type Database = {
           phone?: string | null
           points_per_euro?: number | null
           signup_code?: string
+          theme_color?: string | null
           user_id?: string
         }
         Relationships: []

@@ -8,21 +8,27 @@ interface MerchantInfo {
   phone?: string | null;
   contact_email?: string | null;
 }
-
 interface Props {
   points: number;
   merchantInfo: MerchantInfo;
+  themeColor?: string;
 }
 
-const CustomerLoyaltyInfoCard: React.FC<Props> = ({ points, merchantInfo }) => (
+const CustomerLoyaltyInfoCard: React.FC<Props> = ({ points, merchantInfo, themeColor = "#2563eb" }) => (
   <Card>
     <CardHeader>
       <CardTitle>Mes Points & Infos</CardTitle>
     </CardHeader>
     <CardContent className="space-y-4">
-      <div className="text-center bg-primary/10 p-4 rounded-lg">
+      <div
+        className="text-center p-4 rounded-lg"
+        style={{
+          background: `${themeColor}22`, // light background with 20% opacity (hex)
+          border: `2px solid ${themeColor}`,
+        }}
+      >
         <p className="text-sm text-muted-foreground">Solde de points</p>
-        <p className="text-4xl font-bold">{points}</p>
+        <p className="text-4xl font-bold" style={{ color: themeColor }}>{points}</p>
       </div>
       <div className="space-y-2 text-sm">
         <h3 className="font-semibold flex items-center mb-2">Coordonnées</h3>
