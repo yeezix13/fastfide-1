@@ -48,7 +48,12 @@ const CustomerVisits = () => {
       <Card>
         <CardHeader>
           <CardTitle>
-            <Link className="text-sm text-muted-foreground underline mr-2" to="/tableau-de-bord-commercant">&larr; Retour</Link>
+            <Link
+              className="text-sm text-muted-foreground underline mr-2"
+              to="/tableau-de-bord-commercant?tab=clients"
+            >
+              &larr; Retour
+            </Link>
             {profile
               ? `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim() || "Client"
               : "Client"}
