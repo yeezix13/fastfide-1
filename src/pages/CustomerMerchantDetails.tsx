@@ -1,4 +1,3 @@
-
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -122,24 +121,28 @@ const CustomerMerchantDetails = () => {
 
   const isLoading = isLoadingAccount || isLoadingRewards || isLoadingVisits || isLoadingRedemptions;
 
-  // Correction ici : afficher points_spent s'il est non-null ET supérieur à zéro (pour ne pas masquer les cas d'utilisation de points à zéro)
+  // Nouvelle logique - fusion visites avec soit points gagnés, soit points dépensés (et indication du cas où rien de dépensé ni gagné)
   const historique = (() => {
     if (!visits && !rewardRedemptions) return [];
     const visitesMap = (visits || []).map(visit => {
       const pointsList: { value: number; label: string }[] = [];
-      if (typeof visit.points_earned === "number" && visit.points_earned !== 0) {
-        pointsList.push({ value: visit.points_earned, label: "gagnés" });
-      }
-      // Correction principale : accepte points_spent > 0 (ignore undefined, zéro, ou null)
+      let mainType: "visit" | "redemption" = "visit";
+      let rewardName: string | null = null;
+      // Si la visite est une consommation de points (récompense), on note type "redemption"
       if (typeof visit.points_spent === "number" && visit.points_spent > 0) {
+        mainType = "redemption";
         pointsList.push({ value: -Math.abs(visit.points_spent), label: "dépensés" });
       }
+      // Si la visite rapporte des points, normale
+      if (typeof visit.points_earned === "number" && visit.points_earned > 0) {
+        pointsList.push({ value: visit.points_earned, label: "gagnés" });
+      }
       return {
-        type: "visit" as const,
+        type: mainType,
         id: visit.id,
         date: visit.created_at,
         montant: typeof visit.amount_spent === "number" ? visit.amount_spent : null,
-        rewardName: null as string | null,
+        rewardName,
         pointsList,
       };
     });
@@ -204,4 +207,3 @@ const CustomerMerchantDetails = () => {
 };
 
 export default CustomerMerchantDetails;
-

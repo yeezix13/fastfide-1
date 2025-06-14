@@ -1,3 +1,4 @@
+
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,23 +73,25 @@ const CustomerVisits = () => {
   const isLoading = isLoadingVisits || isLoadingRewards;
   const error = errorVisits || errorRewards;
 
-  // Fusion visites et redemptions (combine visits and redemptions history into one array)
+  // Refacto : chaque visite peut être une rédemption (points_spent > 0, amount_spent nul)
   const historique = React.useMemo(() => {
     const visitesMap = (visits || []).map(visit => {
-      // Afficher à la fois les points gagnés ET dépensés (points dépensés affichés en négatif)
       const pointsList: { value: number; label: string }[] = [];
-      if (typeof visit.points_earned === "number" && visit.points_earned !== 0) {
-        pointsList.push({ value: visit.points_earned, label: "gagnés" });
-      }
+      let mainType: "visit" | "redemption" = "visit";
+      let rewardName: string | null = null;
       if (typeof visit.points_spent === "number" && visit.points_spent > 0) {
+        mainType = "redemption";
         pointsList.push({ value: -Math.abs(visit.points_spent), label: "dépensés" });
       }
+      if (typeof visit.points_earned === "number" && visit.points_earned > 0) {
+        pointsList.push({ value: visit.points_earned, label: "gagnés" });
+      }
       return {
-        type: "visit" as const,
+        type: mainType,
         id: visit.id,
         date: visit.created_at,
         montant: typeof visit.amount_spent === "number" ? visit.amount_spent : null,
-        rewardName: null as string | null,
+        rewardName,
         pointsList,
       };
     });
@@ -149,9 +152,9 @@ const CustomerVisits = () => {
                     </TableCell>
                     <TableCell>
                       {entry.type === "visit"
-                        ? entry.montant !== null
+                        ? entry.montant !== null && entry.montant !== undefined && entry.montant !== 0
                           ? `${entry.montant} €`
-                          : ""
+                          : (entry.pointsList.find(pt => pt.label === "dépensés") ? "-- € Utilisé récompense" : "")
                         : `-- €${entry.rewardName ? ` (${entry.rewardName})` : ""}`}
                     </TableCell>
                     <TableCell className="text-right font-medium">
