@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +14,7 @@ import CustomerMerchantDetails from "./pages/CustomerMerchantDetails";
 import CustomerPreferences from "./pages/CustomerPreferences";
 import CustomerVisits from "./pages/CustomerVisits";
 import CustomerSignUpPage from "./pages/CustomerSignUpPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +34,7 @@ const App = () => (
           <Route path="/tableau-de-bord-client/preferences" element={<CustomerPreferences />} />
           <Route path="/tableau-de-bord-commercant/visites-client/:merchantId/:customerId" element={<CustomerVisits />} />
           <Route path="/inscription" element={<CustomerSignUpPage />} />
+          <Route path="/reinitialiser-mot-de-passe" element={<ResetPasswordPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

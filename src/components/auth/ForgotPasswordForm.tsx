@@ -1,0 +1,114 @@
+
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
+
+const formSchema = z.object({
+  email: z.string().email({ message: "Veuillez saisir une adresse e-mail valide." }),
+});
+
+interface ForgotPasswordFormProps {
+  onBackToLogin: () => void;
+}
+
+const ForgotPasswordForm = ({ onBackToLogin }: ForgotPasswordFormProps) => {
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+        redirectTo: `${window.location.origin}/reinitialiser-mot-de-passe`,
+      });
+
+      if (error) {
+        toast({
+          title: "Erreur",
+          description: "Une erreur est survenue lors de l'envoi de l'email.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Email envoyé",
+          description: "Un lien de réinitialisation a été envoyé à votre adresse email.",
+        });
+        form.reset();
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur inattendue est survenue.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="text-center">
+        <h2 className="text-lg font-semibold">Mot de passe oublié</h2>
+        <p className="text-sm text-gray-600 mt-2">
+          Saisissez votre adresse email pour recevoir un lien de réinitialisation
+        </p>
+      </div>
+      
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField 
+            control={form.control} 
+            name="email" 
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="email" 
+                    placeholder="votre@email.com"
+                    {...field} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} 
+          />
+          
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isLoading}
+          >
+            {isLoading ? "Envoi en cours..." : "Envoyer le lien de réinitialisation"}
+          </Button>
+          
+          <Button 
+            type="button" 
+            variant="ghost" 
+            className="w-full" 
+            onClick={onBackToLogin}
+          >
+            Retour à la connexion
+          </Button>
+        </form>
+      </Form>
+    </div>
+  );
+};
+
+export default ForgotPasswordForm;
