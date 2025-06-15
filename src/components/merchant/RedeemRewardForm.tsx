@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/components/ui/use-toast';
 import CustomerFinder from './CustomerFinder';
+
+// Fonctions pour masquer les informations
+const obfuscatePhone = (phone: string | null): string => {
+  if (!phone) return '-';
+  if (phone.length <= 4) return phone;
+  return `••••••${phone.slice(-4)}`;
+};
+
+const obfuscateEmail = (email: string | null): string => {
+  if (!email || !email.includes('@')) return email ?? '-';
+  const [local, domain] = email.split('@');
+  const obfuscatePart = (part: string, visibleStart: number, visibleEnd: number) => {
+    if (part.length <= visibleStart + visibleEnd) {
+      return part;
+    }
+    return `${part.slice(0, visibleStart)}...${part.slice(-visibleEnd)}`;
+  };
+  return `${obfuscatePart(local, 2, 1)}@${obfuscatePart(domain, 2, 3)}`;
+};
 
 type Merchant = Database['public']['Tables']['merchants']['Row'];
 type Reward = Database['public']['Tables']['rewards']['Row'];
@@ -169,8 +189,8 @@ const RedeemRewardForm = ({ merchant, themeColor }: { merchant: Merchant; themeC
           {currentCustomer.first_name} {currentCustomer.last_name}
         </div>
         <div className="text-xs text-muted-foreground">
-          <span>Tél: {currentCustomer.phone || "-"}</span> &nbsp; | &nbsp;
-          <span>Email: {currentCustomer.email || "-"}</span>
+          <span>Tél: {obfuscatePhone(currentCustomer.phone)}</span> &nbsp; | &nbsp;
+          <span>Email: {obfuscateEmail(currentCustomer.email)}</span>
         </div>
         <Button
           variant="ghost"

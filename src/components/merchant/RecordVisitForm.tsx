@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,6 +21,26 @@ interface RecordVisitFormProps {
   merchant: Merchant;
   themeColor?: string;
 }
+
+// Fonctions pour masquer les informations
+const obfuscatePhone = (phone: string | null): string => {
+  if (!phone) return '-';
+  if (phone.length <= 4) return phone;
+  return `••••••${phone.slice(-4)}`;
+};
+
+const obfuscateEmail = (email: string | null): string => {
+  if (!email || !email.includes('@')) return email ?? '-';
+  const [local, domain] = email.split('@');
+  const obfuscatePart = (part: string, visibleStart: number, visibleEnd: number) => {
+    if (part.length <= visibleStart + visibleEnd) {
+      return part;
+    }
+    return `${part.slice(0, visibleStart)}...${part.slice(-visibleEnd)}`;
+  };
+  return `${obfuscatePart(local, 2, 1)}@${obfuscatePart(domain, 2, 3)}`;
+};
+
 
 const RecordVisitForm = ({ merchant, themeColor }: RecordVisitFormProps) => {
   const { toast } = useToast();
@@ -87,8 +108,8 @@ const RecordVisitForm = ({ merchant, themeColor }: RecordVisitFormProps) => {
           {currentCustomer.first_name} {currentCustomer.last_name}
         </div>
         <div className="text-xs text-muted-foreground">
-          <span>Tél: {currentCustomer.phone || "-"}</span> &nbsp; | &nbsp;
-          <span>Email: {currentCustomer.email || "-"}</span>
+          <span>Tél: {obfuscatePhone(currentCustomer.phone)}</span> &nbsp; | &nbsp;
+          <span>Email: {obfuscateEmail(currentCustomer.email)}</span>
         </div>
         <Button
           variant="ghost"

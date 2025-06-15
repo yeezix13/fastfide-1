@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
@@ -21,6 +22,25 @@ interface CustomerWithProfile {
   last_visit: string | null; // ISO string
   raw_link?: any;
 }
+
+// Fonctions pour masquer les informations
+const obfuscatePhone = (phone: string | null): string => {
+  if (!phone) return '-';
+  if (phone.length <= 4) return phone;
+  return `••••••${phone.slice(-4)}`;
+};
+
+const obfuscateEmail = (email: string | null): string => {
+  if (!email || !email.includes('@')) return email ?? '-';
+  const [local, domain] = email.split('@');
+  const obfuscatePart = (part: string, visibleStart: number, visibleEnd: number) => {
+    if (part.length <= visibleStart + visibleEnd) {
+      return part;
+    }
+    return `${part.slice(0, visibleStart)}...${part.slice(-visibleEnd)}`;
+  };
+  return `${obfuscatePart(local, 2, 1)}@${obfuscatePart(domain, 2, 3)}`;
+};
 
 const CustomerList = ({ merchant, themeColor }: CustomerListProps) => {
   const navigate = useNavigate();
@@ -130,12 +150,12 @@ const CustomerList = ({ merchant, themeColor }: CustomerListProps) => {
                   </TableCell>
                   <TableCell>
                     {profile?.email 
-                      ? profile.email
+                      ? obfuscateEmail(profile.email)
                       : <span className="text-destructive italic">-</span>
                     }
                   </TableCell>
                   <TableCell>
-                    {profile?.phone ?? <span className="text-destructive italic">-</span>}
+                    {profile?.phone ? obfuscatePhone(profile.phone) : <span className="text-destructive italic">-</span>}
                   </TableCell>
                   <TableCell className="text-right font-medium">{customer.loyalty_points}</TableCell>
                   <TableCell className="text-right font-mono text-xs">
