@@ -97,7 +97,7 @@ const CustomerPreferences = () => {
           first_name: data.first_name,
           last_name: data.last_name,
           phone: data.phone,
-          birth_date: data.birth_date,
+          birth_date: data.birth_date ? format(data.birth_date, 'yyyy-MM-dd') : null,
         })
         .eq('id', user.id);
 
