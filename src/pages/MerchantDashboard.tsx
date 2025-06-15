@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +13,7 @@ import LoyaltySettings from '@/components/merchant/LoyaltySettings';
 import MerchantProfileForm from '@/components/merchant/MerchantProfileForm';
 import CustomerList from '@/components/merchant/CustomerList';
 import MerchantStats from '@/components/merchant/MerchantStats';
+import { LogOut } from "lucide-react";
 
 const MerchantDashboard = () => {
   const navigate = useNavigate();
@@ -87,120 +89,144 @@ const MerchantDashboard = () => {
     );
   }
 
-  // On récupère la couleur du theme, fallback si absent
-  const themeColor = merchant.theme_color || "#2563eb";
+  // Couleur personnalisée du commerçant
+  const themeColor = merchant.theme_color || "#6366f1";
+  const lightBg = `${themeColor}17`; // hex + alpha pour effet "pastel"
 
   return (
-    <div className="container mx-auto p-4">
-       <header className="flex justify-between items-center py-4">
-        <h1
-          className="text-2xl font-bold"
-          style={{ color: themeColor }}
-        >
-          {merchant.name}
-        </h1>
-        <Button
-          onClick={handleLogout}
-          variant="outline"
-          style={{
-            color: themeColor,
-            borderColor: themeColor,
-          }}
-          className="hover:bg-opacity-10"
-        >
-          Déconnexion
-        </Button>
-      </header>
-      <main>
-        <p className="text-muted-foreground mb-6">Bienvenue sur votre tableau de bord.</p>
-        
-        <Tabs defaultValue="actions" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
-            <TabsTrigger
-              value="actions"
-              style={{ color: themeColor }}
-              className="data-[state=active]:font-bold"
+    <div className="min-h-screen bg-[#f8f9fb]">
+      <div className="container mx-auto p-0 pt-1 md:p-4">
+        <header className="flex justify-between items-center py-6 px-4 md:px-8 rounded-b-lg bg-white shadow-md mb-8">
+          <h1
+            className="text-3xl md:text-4xl font-bold tracking-tight flex items-center gap-3"
+            style={{ color: themeColor }}
+          >
+            <span
+              style={{
+                background: lightBg,
+                borderRadius: '10px',
+                padding: '0.3em 0.9em',
+              }}
+              className="shadow-sm"
             >
-              Actions
-            </TabsTrigger>
-            <TabsTrigger
-              value="stats"
-              style={{ color: themeColor }}
-              className="data-[state=active]:font-bold"
-            >
-              Statistiques
-            </TabsTrigger>
-            <TabsTrigger
-              value="customers"
-              style={{ color: themeColor }}
-              className="data-[state=active]:font-bold"
-            >
-              Clients
-            </TabsTrigger>
-            <TabsTrigger
-              value="settings"
-              style={{ color: themeColor }}
-              className="data-[state=active]:font-bold"
-            >
-              Réglages
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="actions" className="mt-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle style={{ color: themeColor }}>
-                    Enregistrer une visite
-                  </CardTitle>
-                  <CardDescription>Ajoutez des points à un client après un achat.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <RecordVisitForm merchant={merchant} themeColor={themeColor} />
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle style={{ color: themeColor }}>Utiliser une récompense</CardTitle>
-                  <CardDescription>Permettez à un client d'utiliser ses points.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <RedeemRewardForm merchant={merchant} themeColor={themeColor} />
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          <TabsContent value="settings" className="mt-6">
-            <div className="grid md:grid-cols-2 gap-6">
-                 <Card>
+              {merchant.name}
+            </span>
+          </h1>
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            style={{
+              color: themeColor,
+              borderColor: themeColor,
+              background: lightBg,
+              fontWeight: 600,
+            }}
+            className="hover:bg-opacity-15 flex items-center gap-2 shadow-none"
+          >
+            <LogOut className="w-5 h-5" />
+            Déconnexion
+          </Button>
+        </header>
+        <main>
+          <p className="text-muted-foreground mb-8 px-4 md:px-8 text-lg">Bienvenue sur votre tableau de bord.</p>
+          
+          <div className="w-full mx-auto rounded-xl p-0 pt-0">
+            <Tabs defaultValue="actions" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-white rounded-xl shadow-sm mb-8">
+                <TabsTrigger
+                  value="actions"
+                  style={{ color: themeColor }}
+                  className="data-[state=active]:bg-[var(--themeColor)] data-[state=active]:text-white data-[state=active]:font-bold px-4"
+                >
+                  Actions
+                </TabsTrigger>
+                <TabsTrigger
+                  value="stats"
+                  style={{ color: themeColor }}
+                  className="data-[state=active]:bg-[var(--themeColor)] data-[state=active]:text-white data-[state=active]:font-bold px-4"
+                >
+                  Statistiques
+                </TabsTrigger>
+                <TabsTrigger
+                  value="customers"
+                  style={{ color: themeColor }}
+                  className="data-[state=active]:bg-[var(--themeColor)] data-[state=active]:text-white data-[state=active]:font-bold px-4"
+                >
+                  Clients
+                </TabsTrigger>
+                <TabsTrigger
+                  value="settings"
+                  style={{ color: themeColor }}
+                  className="data-[state=active]:bg-[var(--themeColor)] data-[state=active]:text-white data-[state=active]:font-bold px-4"
+                >
+                  Réglages
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="actions" className="mt-0">
+                <div className="grid md:grid-cols-2 gap-8 px-2 md:px-0">
+                  <Card className="rounded-2xl shadow-lg border-0 bg-white">
                     <CardHeader>
-                        <CardTitle>Règles & Récompenses</CardTitle>
-                        <CardDescription>Gérez comment vos clients gagnent et utilisent des points.</CardDescription>
+                      <CardTitle style={{ color: themeColor, fontSize: 22, fontWeight: 800 }}>
+                        Enregistrer une visite
+                      </CardTitle>
+                      <CardDescription>Ajoutez des points à un client après un achat.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <LoyaltySettings merchant={merchant} themeColor={themeColor} />
+                      <RecordVisitForm merchant={merchant} themeColor={themeColor} />
                     </CardContent>
-                </Card>
-                <Card>
+                  </Card>
+                  <Card className="rounded-2xl shadow-lg border-0 bg-white">
                     <CardHeader>
-                        <CardTitle>Informations du commerce</CardTitle>
-                        <CardDescription>Modifiez vos coordonnées ici.</CardDescription>
+                      <CardTitle style={{ color: themeColor, fontSize: 22, fontWeight: 800 }}>
+                        Utiliser une récompense
+                      </CardTitle>
+                      <CardDescription>Permettez à un client d'utiliser ses points.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <MerchantProfileForm merchant={merchant} />
+                      <RedeemRewardForm merchant={merchant} themeColor={themeColor} />
                     </CardContent>
-                </Card>
-            </div>
-          </TabsContent>
-          <TabsContent value="customers" className="mt-6">
-            <CustomerList merchant={merchant} themeColor={themeColor} />
-          </TabsContent>
-          <TabsContent value="stats" className="mt-6">
-             <MerchantStats merchant={merchant} themeColor={themeColor} />
-          </TabsContent>
-        </Tabs>
-      </main>
+                  </Card>
+                </div>
+              </TabsContent>
+              <TabsContent value="settings" className="mt-0">
+                <div className="grid md:grid-cols-2 gap-8 px-2 md:px-0">
+                  <Card className="rounded-2xl shadow-lg border-0 bg-white">
+                    <CardHeader>
+                      <CardTitle style={{ color: themeColor, fontSize: 22, fontWeight: 800 }}>Règles & Récompenses</CardTitle>
+                      <CardDescription>Gérez comment vos clients gagnent et utilisent des points.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <LoyaltySettings merchant={merchant} themeColor={themeColor} />
+                    </CardContent>
+                  </Card>
+                  <Card className="rounded-2xl shadow-lg border-0 bg-white">
+                    <CardHeader>
+                      <CardTitle style={{ color: themeColor, fontSize: 22, fontWeight: 800 }}>Informations du commerce</CardTitle>
+                      <CardDescription>Modifiez vos coordonnées ici.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <MerchantProfileForm merchant={merchant} />
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+              <TabsContent value="customers" className="mt-0">
+                <div className="px-2 md:px-0">
+                  <CustomerList merchant={merchant} themeColor={themeColor} />
+                </div>
+              </TabsContent>
+              <TabsContent value="stats" className="mt-0">
+                <div className="px-2 md:px-0">
+                  <MerchantStats merchant={merchant} themeColor={themeColor} />
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </main>
+      </div>
     </div>
   );
 };
 
 export default MerchantDashboard;
+
