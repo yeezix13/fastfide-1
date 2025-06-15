@@ -1,132 +1,13 @@
 
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, CalendarIcon } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import type { User } from '@supabase/supabase-js';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { useToast } from '@/components/ui/use-toast';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
-
-const profileFormSchema = z.object({
-  first_name: z.string().min(2, { message: "Le prénom doit contenir au moins 2 caractères." }),
-  last_name: z.string().min(2, { message: "Le nom de famille doit contenir au moins 2 caractères." }),
-  phone: z.string().optional(),
-  email: z.string().email({ message: "Veuillez saisir une adresse e-mail valide." }),
-  birth_date: z.date({ coerce: true }).optional().nullable(),
-});
-
-type ProfileFormValues = z.infer<typeof profileFormSchema>;
+import CustomerPreferencesForm from '@/components/customer/CustomerPreferencesForm';
+import { useCustomerProfile } from '@/hooks/useCustomerProfile';
 
 const CustomerPreferences = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/connexion-client');
-      } else {
-        setUser(session.user);
-      }
-    };
-    getUser();
-  }, [navigate]);
-
-  const { data: profile, isLoading: isLoadingProfile } = useQuery({
-    queryKey: ['profile', user?.id],
-    queryFn: async () => {
-      if (!user) return null;
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('first_name, last_name, phone, birth_date')
-        .eq('id', user.id)
-        .single();
-      if (error && error.code !== 'PGRST116') {
-        console.error("Error fetching profile:", error);
-      }
-      return data;
-    },
-    enabled: !!user,
-  });
-
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      first_name: '',
-      last_name: '',
-      phone: '',
-      email: '',
-      birth_date: null,
-    },
-  });
-
-  useEffect(() => {
-    if (profile && user) {
-      form.reset({
-        first_name: profile.first_name || '',
-        last_name: profile.last_name || '',
-        phone: profile.phone || '',
-        email: user.email || '',
-        birth_date: profile.birth_date ? new Date(`${profile.birth_date}T00:00:00`) : null,
-      });
-    }
-  }, [profile, user, form]);
-
-  const updateProfileMutation = useMutation({
-    mutationFn: async (data: ProfileFormValues) => {
-      if (!user) throw new Error("Utilisateur non authentifié.");
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          first_name: data.first_name,
-          last_name: data.last_name,
-          phone: data.phone,
-          birth_date: data.birth_date ? format(data.birth_date, 'yyyy-MM-dd') : null,
-        })
-        .eq('id', user.id);
-
-      if (profileError) throw profileError;
-
-      if (data.email && data.email !== user.email) {
-        const { error: emailError } = await supabase.auth.updateUser({ email: data.email });
-        if (emailError) throw emailError;
-      }
-    },
-    onSuccess: () => {
-      toast({
-        title: "Profil mis à jour",
-        description: "Vos informations ont été mises à jour avec succès.",
-      });
-      queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Erreur",
-        description: error.message || "Une erreur est survenue lors de la mise à jour.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const onSubmit = (data: ProfileFormValues) => {
-    updateProfileMutation.mutate(data);
-  };
+  const { user, profile, isLoadingProfile, updateProfile, isUpdating } = useCustomerProfile();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
@@ -146,110 +27,12 @@ const CustomerPreferences = () => {
           {isLoadingProfile ? (
             <p>Chargement de vos informations...</p>
           ) : (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="first_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Prénom</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Votre prénom" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="last_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nom</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Votre nom" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Téléphone</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Votre numéro de téléphone" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="Votre email" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="birth_date"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Date de naissance</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP", { locale: fr })
-                              ) : (
-                                <span>Choisissez une date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) =>
-                              date > new Date() || date < new Date("1900-01-01")
-                            }
-                            initialFocus
-                            locale={fr}
-                            captionLayout="dropdown-buttons"
-                            fromYear={1930}
-                            toYear={new Date().getFullYear()}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" disabled={updateProfileMutation.isPending} className="w-full">
-                  {updateProfileMutation.isPending ? 'Mise à jour en cours...' : 'Mettre à jour'}
-                </Button>
-              </form>
-            </Form>
+            <CustomerPreferencesForm
+              profile={profile}
+              user={user}
+              onSubmit={updateProfile}
+              isLoading={isUpdating}
+            />
           )}
         </CardContent>
       </Card>
