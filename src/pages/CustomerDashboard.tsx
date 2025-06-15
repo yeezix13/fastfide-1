@@ -64,7 +64,8 @@ const CustomerDashboard = () => {
           loyalty_points,
           merchants (
             id,
-            name
+            name,
+            theme_color
           )
         `)
         .eq('customer_id', user.id);
@@ -111,36 +112,42 @@ const CustomerDashboard = () => {
         {isLoadingAccounts ? (
           <p>Chargement de vos cartes...</p>
         ) : loyaltyAccounts && loyaltyAccounts.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {loyaltyAccounts.map((account) => (
-              account.merchants && (
-                <Card key={account.merchants.id}>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {loyaltyAccounts.map((account) => {
+              if (!account.merchants) return null;
+
+              const themeColor = account.merchants.theme_color || '#2563eb';
+              const pastelBg = `${themeColor}1A`;
+
+              return (
+                <Card key={account.merchants.id} className="rounded-2xl shadow-lg border-0 transition-all hover:shadow-xl hover:-translate-y-1" style={{ background: pastelBg }}>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-3">
-                      <Avatar>
-                         <AvatarFallback>
-                           <Store />
-                         </AvatarFallback>
+                    <CardTitle className="flex items-center gap-3 text-lg">
+                      <Avatar className="h-12 w-12 border-2" style={{ borderColor: themeColor }}>
+                        <AvatarFallback style={{ backgroundColor: themeColor, color: 'white' }}>
+                          <Store size={24} />
+                        </AvatarFallback>
                       </Avatar>
-                      <span>{account.merchants.name}</span>
+                      <span className="font-bold">{account.merchants.name}</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center mt-2">
                       <div>
-                        <p className="font-bold text-2xl">{account.loyalty_points}</p>
-                        <p className="text-sm text-muted-foreground">points</p>
+                        <p className="font-extrabold text-4xl" style={{ color: themeColor }}>{account.loyalty_points}</p>
+                        <p className="text-sm" style={{ color: themeColor }}>points</p>
                       </div>
-                      <Button asChild variant="ghost">
+                      <Button asChild variant="ghost" className="hover:bg-transparent" style={{ color: themeColor }}>
                         <Link to={`/tableau-de-bord-client/commercant/${account.merchants.id}`}>
-                          Voir détails <ArrowRight className="ml-2" />
+                          <span className="font-semibold">Voir détails</span>
+                          <ArrowRight className="ml-2 h-5 w-5" />
                         </Link>
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
-              )
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="my-8 p-8 border-dashed border-2 rounded-lg text-center text-muted-foreground">
