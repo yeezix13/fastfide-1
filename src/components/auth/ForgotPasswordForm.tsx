@@ -32,24 +32,32 @@ const ForgotPasswordForm = ({ onBackToLogin }: ForgotPasswordFormProps) => {
     setIsLoading(true);
     
     try {
+      // Utiliser l'URL actuelle au lieu de localhost
+      const currentUrl = window.location.origin;
+      const redirectUrl = `${currentUrl}/reinitialiser-mot-de-passe`;
+      
+      console.log('Sending password reset email with redirect URL:', redirectUrl);
+      
       const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-        redirectTo: `${window.location.origin}/reinitialiser-mot-de-passe`,
+        redirectTo: redirectUrl,
       });
 
       if (error) {
+        console.error('Password reset error:', error);
         toast({
           title: "Erreur",
-          description: "Une erreur est survenue lors de l'envoi de l'email.",
+          description: "Une erreur est survenue lors de l'envoi de l'email. Vérifiez que l'adresse email est correcte.",
           variant: "destructive",
         });
       } else {
         toast({
           title: "Email envoyé",
-          description: "Un lien de réinitialisation a été envoyé à votre adresse email.",
+          description: "Un lien de réinitialisation a été envoyé à votre adresse email. Vérifiez également vos spams.",
         });
         form.reset();
       }
     } catch (error) {
+      console.error('Unexpected error:', error);
       toast({
         title: "Erreur",
         description: "Une erreur inattendue est survenue.",
