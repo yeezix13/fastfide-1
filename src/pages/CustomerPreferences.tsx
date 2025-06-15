@@ -1,7 +1,7 @@
 
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CalendarIcon } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,12 +13,18 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 const profileFormSchema = z.object({
   first_name: z.string().min(2, { message: "Le prénom doit contenir au moins 2 caractères." }),
   last_name: z.string().min(2, { message: "Le nom de famille doit contenir au moins 2 caractères." }),
   phone: z.string().optional(),
   email: z.string().email({ message: "Veuillez saisir une adresse e-mail valide." }),
+  birth_date: z.date({ coerce: true }).optional().nullable(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -47,7 +53,7 @@ const CustomerPreferences = () => {
       if (!user) return null;
       const { data, error } = await supabase
         .from('profiles')
-        .select('first_name, last_name, phone')
+        .select('first_name, last_name, phone, birth_date')
         .eq('id', user.id)
         .single();
       if (error && error.code !== 'PGRST116') {
@@ -65,6 +71,7 @@ const CustomerPreferences = () => {
       last_name: '',
       phone: '',
       email: '',
+      birth_date: null,
     },
   });
 
@@ -75,6 +82,7 @@ const CustomerPreferences = () => {
         last_name: profile.last_name || '',
         phone: profile.phone || '',
         email: user.email || '',
+        birth_date: profile.birth_date ? new Date(`${profile.birth_date}T00:00:00`) : null,
       });
     }
   }, [profile, user, form]);
@@ -89,6 +97,7 @@ const CustomerPreferences = () => {
           first_name: data.first_name,
           last_name: data.last_name,
           phone: data.phone,
+          birth_date: data.birth_date,
         })
         .eq('id', user.id);
 
@@ -187,6 +196,51 @@ const CustomerPreferences = () => {
                       <FormControl>
                         <Input type="email" placeholder="Votre email" {...field} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="birth_date"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Date de naissance</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP", { locale: fr })
+                              ) : (
+                                <span>Choisissez une date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date > new Date() || date < new Date("1900-01-01")
+                            }
+                            initialFocus
+                            locale={fr}
+                            captionLayout="dropdown-buttons"
+                            fromYear={1930}
+                            toYear={new Date().getFullYear()}
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}

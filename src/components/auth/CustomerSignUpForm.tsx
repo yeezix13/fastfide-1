@@ -9,6 +9,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const baseSchema = {
   firstName: z.string().min(1, { message: "Le prénom est requis." }),
@@ -16,6 +22,7 @@ const baseSchema = {
   phone: z.string().min(1, { message: "Le numéro de téléphone est requis." }),
   email: z.string().email({ message: "Veuillez saisir une adresse e-mail valide." }),
   password: z.string().min(6, { message: "Le mot de passe doit contenir au moins 6 caractères." }),
+  birth_date: z.date({ coerce: true }).optional(),
 };
 
 type Props = {
@@ -44,6 +51,7 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
       phone: "",
       email: "",
       password: "",
+      birth_date: undefined,
       ...(merchantId ? {} : { merchantCode: "" }),
     } as any,
   });
@@ -82,6 +90,7 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
           last_name: values.lastName,
           phone: values.phone,
           email: values.email,
+          birth_date: values.birth_date ? format(values.birth_date, 'yyyy-MM-dd') : null,
         },
         emailRedirectTo: `${window.location.origin}/tableau-de-bord-client`,
       },
@@ -146,6 +155,51 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
         <FormField control={form.control} name="email" render={({ field }) => (
           <FormItem><FormLabel>Email *</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
+        <FormField
+          control={form.control}
+          name="birth_date"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Date de naissance</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(field.value, "PPP", { locale: fr })
+                      ) : (
+                        <span>Choisissez une date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                    locale={fr}
+                    captionLayout="dropdown-buttons"
+                    fromYear={1930}
+                    toYear={new Date().getFullYear()}
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         {!merchantId && (
           <FormField control={form.control} name="merchantCode" render={({ field }) => (
             <FormItem><FormLabel>Code commerçant *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
