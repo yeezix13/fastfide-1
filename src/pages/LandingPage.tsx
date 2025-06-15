@@ -1,96 +1,43 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BarChart, Gift, Heart, Users } from "lucide-react";
-import Header from "@/components/Header";
+import { User, Store } from "lucide-react";
 
 const LandingPage = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50/50">
-      <Header />
-      <main className="flex-1">
-        {/* Hero Section */}
-        <section className="w-full py-20 md:py-32 lg:py-40 text-center bg-background">
-          <div className="container px-4 md:px-6">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900">
-              La relation client, réinventée pour les commerces de proximité.
-            </h1>
-            <p className="mt-6 max-w-3xl mx-auto text-lg md:text-xl text-gray-600">
-              Fidélio vous aide à créer un lien durable avec vos clients et à développer votre activité. Simple, intuitif et efficace.
-            </p>
-            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" asChild>
-                <Link to="/connexion-commercant">
-                  Je suis un commerçant <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link to="/connexion-client">
-                  Je suis un client
-                </Link>
-              </Button>
-            </div>
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-white via-gray-50 to-gray-100 px-2">
+      <div className="w-full max-w-2xl flex flex-col md:flex-row gap-8 justify-center items-center">
+        {/* Carte Client */}
+        <div className="bg-white rounded-3xl shadow-xl flex flex-col items-center flex-1 px-6 py-10 md:py-14 md:px-10 animate-fade-in transition-shadow hover:shadow-2xl border border-gray-50">
+          <div className="bg-blue-100 rounded-full p-4 mb-4">
+            <User className="text-blue-600" size={40} />
           </div>
-        </section>
-
-        {/* Features Section */}
-        <section className="w-full py-16 md:py-24 bg-white">
-          <div className="container px-4 md:px-6">
-            <h2 className="text-3xl font-bold text-center text-gray-900">Une plateforme, deux expériences</h2>
-            <p className="text-center mt-4 text-gray-600 max-w-2xl mx-auto">
-              Des outils puissants pour les commerçants et une application simple pour les clients fidèles.
-            </p>
-            <div className="mt-12 grid gap-8 md:grid-cols-2 lg:gap-12">
-              <div className="rounded-lg border bg-card text-card-foreground p-8">
-                <h3 className="text-2xl font-bold">Pour les commerçants</h3>
-                <ul className="mt-6 space-y-4">
-                  <li className="flex items-start gap-4">
-                    <div className="bg-primary text-primary-foreground rounded-full p-2">
-                      <Users className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">Fidélisez votre clientèle</h4>
-                      <p className="text-muted-foreground">Créez votre programme de fidélité personnalisé et récompensez vos clients.</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-4">
-                    <div className="bg-primary text-primary-foreground rounded-full p-2">
-                      <BarChart className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">Suivez votre activité</h4>
-                      <p className="text-muted-foreground">Accédez à des statistiques claires pour mieux comprendre vos clients.</p>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-              <div className="rounded-lg border bg-card text-card-foreground p-8">
-                <h3 className="text-2xl font-bold">Pour les clients</h3>
-                 <ul className="mt-6 space-y-4">
-                  <li className="flex items-start gap-4">
-                    <div className="bg-secondary text-secondary-foreground rounded-full p-2">
-                       <Heart className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">Soutenez vos commerces favoris</h4>
-                      <p className="text-muted-foreground">Rejoignez facilement les programmes de fidélité de vos commerçants préférés.</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-4">
-                    <div className="bg-secondary text-secondary-foreground rounded-full p-2">
-                      <Gift className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">Profitez d'avantages exclusifs</h4>
-                      <p className="text-muted-foreground">Recevez des offres spéciales et des récompenses pour votre fidélité.</p>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-            </div>
+          <h2 className="text-2xl md:text-3xl font-bold mb-3 text-gray-900">Je suis client</h2>
+          <p className="text-gray-500 text-base mb-6 text-center max-w-xs">
+            Retrouvez vos commerçants, traquez vos points fidélité et profitez d’avantages exclusifs.
+          </p>
+          <Button asChild size="lg" className="w-full md:w-auto">
+            <Link to="/connexion-client">
+              Continuer
+            </Link>
+          </Button>
+        </div>
+        {/* Carte Commerçant */}
+        <div className="bg-white rounded-3xl shadow-xl flex flex-col items-center flex-1 px-6 py-10 md:py-14 md:px-10 animate-fade-in transition-shadow hover:shadow-2xl border border-gray-50">
+          <div className="bg-violet-100 rounded-full p-4 mb-4">
+            <Store className="text-violet-600" size={40} />
           </div>
-        </section>
-      </main>
+          <h2 className="text-2xl md:text-3xl font-bold mb-3 text-gray-900">Je suis commerçant</h2>
+          <p className="text-gray-500 text-base mb-6 text-center max-w-xs">
+            Gérez vos programmes de fidélité et visualisez vos statistiques facilement.
+          </p>
+          <Button asChild size="lg" className="w-full md:w-auto">
+            <Link to="/connexion-commercant">
+              Continuer
+            </Link>
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
