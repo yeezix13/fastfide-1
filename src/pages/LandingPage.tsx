@@ -1,13 +1,10 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { User, Store } from "lucide-react";
-
 const LandingPage = () => {
-  return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-white via-gray-50 to-gray-100 px-2 py-8">
+  return <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-white via-gray-50 to-gray-100 px-2 py-8">
       {/* Logo centré */}
-      <div className="flex flex-col items-center mb-10">
+      <div className="flex flex-col items-center mb-10 py-[26px]">
         <div className="flex items-center gap-3">
           <Store size={48} className="text-violet-600 drop-shadow-lg" />
           <span className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight select-none">FastFide</span>
@@ -23,7 +20,7 @@ const LandingPage = () => {
           <div className="bg-blue-100 rounded-full p-4 mb-4">
             <User className="text-blue-600" size={40} />
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold mb-3 text-gray-900">Je suis client</h2>
+          <h2 className="text-2xl font-bold mb-3 text-gray-900 md:text-2xl">Je suis client</h2>
           <p className="text-gray-500 text-base mb-6 text-center max-w-xs">
             Cumulez des points chez vos commerçants et profitez d’avantages exclusifs.
           </p>
@@ -38,7 +35,7 @@ const LandingPage = () => {
           <div className="bg-violet-100 rounded-full p-4 mb-4">
             <Store className="text-violet-600" size={40} />
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold mb-3 text-gray-900">Je suis commerçant</h2>
+          <h2 className="text-2xl font-bold mb-3 text-gray-900 md:text-2xl">Je suis commerçant</h2>
           <p className="text-gray-500 text-base mb-6 text-center max-w-xs">
             Gérez vos programmes de fidélité et analysez vos statistiques simplement.
           </p>
@@ -49,8 +46,6 @@ const LandingPage = () => {
           </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default LandingPage;
