@@ -1,3 +1,4 @@
+
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -179,28 +180,24 @@ const CustomerMerchantDetails = () => {
       ) : (
         <>
           <h1 className="text-3xl font-bold mb-6">{loyaltyAccount.merchants.name}</h1>
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2 space-y-6">
-              <CustomerRewardsList
-                rewards={rewards || []}
-                currentPoints={loyaltyAccount.loyalty_points}
-              />
-              <CustomerLoyaltyHistoryTable
-                historique={historique}
-                isLoading={isLoadingVisits || isLoadingRedemptions}
-              />
-            </div>
-            <div className="lg:col-span-1">
-              <CustomerLoyaltyInfoCard
-                points={loyaltyAccount.loyalty_points}
-                merchantInfo={{
-                  address: loyaltyAccount.merchants.address,
-                  phone: loyaltyAccount.merchants.phone,
-                  contact_email: loyaltyAccount.merchants.contact_email,
-                }}
-                themeColor={loyaltyAccount.merchants.theme_color || "#2563eb"}
-              />
-            </div>
+          <div className="flex flex-col gap-8">
+            <CustomerLoyaltyInfoCard
+              points={loyaltyAccount.loyalty_points}
+              merchantInfo={{
+                address: loyaltyAccount.merchants.address,
+                phone: loyaltyAccount.merchants.phone,
+                contact_email: loyaltyAccount.merchants.contact_email,
+              }}
+              themeColor={loyaltyAccount.merchants.theme_color || "#2563eb"}
+            />
+            <CustomerRewardsList
+              rewards={rewards || []}
+              currentPoints={loyaltyAccount.loyalty_points}
+            />
+            <CustomerLoyaltyHistoryTable
+              historique={historique}
+              isLoading={isLoadingVisits || isLoadingRedemptions}
+            />
           </div>
         </>
       )}
