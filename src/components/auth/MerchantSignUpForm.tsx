@@ -68,7 +68,7 @@ const MerchantSignUpForm = () => {
         .from('merchants')
         .select('signup_code')
         .eq('signup_code', signupCode)
-        .single();
+        .maybeSingle();
 
       if (existingMerchant) {
         toast({
@@ -95,9 +95,17 @@ const MerchantSignUpForm = () => {
       });
 
       if (authError) {
+        console.error("Auth error:", authError);
+        
         if (authError.message.includes('already registered')) {
           toast({
             title: "Erreur",
+            description: "Cette adresse e-mail est déjà utilisée.",
+            variant: "destructive",
+          });
+        } else if (authError.message.includes('User already registered')) {
+          toast({
+            title: "Erreur", 
             description: "Cette adresse e-mail est déjà utilisée.",
             variant: "destructive",
           });
@@ -123,13 +131,14 @@ const MerchantSignUpForm = () => {
             address: values.address,
             phone: values.phone,
             contact_email: values.email,
-            points_per_euro: 1.0, // Valeur par défaut
+            points_per_euro: 1.0,
           });
 
         if (merchantError) {
+          console.error("Merchant creation error:", merchantError);
           toast({
             title: "Erreur",
-            description: "Erreur lors de la création du profil commerçant.",
+            description: "Erreur lors de la création du profil commerçant. Veuillez réessayer.",
             variant: "destructive",
           });
           setIsLoading(false);
@@ -144,9 +153,10 @@ const MerchantSignUpForm = () => {
         form.reset();
       }
     } catch (error) {
+      console.error("Unexpected error:", error);
       toast({
         title: "Erreur",
-        description: "Une erreur inattendue s'est produite.",
+        description: "Une erreur inattendue s'est produite. Veuillez réessayer.",
         variant: "destructive",
       });
     } finally {
