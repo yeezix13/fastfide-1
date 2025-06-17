@@ -60,8 +60,12 @@ const MerchantSignUpForm = () => {
     setIsLoading(true);
     
     try {
+      // Vérifier d'abord si l'email existe déjà dans la table auth
+      console.log("Tentative d'inscription pour:", values.email);
+      
       // Générer le code d'inscription automatiquement
       const signupCode = generateSignupCode(values.businessName);
+      console.log("Code d'inscription généré:", signupCode);
 
       // Vérifier que le code d'inscription est unique
       const { data: existingMerchant } = await supabase
@@ -97,22 +101,16 @@ const MerchantSignUpForm = () => {
       if (authError) {
         console.error("Auth error:", authError);
         
-        if (authError.message.includes('already registered')) {
+        if (authError.message.includes('already registered') || authError.message.includes('User already registered') || authError.code === 'user_already_exists') {
           toast({
-            title: "Erreur",
-            description: "Cette adresse e-mail est déjà utilisée.",
-            variant: "destructive",
-          });
-        } else if (authError.message.includes('User already registered')) {
-          toast({
-            title: "Erreur", 
-            description: "Cette adresse e-mail est déjà utilisée.",
+            title: "Email déjà utilisé",
+            description: `L'adresse email ${values.email} est déjà associée à un compte. Veuillez utiliser une autre adresse email ou vous connecter si c'est votre compte.`,
             variant: "destructive",
           });
         } else {
           toast({
             title: "Erreur d'inscription",
-            description: authError.message,
+            description: `Erreur: ${authError.message}`,
             variant: "destructive",
           });
         }
@@ -121,6 +119,8 @@ const MerchantSignUpForm = () => {
       }
 
       if (authData.user) {
+        console.log("Utilisateur créé avec succès:", authData.user.id);
+        
         // Créer l'entrée commerçant
         const { error: merchantError } = await supabase
           .from('merchants')
@@ -145,6 +145,7 @@ const MerchantSignUpForm = () => {
           return;
         }
 
+        console.log("Profil commerçant créé avec succès");
         toast({
           title: "Inscription réussie !",
           description: `Un email de validation a été envoyé à votre adresse. Votre code d'inscription généré est : ${signupCode}`,
