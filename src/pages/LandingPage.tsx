@@ -1,19 +1,12 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { User, Store } from "lucide-react";
-
 const LandingPage = () => {
-  return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-white via-gray-50 to-gray-100 px-2 py-8">
+  return <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-white via-gray-50 to-gray-100 px-2 py-8">
       {/* Logo FastFide centré */}
       <div className="flex flex-col items-center mb-10 py-[26px]">
         <div className="flex items-center gap-3 mb-4">
-          <img 
-            src="/lovable-uploads/9bfa32cf-220e-40a5-8c57-7bdf41b78068.png" 
-            alt="FastFide Logo" 
-            className="h-16 w-auto"
-          />
+          <img src="/lovable-uploads/9bfa32cf-220e-40a5-8c57-7bdf41b78068.png" alt="FastFide Logo" className="h-1/6 overflow-auto " />
         </div>
         <span className="text-lg text-gray-500 mt-2 text-center max-w-md">
           Votre fidélité, récompensée localement.
@@ -52,8 +45,6 @@ const LandingPage = () => {
           </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default LandingPage;
