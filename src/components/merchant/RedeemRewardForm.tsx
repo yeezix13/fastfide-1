@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -45,6 +44,31 @@ const RedeemRewardForm = ({ merchant, themeColor }: { merchant: Merchant; themeC
   const [availableRewards, setAvailableRewards] = useState<Reward[]>([]);
   const [selectedReward, setSelectedReward] = useState<string>('');
   const [customerPoints, setCustomerPoints] = useState<number | null>(null);
+
+  // Fonction pour envoyer l'email de notification
+  const sendRewardNotification = async (customerEmail: string, customerName: string, rewardName: string, pointsSpent: number) => {
+    try {
+      const { error } = await supabase.functions.invoke('send-reward-notification', {
+        body: {
+          customerEmail,
+          customerName,
+          rewardName,
+          merchantName: merchant.name,
+          pointsSpent,
+        },
+      });
+
+      if (error) {
+        console.error('Erreur lors de l\'envoi de l\'email:', error);
+        // On n'affiche pas d'erreur à l'utilisateur car c'est un service secondaire
+      } else {
+        console.log('Email de notification envoyé avec succès');
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi de l\'email:', error);
+      // On n'affiche pas d'erreur à l'utilisateur car c'est un service secondaire
+    }
+  };
 
   // Recherche les points et récompenses quand currentCustomer change
   const fetchCustomerRewards = async (customer: CustomerProfile) => {
@@ -117,10 +141,24 @@ const RedeemRewardForm = ({ merchant, themeColor }: { merchant: Merchant; themeC
       }
 
       if ((data as any)?.success) {
+        const rewardName = (data as any).reward_name;
+        const pointsSpent = (data as any).points_deducted;
+        
         toast({
           title: 'Succès !',
-          description: `La récompense "${(data as any).reward_name}" a été utilisée pour ${(data as any).customer.first_name} ${(data as any).customer.last_name}.`,
+          description: `La récompense "${rewardName}" a été utilisée pour ${(data as any).customer.first_name} ${(data as any).customer.last_name}.`,
         });
+
+        // Envoyer l'email de notification si l'email du client est disponible
+        if (currentCustomer.email) {
+          const customerName = `${currentCustomer.first_name} ${currentCustomer.last_name}`;
+          await sendRewardNotification(
+            currentCustomer.email,
+            customerName,
+            rewardName,
+            pointsSpent
+          );
+        }
 
         // Invalider les queries pour rafraîchir les données
         queryClient.invalidateQueries({ queryKey: ['merchantCustomers'] });
