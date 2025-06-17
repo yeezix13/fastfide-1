@@ -32,6 +32,7 @@ const MerchantForgotPasswordForm = ({ onBackToLogin }: MerchantForgotPasswordFor
     setIsLoading(true);
     
     try {
+      // Utiliser l'URL actuelle de l'application au lieu de app.fastfide.com
       const currentUrl = window.location.origin;
       const redirectUrl = `${currentUrl}/reinitialiser-mot-de-passe`;
       

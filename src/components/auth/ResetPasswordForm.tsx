@@ -35,24 +35,47 @@ const ResetPasswordForm = () => {
     setIsLoading(true);
     
     try {
+      console.log('Tentative de mise à jour du mot de passe...');
+      
       const { error } = await supabase.auth.updateUser({
         password: values.password
       });
 
       if (error) {
+        console.error('Erreur lors de la mise à jour du mot de passe:', error);
         toast({
           title: "Erreur",
-          description: "Impossible de mettre à jour le mot de passe.",
+          description: "Impossible de mettre à jour le mot de passe. " + error.message,
           variant: "destructive",
         });
       } else {
+        console.log('Mot de passe mis à jour avec succès');
         toast({
           title: "Succès",
           description: "Votre mot de passe a été mis à jour avec succès.",
         });
-        navigate("/tableau-de-bord-client");
+        
+        // Vérifier si l'utilisateur est un commerçant ou un client pour rediriger correctement
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { data: merchant } = await supabase
+            .from('merchants')
+            .select('id')
+            .eq('user_id', user.id)
+            .single();
+          
+          if (merchant) {
+            navigate("/tableau-de-bord-commercant");
+          } else {
+            navigate("/tableau-de-bord-client");
+          }
+        } else {
+          navigate("/connexion-client");
+        }
       }
     } catch (error) {
+      console.error('Erreur inattendue:', error);
       toast({
         title: "Erreur",
         description: "Une erreur inattendue est survenue.",
