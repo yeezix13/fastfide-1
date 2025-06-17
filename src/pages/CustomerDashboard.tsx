@@ -92,6 +92,15 @@ const CustomerDashboard = () => {
 
   return (
     <div className="container mx-auto p-4 md:p-8">
+      {/* Header avec logo FastFide */}
+      <div className="flex items-center justify-center mb-6">
+        <img 
+          src="/lovable-uploads/9bfa32cf-220e-40a5-8c57-7bdf41b78068.png" 
+          alt="FastFide Logo" 
+          className="h-12 w-auto"
+        />
+      </div>
+
       <header className="flex flex-wrap gap-4 justify-between items-center py-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold">Bonjour, {displayName}</h1>

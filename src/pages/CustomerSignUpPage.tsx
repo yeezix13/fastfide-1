@@ -2,7 +2,8 @@
 import { useSearchParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Store } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Spinner from '@/components/ui/spinner';
 import CustomerSignUpForm from '@/components/auth/CustomerSignUpForm';
 import { useMerchantByCode } from '@/hooks/useMerchantByCode';
@@ -32,12 +33,40 @@ const CustomerSignUpPage = () => {
           </Button>
         </div>
       )}
+      
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
+          {/* Affichage du commerçant avec sa couleur */}
+          {merchant && (
+            <div className="flex flex-col items-center mb-4">
+              <Avatar 
+                className="h-16 w-16 border-4 mb-3" 
+                style={{ borderColor: merchant.theme_color || '#2563eb' }}
+              >
+                <AvatarFallback 
+                  style={{ 
+                    backgroundColor: merchant.theme_color || '#2563eb', 
+                    color: 'white',
+                    fontSize: '1.5rem',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  {merchant.name.substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <h3 
+                className="text-xl font-bold mb-2" 
+                style={{ color: merchant.theme_color || '#2563eb' }}
+              >
+                {merchant.name}
+              </h3>
+            </div>
+          )}
+          
           <CardTitle className="text-2xl">Inscription Client</CardTitle>
           <CardDescription>
             {merchant
-              ? <>Créez votre compte pour rejoindre <span className="font-bold">{merchant.name}</span>.<br />Vous serez automatiquement associé à ce commerçant.</>
+              ? <>Créez votre compte pour rejoindre <span className="font-bold" style={{ color: merchant.theme_color || '#2563eb' }}>{merchant.name}</span>.<br />Vous serez automatiquement associé à ce commerçant.</>
               : <>Connectez-vous ou inscrivez-vous pour accéder à votre espace fidélité.</>
             }
           </CardDescription>

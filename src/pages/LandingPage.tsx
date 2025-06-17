@@ -1,13 +1,19 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { User, Store } from "lucide-react";
+
 const LandingPage = () => {
-  return <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-white via-gray-50 to-gray-100 px-2 py-8">
-      {/* Logo centré */}
+  return (
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-white via-gray-50 to-gray-100 px-2 py-8">
+      {/* Logo FastFide centré */}
       <div className="flex flex-col items-center mb-10 py-[26px]">
-        <div className="flex items-center gap-3">
-          <Store size={48} className="text-violet-600 drop-shadow-lg" />
-          <span className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight select-none">FastFide</span>
+        <div className="flex items-center gap-3 mb-4">
+          <img 
+            src="/lovable-uploads/9bfa32cf-220e-40a5-8c57-7bdf41b78068.png" 
+            alt="FastFide Logo" 
+            className="h-16 w-auto"
+          />
         </div>
         <span className="text-lg text-gray-500 mt-2 text-center max-w-md">
           Votre fidélité, récompensée localement.
@@ -22,7 +28,7 @@ const LandingPage = () => {
           </div>
           <h2 className="text-2xl font-bold mb-3 text-gray-900 md:text-2xl">Je suis client</h2>
           <p className="text-gray-500 text-base mb-6 text-center max-w-xs">
-            Cumulez des points chez vos commerçants et profitez d’avantages exclusifs.
+            Cumulez des points chez vos commerçants et profitez d'avantages exclusifs.
           </p>
           <Button asChild size="lg" className="w-full md:w-auto">
             <Link to="/connexion-client">
@@ -46,6 +52,8 @@ const LandingPage = () => {
           </Button>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default LandingPage;
