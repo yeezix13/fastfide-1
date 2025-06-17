@@ -95,7 +95,7 @@ const CustomerDashboard = () => {
       {/* Header avec logo FastFide */}
       <div className="flex items-center justify-center mb-6">
         <img 
-          src="/lovable-uploads/9bfa32cf-220e-40a5-8c57-7bdf41b78068.png" 
+          src="/lovable-uploads/9c24c620-d700-43f2-bb91-b498726fd2ff.png" 
           alt="FastFide Logo" 
           className="h-12 w-auto"
         />
