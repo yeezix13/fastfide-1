@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import MerchantForgotPasswordForm from "./MerchantForgotPasswordForm";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Veuillez saisir une adresse e-mail valide." }),
@@ -18,6 +19,7 @@ const formSchema = z.object({
 const MerchantLoginForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -66,6 +68,14 @@ const MerchantLoginForm = () => {
     }
   }
 
+  if (showForgotPassword) {
+    return (
+      <MerchantForgotPasswordForm 
+        onBackToLogin={() => setShowForgotPassword(false)} 
+      />
+    );
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
@@ -76,9 +86,13 @@ const MerchantLoginForm = () => {
           <FormItem><FormLabel>Mot de passe</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
         <div className="text-sm">
-          <Link to="#" className="font-medium text-primary hover:underline">
+          <button 
+            type="button"
+            onClick={() => setShowForgotPassword(true)}
+            className="font-medium text-primary hover:underline"
+          >
             Mot de passe oublié ?
-          </Link>
+          </button>
         </div>
         <Button type="submit" className="w-full">Je me connecte</Button>
       </form>
