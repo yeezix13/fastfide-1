@@ -16,14 +16,27 @@ const formSchema = z.object({
   firstName: z.string().min(1, { message: "Le prénom est requis." }),
   lastName: z.string().min(1, { message: "Le nom est requis." }),
   businessName: z.string().min(1, { message: "Le nom du commerce est requis." }),
-  signupCode: z.string().min(3, { message: "Le code d'inscription doit contenir au moins 3 caractères." }),
-  address: z.string().optional(),
-  phone: z.string().optional(),
-  pointsPerEuro: z.string().default("1"),
+  address: z.string().min(1, { message: "L'adresse est requise." }),
+  phone: z.string().min(1, { message: "Le téléphone est requis." }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Les mots de passe ne correspondent pas.",
   path: ["confirmPassword"],
 });
+
+// Fonction pour générer le code d'inscription automatiquement
+const generateSignupCode = (businessName: string): string => {
+  return businessName
+    .toLowerCase()
+    .replace(/[àáâãäå]/g, 'a')
+    .replace(/[èéêë]/g, 'e')
+    .replace(/[ìíîï]/g, 'i')
+    .replace(/[òóôõö]/g, 'o')
+    .replace(/[ùúûü]/g, 'u')
+    .replace(/[ç]/g, 'c')
+    .replace(/[ñ]/g, 'n')
+    .replace(/[^a-z0-9]/g, '')
+    .toUpperCase();
+};
 
 const MerchantSignUpForm = () => {
   const { toast } = useToast();
@@ -38,10 +51,8 @@ const MerchantSignUpForm = () => {
       firstName: "",
       lastName: "",
       businessName: "",
-      signupCode: "",
       address: "",
       phone: "",
-      pointsPerEuro: "1",
     },
   });
 
@@ -49,17 +60,20 @@ const MerchantSignUpForm = () => {
     setIsLoading(true);
     
     try {
+      // Générer le code d'inscription automatiquement
+      const signupCode = generateSignupCode(values.businessName);
+
       // Vérifier que le code d'inscription est unique
       const { data: existingMerchant } = await supabase
         .from('merchants')
         .select('signup_code')
-        .eq('signup_code', values.signupCode)
+        .eq('signup_code', signupCode)
         .single();
 
       if (existingMerchant) {
         toast({
           title: "Erreur",
-          description: "Ce code d'inscription est déjà utilisé. Veuillez en choisir un autre.",
+          description: "Un commerce avec un nom similaire existe déjà. Veuillez modifier le nom de votre commerce.",
           variant: "destructive",
         });
         setIsLoading(false);
@@ -105,11 +119,11 @@ const MerchantSignUpForm = () => {
           .insert({
             user_id: authData.user.id,
             name: values.businessName,
-            signup_code: values.signupCode,
-            address: values.address || null,
-            phone: values.phone || null,
+            signup_code: signupCode,
+            address: values.address,
+            phone: values.phone,
             contact_email: values.email,
-            points_per_euro: parseFloat(values.pointsPerEuro),
+            points_per_euro: 1.0, // Valeur par défaut
           });
 
         if (merchantError) {
@@ -124,7 +138,7 @@ const MerchantSignUpForm = () => {
 
         toast({
           title: "Inscription réussie !",
-          description: "Un email de validation a été envoyé à votre adresse. Veuillez cliquer sur le lien pour activer votre compte.",
+          description: `Un email de validation a été envoyé à votre adresse. Votre code d'inscription généré est : ${signupCode}`,
         });
         
         form.reset();
@@ -231,31 +245,12 @@ const MerchantSignUpForm = () => {
 
         <FormField
           control={form.control}
-          name="signupCode"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Code d'inscription</FormLabel>
-              <FormControl>
-                <Input 
-                  {...field} 
-                  placeholder="ex: BOULANGERIE2024"
-                  className="uppercase"
-                  onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
           name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Adresse (optionnel)</FormLabel>
+              <FormLabel>Adresse</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} placeholder="12 rue de la paix, 75015 Paris" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -267,23 +262,9 @@ const MerchantSignUpForm = () => {
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Téléphone (optionnel)</FormLabel>
+              <FormLabel>Téléphone</FormLabel>
               <FormControl>
                 <Input {...field} placeholder="0123456789" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="pointsPerEuro"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Points par euro dépensé</FormLabel>
-              <FormControl>
-                <Input type="number" step="0.1" min="0" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
