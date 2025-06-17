@@ -15,6 +15,8 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import CustomerDuplicateHandler from "./CustomerDuplicateHandler";
 
 const baseSchema = {
   firstName: z.string().min(1, { message: "Le prénom est requis." }),
@@ -33,6 +35,11 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [formLoading, setFormLoading] = useState(false);
+  const [duplicateInfo, setDuplicateInfo] = useState<{
+    email?: boolean;
+    phone?: boolean;
+    emailValue?: string;
+  } | null>(null);
 
   // Si merchantId est fourni, le code commerçant n'est pas demandé
   const formSchema = z.object({
@@ -56,88 +63,148 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
     } as any,
   });
 
+  // Fonction pour vérifier les doublons
+  const checkDuplicates = async (email: string, phone: string) => {
+    const [emailCheck, phoneCheck] = await Promise.all([
+      supabase.from("profiles").select("id").eq("email", email).maybeSingle(),
+      supabase.from("profiles").select("id").eq("phone", phone).maybeSingle()
+    ]);
+
+    return {
+      emailExists: !!emailCheck.data,
+      phoneExists: !!phoneCheck.data,
+      emailError: emailCheck.error,
+      phoneError: phoneCheck.error
+    };
+  };
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setFormLoading(true);
-    // Trouver le commerçant à associer
-    let merchant: { id: string } | null = null;
-    if (merchantId) {
-      merchant = { id: merchantId };
-    } else {
-      const { data, error } = await supabase
-        .from("merchants")
-        .select("id")
-        .eq("signup_code", values.merchantCode)
-        .maybeSingle();
-      if (error || !data) {
+    setDuplicateInfo(null);
+
+    try {
+      // Vérifier les doublons avant de procéder
+      const duplicates = await checkDuplicates(values.email, values.phone);
+      
+      if (duplicates.emailError || duplicates.phoneError) {
         toast({
           title: "Erreur",
-          description: "Code commerçant invalide ou introuvable.",
+          description: "Erreur lors de la vérification des données existantes.",
           variant: "destructive",
         });
         setFormLoading(false);
         return;
       }
-      merchant = { id: data.id };
-    }
 
-    // Nouvelle inscription avec email obligatoire
-    const { data: authData, error: signUpError } = await supabase.auth.signUp({
-      email: values.email,
-      password: values.password,
-      options: {
-        data: {
-          first_name: values.firstName,
-          last_name: values.lastName,
-          phone: values.phone,
-          email: values.email,
-          birth_date: values.birth_date ? format(values.birth_date, 'yyyy-MM-dd') : null,
+      if (duplicates.emailExists || duplicates.phoneExists) {
+        setDuplicateInfo({
+          email: duplicates.emailExists,
+          phone: duplicates.phoneExists,
+          emailValue: values.email
+        });
+        setFormLoading(false);
+        return;
+      }
+
+      // Trouver le commerçant à associer
+      let merchant: { id: string } | null = null;
+      if (merchantId) {
+        merchant = { id: merchantId };
+      } else {
+        const { data, error } = await supabase
+          .from("merchants")
+          .select("id")
+          .eq("signup_code", values.merchantCode)
+          .maybeSingle();
+        if (error || !data) {
+          toast({
+            title: "Erreur",
+            description: "Code commerçant invalide ou introuvable.",
+            variant: "destructive",
+          });
+          setFormLoading(false);
+          return;
+        }
+        merchant = { id: data.id };
+      }
+
+      // Nouvelle inscription avec email obligatoire
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: {
+          data: {
+            first_name: values.firstName,
+            last_name: values.lastName,
+            phone: values.phone,
+            email: values.email,
+            birth_date: values.birth_date ? format(values.birth_date, 'yyyy-MM-dd') : null,
+          },
+          emailRedirectTo: `${window.location.origin}/tableau-de-bord-client`,
         },
-        emailRedirectTo: `${window.location.origin}/tableau-de-bord-client`,
-      },
-    });
+      });
 
-    if (signUpError) {
+      if (signUpError) {
+        toast({
+          title: "Erreur d'inscription",
+          description: signUpError.message,
+          variant: "destructive",
+        });
+        setFormLoading(false);
+        return;
+      }
+
+      if (authData.user && !authData.session) {
+        toast({
+          title: "Inscription réussie !",
+          description: "Veuillez vérifier votre boîte de réception pour confirmer votre adresse e-mail.",
+        });
+        setFormLoading(false);
+        return;
+      }
+
+      if (authData.user && authData.session) {
+        // Associer au commerçant immédiatement
+        const { error: linkError } = await supabase
+          .from('customer_merchant_link')
+          .insert({ customer_id: authData.user.id, merchant_id: merchant.id });
+
+        if (linkError) {
+          toast({
+            title: "Erreur lors de l'association",
+            description: "Nous n'avons pas pu vous associer au commerçant. Veuillez réessayer plus tard.",
+            variant: "destructive",
+          });
+          setFormLoading(false);
+          return;
+        }
+        toast({
+          title: "Bienvenue !",
+          description: "Votre compte a été créé avec succès.",
+        });
+        setFormLoading(false);
+        navigate("/tableau-de-bord-client");
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'inscription:", error);
       toast({
-        title: "Erreur d'inscription",
-        description: signUpError.message,
+        title: "Erreur",
+        description: "Une erreur inattendue est survenue.",
         variant: "destructive",
       });
+    } finally {
       setFormLoading(false);
-      return;
     }
+  }
 
-    if (authData.user && !authData.session) {
-      toast({
-        title: "Inscription réussie !",
-        description: "Veuillez vérifier votre boîte de réception pour confirmer votre adresse e-mail.",
-      });
-      setFormLoading(false);
-      return;
-    }
-
-    if (authData.user && authData.session) {
-      // Associer au commerçant immédiatement
-      const { error: linkError } = await supabase
-        .from('customer_merchant_link')
-        .insert({ customer_id: authData.user.id, merchant_id: merchant.id });
-
-      if (linkError) {
-        toast({
-          title: "Erreur lors de l'association",
-          description: "Nous n'avons pas pu vous associer au commerçant. Veuillez réessayer plus tard.",
-          variant: "destructive",
-        });
-        setFormLoading(false);
-        return;
-      }
-      toast({
-        title: "Bienvenue !",
-        description: "Votre compte a été créé avec succès.",
-      });
-      setFormLoading(false);
-      navigate("/tableau-de-bord-client");
-    }
-    setFormLoading(false);
+  // Si on a détecté des doublons, afficher le gestionnaire de doublons
+  if (duplicateInfo) {
+    return (
+      <CustomerDuplicateHandler 
+        duplicateInfo={duplicateInfo}
+        onBack={() => setDuplicateInfo(null)}
+      />
+    );
   }
 
   return (
