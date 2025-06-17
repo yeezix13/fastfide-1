@@ -1,26 +1,22 @@
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useToast } from '@/components/ui/use-toast';
+import { Label } from '@/components/ui/label';
 import type { Database } from '@/integrations/supabase/types';
+import { useToast } from '@/components/ui/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 import CustomerFinder from './CustomerFinder';
 
 type Merchant = Database['public']['Tables']['merchants']['Row'];
-
-const formSchema = z.object({
-  amount: z.coerce.number().min(0.01, 'Le montant doit être supérieur à 0.'),
-});
-
-interface RecordVisitFormProps {
-  merchant: Merchant;
-  themeColor?: string;
-}
+type CustomerProfile = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  email: string | null;
+};
 
 // Fonctions pour masquer les informations
 const obfuscatePhone = (phone: string | null): string => {
@@ -41,63 +37,88 @@ const obfuscateEmail = (email: string | null): string => {
   return `${obfuscatePart(local, 2, 1)}@${obfuscatePart(domain, 2, 3)}`;
 };
 
-
-const RecordVisitForm = ({ merchant, themeColor }: RecordVisitFormProps) => {
+const RecordVisitForm = ({ merchant, themeColor }: { merchant: Merchant; themeColor?: string }) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [amount, setAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [currentCustomer, setCurrentCustomer] = useState<{
-    id: string;
-    first_name: string | null;
-    last_name: string | null;
-    phone: string | null;
-    email: string | null;
-  } | null>(null);
+  const [currentCustomer, setCurrentCustomer] = useState<CustomerProfile | null>(null);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      amount: undefined,
-    },
-  });
+  const handleSelectCustomer = (customer: CustomerProfile) => {
+    setCurrentCustomer(customer);
+  };
 
-  // Nouvelle étape : recherche et sélection du client
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!currentCustomer) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez sélectionner un client.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!amount || parseFloat(amount) <= 0) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez saisir un montant valide.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('record_visit', {
+        customer_phone_number: currentCustomer.phone,
+        merchant_user_id: merchant.user_id,
+        spent_amount: parseFloat(amount),
+      });
+
+      if (error || (data as any)?.error) {
+        throw new Error((data as any)?.error || error?.message || "Une erreur s'est produite.");
+      }
+
+      if ((data as any)?.success) {
+        toast({
+          title: 'Visite enregistrée !',
+          description: `${(data as any).points_earned} points ont été attribués à ${(data as any).customer.first_name} ${(data as any).customer.last_name}.`,
+        });
+
+        // Invalider les queries pour rafraîchir les données
+        queryClient.invalidateQueries({ queryKey: ['merchantCustomers'] });
+        queryClient.invalidateQueries({ queryKey: ['loyaltyAccounts'] });
+        queryClient.invalidateQueries({ queryKey: ['visits'] });
+
+        // Reset form
+        setAmount('');
+        setCurrentCustomer(null);
+      }
+    } catch (error: any) {
+      console.error('Visit recording error:', error);
+      toast({
+        title: 'Erreur',
+        description: error.message || "Une erreur s'est produite lors de l'enregistrement de la visite.",
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 1. ETAPE DE RECHERCHE CLIENT
   if (!currentCustomer) {
     return (
       <div>
-        <p className="mb-2 text-sm">Recherchez le client par <b>nom ou numéro de téléphone</b> :</p>
-        <CustomerFinder onSelect={(customer) => setCurrentCustomer(customer)} />
+        <p className="mb-2 text-sm">Recherchez le client par <b>téléphone, nom ou prénom</b> :</p>
+        <CustomerFinder onSelect={handleSelectCustomer} />
       </div>
     );
   }
 
-  // Affichage infos client + saisie montant
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true);
-    // On utilise le numéro de téléphone du client sélectionné
-    const { data, error } = await supabase.rpc('record_visit', {
-      customer_phone_number: currentCustomer.phone,
-      merchant_user_id: merchant.user_id,
-      spent_amount: values.amount,
-    });
-
-    setIsLoading(false);
-
-    if (error || (data as any)?.error) {
-      toast({
-        title: 'Erreur',
-        description: (data as any)?.error || error?.message || "Une erreur s'est produite.",
-        variant: 'destructive',
-      });
-    } else if ((data as any)?.success) {
-      toast({
-        title: 'Succès !',
-        description: `${(data as any).points_earned} points ajoutés pour ${currentCustomer.first_name} ${currentCustomer.last_name}.`,
-      });
-      setCurrentCustomer(null);
-      form.reset();
-    }
-  }
-
+  // 2. ETAPE SAISIE MONTANT
   return (
     <div>
       <div className="border rounded p-3 mb-4 bg-muted/50">
@@ -122,31 +143,30 @@ const RecordVisitForm = ({ merchant, themeColor }: RecordVisitFormProps) => {
           Changer de client
         </Button>
       </div>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="amount"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel style={themeColor ? { color: themeColor } : undefined}>Montant dépensé (€)</FormLabel>
-                <FormControl>
-                  <Input type="number" step="0.01" placeholder="Ex: 25.50" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="amount">Montant dépensé (€)</Label>
+          <Input
+            id="amount"
+            type="number"
+            step="0.01"
+            min="0"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="0.00"
+            style={themeColor ? { borderColor: themeColor } : undefined}
           />
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="w-full"
-            style={themeColor ? { backgroundColor: themeColor, borderColor: themeColor } : undefined}
-          >
-            {isLoading ? 'Enregistrement...' : 'Enregistrer la visite'}
-          </Button>
-        </form>
-      </Form>
+        </div>
+        <Button
+          type="submit"
+          disabled={isLoading || !amount}
+          className="w-full"
+          style={themeColor ? { backgroundColor: themeColor, borderColor: themeColor } : undefined}
+        >
+          {isLoading ? 'Enregistrement...' : 'Enregistrer la visite'}
+        </Button>
+      </form>
     </div>
   );
 };

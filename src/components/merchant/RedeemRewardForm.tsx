@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/components/ui/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 import CustomerFinder from './CustomerFinder';
 
 // Fonctions pour masquer les informations
@@ -38,6 +39,7 @@ type CustomerProfile = {
 
 const RedeemRewardForm = ({ merchant, themeColor }: { merchant: Merchant; themeColor?: string }) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [currentCustomer, setCurrentCustomer] = useState<CustomerProfile | null>(null);
   const [availableRewards, setAvailableRewards] = useState<Reward[]>([]);
@@ -51,37 +53,45 @@ const RedeemRewardForm = ({ merchant, themeColor }: { merchant: Merchant; themeC
     setSelectedReward('');
 
     setIsLoading(true);
-    // 1. Trouver le lien de fidélité
-    const { data: linkData, error: linkError } = await supabase
-      .from('customer_merchant_link')
-      .select('loyalty_points')
-      .eq('customer_id', customer.id)
-      .eq('merchant_id', merchant.id)
-      .maybeSingle();
-
-    let points = 0;
-    if (linkData && linkData.loyalty_points != null) {
-      points = linkData.loyalty_points;
-      setCustomerPoints(points);
-    } else {
-      setCustomerPoints(0);
-    }
-
-    // 2. Charger les récompenses disponibles
-    if (points > 0) {
-      const { data: rewardsData, error: rewardsError } = await supabase
-        .from('rewards')
-        .select('*')
+    try {
+      // 1. Trouver le lien de fidélité
+      const { data: linkData, error: linkError } = await supabase
+        .from('customer_merchant_link')
+        .select('loyalty_points')
+        .eq('customer_id', customer.id)
         .eq('merchant_id', merchant.id)
-        .lte('points_required', points)
-        .order('points_required');
-      if (rewardsError) {
-        toast({ title: 'Erreur', description: 'Impossible de charger les récompenses.', variant: 'destructive' });
-      } else {
+        .maybeSingle();
+
+      if (linkError) throw linkError;
+
+      let points = 0;
+      if (linkData && linkData.loyalty_points != null) {
+        points = linkData.loyalty_points;
+      }
+      setCustomerPoints(points);
+
+      // 2. Charger les récompenses disponibles si le client a des points
+      if (points > 0) {
+        const { data: rewardsData, error: rewardsError } = await supabase
+          .from('rewards')
+          .select('*')
+          .eq('merchant_id', merchant.id)
+          .lte('points_required', points)
+          .order('points_required');
+        
+        if (rewardsError) throw rewardsError;
         setAvailableRewards(rewardsData || []);
       }
+    } catch (error) {
+      console.error('Error fetching customer data:', error);
+      toast({ 
+        title: 'Erreur', 
+        description: 'Impossible de charger les données du client.', 
+        variant: 'destructive' 
+      });
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   // Lors de la sélection d'un client, charger ses infos
@@ -91,82 +101,47 @@ const RedeemRewardForm = ({ merchant, themeColor }: { merchant: Merchant; themeC
   };
 
   // Gérer l'utilisation d'une récompense
-  async function handleRedeem() {
+  const handleRedeem = async () => {
     if (!selectedReward || !currentCustomer) return;
+    
     setIsLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('redeem_reward', {
+        customer_phone_number: currentCustomer.phone,
+        merchant_user_id: merchant.user_id,
+        reward_id_to_redeem: selectedReward,
+      });
 
-    const { data, error } = await supabase.rpc('redeem_reward', {
-      customer_phone_number: currentCustomer.phone,
-      merchant_user_id: merchant.user_id,
-      reward_id_to_redeem: selectedReward,
-    });
+      if (error || (data as any)?.error) {
+        throw new Error((data as any)?.error || error?.message || "Une erreur s'est produite.");
+      }
 
-    setIsLoading(false);
-    if (error || (data as any)?.error) {
-       toast({
+      if ((data as any)?.success) {
+        toast({
+          title: 'Succès !',
+          description: `La récompense "${(data as any).reward_name}" a été utilisée pour ${(data as any).customer.first_name} ${(data as any).customer.last_name}.`,
+        });
+
+        // Invalider les queries pour rafraîchir les données
+        queryClient.invalidateQueries({ queryKey: ['merchantCustomers'] });
+        queryClient.invalidateQueries({ queryKey: ['loyaltyAccounts'] });
+        queryClient.invalidateQueries({ queryKey: ['visits'] });
+        queryClient.invalidateQueries({ queryKey: ['rewardRedemptions'] });
+
+        // Rafraîchir les données du client actuel
+        await fetchCustomerRewards(currentCustomer);
+      }
+    } catch (error: any) {
+      console.error('Redemption error:', error);
+      toast({
         title: 'Erreur',
-        description: (data as any)?.error || error?.message || "Une erreur s'est produite.",
+        description: error.message || "Une erreur s'est produite lors de l'utilisation de la récompense.",
         variant: 'destructive',
       });
-    } else if ((data as any)?.success) {
-      toast({
-        title: 'Succès !',
-        description: `La récompense a été utilisée pour ${(data as any).customer.first_name} ${(data as any).customer.last_name}.`,
-      });
-
-      // Rafraîchir les points et les récompenses pour le client SANS fermer le profil
-      if (currentCustomer) {
-        setSelectedReward('');
-        setIsLoading(true);
-        // On recharge points/récompenses
-        // Remis sous forme de fonction async interne pour garantir l'attente puis vérification rewards.
-        const refreshAfterRedeem = async () => {
-          let points = 0;
-          const { data: linkData } = await supabase
-            .from('customer_merchant_link')
-            .select('loyalty_points')
-            .eq('customer_id', currentCustomer.id)
-            .eq('merchant_id', merchant.id)
-            .maybeSingle();
-
-          if (linkData && linkData.loyalty_points != null) {
-            points = linkData.loyalty_points;
-            setCustomerPoints(points);
-          } else {
-            setCustomerPoints(0);
-          }
-
-          if (points > 0) {
-            const { data: rewardsData, error: rewardsError } = await supabase
-              .from('rewards')
-              .select('*')
-              .eq('merchant_id', merchant.id)
-              .lte('points_required', points)
-              .order('points_required');
-            if (rewardsError) {
-              toast({ title: 'Erreur', description: 'Impossible de charger les récompenses.', variant: 'destructive' });
-              setAvailableRewards([]);
-            } else {
-              setAvailableRewards(rewardsData || []);
-            }
-          } else {
-            setAvailableRewards([]);
-          }
-
-          setIsLoading(false);
-
-          // Si plus de récompense possible, reset tout comme avant
-          if (points === 0 || (Array.isArray(availableRewards) && availableRewards.length === 0)) {
-            setCurrentCustomer(null);
-            setAvailableRewards([]);
-            setSelectedReward('');
-            setCustomerPoints(null);
-          }
-        };
-        await refreshAfterRedeem();
-      }
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
   // 1. ETAPE DE RECHERCHE CLIENT
   if (!currentCustomer) {
@@ -206,6 +181,7 @@ const RedeemRewardForm = ({ merchant, themeColor }: { merchant: Merchant; themeC
           Solde de points : <b style={themeColor ? { color: themeColor } : undefined}>{customerPoints ?? "..."}</b>
         </div>
       </div>
+      
       {customerPoints === 0 ? (
         <p className="mt-4 text-sm text-muted-foreground">Ce client n'a pas encore de points chez vous.</p>
       ) : (
