@@ -87,6 +87,27 @@ const RecordVisitForm = ({ merchant, themeColor }: { merchant: Merchant; themeCo
           description: `${(data as any).points_earned} points ont été attribués à ${(data as any).customer.first_name} ${(data as any).customer.last_name}.`,
         });
 
+        // Envoyer une notification email si le client a une adresse email et a gagné des points
+        if (currentCustomer.email && (data as any).points_earned > 0) {
+          try {
+            await supabase.functions.invoke('send-notification', {
+              body: {
+                type: 'points_earned',
+                customerEmail: currentCustomer.email,
+                customerName: `${currentCustomer.first_name} ${currentCustomer.last_name}`,
+                merchantName: merchant.name,
+                merchantColor: themeColor,
+                points: (data as any).points_earned,
+                amount: parseFloat(amount),
+              },
+            });
+            console.log('Notification email sent for points earned');
+          } catch (emailError) {
+            console.error('Error sending notification email:', emailError);
+            // N'affiche pas d'erreur à l'utilisateur, l'email est optionnel
+          }
+        }
+
         // Invalider les queries pour rafraîchir les données
         queryClient.invalidateQueries({ queryKey: ['merchantCustomers'] });
         queryClient.invalidateQueries({ queryKey: ['loyaltyAccounts'] });

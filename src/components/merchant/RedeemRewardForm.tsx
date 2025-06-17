@@ -122,6 +122,27 @@ const RedeemRewardForm = ({ merchant, themeColor }: { merchant: Merchant; themeC
           description: `La récompense "${(data as any).reward_name}" a été utilisée pour ${(data as any).customer.first_name} ${(data as any).customer.last_name}.`,
         });
 
+        // Envoyer une notification email si le client a une adresse email
+        if (currentCustomer.email) {
+          try {
+            await supabase.functions.invoke('send-notification', {
+              body: {
+                type: 'reward_redeemed',
+                customerEmail: currentCustomer.email,
+                customerName: `${currentCustomer.first_name} ${currentCustomer.last_name}`,
+                merchantName: merchant.name,
+                merchantColor: themeColor,
+                rewardName: (data as any).reward_name,
+                pointsSpent: (data as any).points_deducted,
+              },
+            });
+            console.log('Notification email sent for reward redemption');
+          } catch (emailError) {
+            console.error('Error sending notification email:', emailError);
+            // N'affiche pas d'erreur à l'utilisateur, l'email est optionnel
+          }
+        }
+
         // Invalider les queries pour rafraîchir les données
         queryClient.invalidateQueries({ queryKey: ['merchantCustomers'] });
         queryClient.invalidateQueries({ queryKey: ['loyaltyAccounts'] });
