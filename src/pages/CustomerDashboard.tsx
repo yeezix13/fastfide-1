@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Settings, Store, ArrowRight } from 'lucide-react';
+import AddMerchantForm from '@/components/customer/AddMerchantForm';
 
 const CustomerDashboard = () => {
   const navigate = useNavigate();
@@ -117,7 +118,10 @@ const CustomerDashboard = () => {
         </div>
       </header>
       <main>
-        <h2 className="text-xl font-semibold mb-4">Mes cartes de fidélité</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Mes cartes de fidélité</h2>
+          {user && <AddMerchantForm userId={user.id} />}
+        </div>
         {isLoadingAccounts ? (
           <p>Chargement de vos cartes...</p>
         ) : loyaltyAccounts && loyaltyAccounts.length > 0 ? (
@@ -161,7 +165,7 @@ const CustomerDashboard = () => {
         ) : (
           <div className="my-8 p-8 border-dashed border-2 rounded-lg text-center text-muted-foreground">
             <p>Vous n'avez encore aucune carte de fidélité.</p>
-            <p className="text-sm mt-2">Scannez le QR Code chez un commerçant partenaire pour commencer !</p>
+            <p className="text-sm mt-2">Scannez le QR Code chez un commerçant partenaire ou utilisez le bouton "Ajouter un commerçant" ci-dessus !</p>
           </div>
         )}
       </main>
