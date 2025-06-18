@@ -27,7 +27,7 @@ const LandingPage = () => {
             <User className="text-blue-600" size={40} />
           </div>
           <h2 className="text-xl font-bold mb-3 text-gray-900 md:text-2xl">Je suis client</h2>
-          <p className="text-gray-500 text-base mb-6 text-center max-w-xs">
+          <p className="text-gray-500 text-sm mb-6 text-center max-w-xs">
             Cumulez des points chez vos commerçants et profitez d'avantages exclusifs.
           </p>
           <Button asChild size="lg" className="w-full md:w-auto">
@@ -42,7 +42,7 @@ const LandingPage = () => {
             <Store className="text-green-600" size={40} />
           </div>
             <h2 className="text-xl font-bold mb-3 text-gray-900 md:text-2xl">Je suis commerçant</h2>
-          <p className="text-gray-500 text-base mb-6 text-center max-w-xs">
+          <p className="text-gray-500 text-sm mb-6 text-center max-w-xs">
             Gérez vos programmes de fidélité et analysez vos statistiques simplement.
           </p>
           <Button asChild size="lg" className="w-full md:w-auto">
