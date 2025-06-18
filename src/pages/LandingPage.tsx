@@ -8,14 +8,14 @@ const LandingPage = () => {
     <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-white via-gray-50 to-gray-100 px-2 py-8">
       {/* Logo FastFide centré */}
       <div className="flex flex-col items-center mb-10 py-[26px]">
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3">
           <img 
             src="/lovable-uploads/9c24c620-d700-43f2-bb91-b498726fd2ff.png" 
             alt="FastFide Logo" 
             className="h-16 w-auto" 
           />
         </div>
-        <span className="text-lg text-gray-500 mt-2 text-center max-w-md">
+        <span className="text-md text-gray-500 mt-2 text-center max-w-md">
           Votre fidélité, récompensée localement.
         </span>
       </div>
