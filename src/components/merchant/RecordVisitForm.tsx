@@ -16,6 +16,7 @@ type CustomerProfile = {
   last_name: string | null;
   phone: string | null;
   email: string | null;
+  client_code: string | null;
 };
 
 // Fonctions pour masquer les informations
@@ -133,7 +134,7 @@ const RecordVisitForm = ({ merchant, themeColor }: { merchant: Merchant; themeCo
   if (!currentCustomer) {
     return (
       <div>
-        <p className="mb-2 text-sm">Recherchez le client par <b>téléphone, nom ou prénom</b> :</p>
+        <p className="mb-2 text-sm">Recherchez le client par <b>code client, téléphone, nom ou prénom</b> :</p>
         <CustomerFinder onSelect={handleSelectCustomer} />
       </div>
     );
@@ -150,6 +151,7 @@ const RecordVisitForm = ({ merchant, themeColor }: { merchant: Merchant; themeCo
           {currentCustomer.first_name} {currentCustomer.last_name}
         </div>
         <div className="text-xs text-muted-foreground">
+          <span>Code: {currentCustomer.client_code || "Non généré"}</span> &nbsp; | &nbsp;
           <span>Tél: {obfuscatePhone(currentCustomer.phone)}</span> &nbsp; | &nbsp;
           <span>Email: {obfuscateEmail(currentCustomer.email)}</span>
         </div>

@@ -121,6 +121,7 @@ const CustomerList = ({ merchant, themeColor }: CustomerListProps) => {
           <TableHeader>
             <TableRow>
               <TableHead>Nom</TableHead>
+              <TableHead>Code client</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Téléphone</TableHead>
               <TableHead className="text-right">Points</TableHead>
@@ -147,6 +148,9 @@ const CustomerList = ({ merchant, themeColor }: CustomerListProps) => {
                     ) : (
                       <span className="text-destructive italic">Profil manquant</span>
                     )}
+                  </TableCell>
+                  <TableCell className="font-mono text-sm">
+                    {profile?.client_code || <span className="text-muted-foreground italic">Non généré</span>}
                   </TableCell>
                   <TableCell>
                     {profile?.email 

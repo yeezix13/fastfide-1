@@ -45,7 +45,7 @@ const CustomerDashboard = () => {
       if (!user) return null;
       const { data, error } = await supabase
         .from('profiles')
-        .select('first_name, last_name, phone')
+        .select('first_name, last_name, phone, client_code')
         .eq('id', user.id)
         .single();
       if (error && error.code !== 'PGRST116') { // Ignore error when no profile is found
@@ -110,7 +110,9 @@ const CustomerDashboard = () => {
         <header className="flex flex-wrap gap-4 justify-between items-center py-4 mb-8">
           <div>
             <h1 className="text-2xl font-bold">Bonjour, {displayName}</h1>
-            <p className="text-muted-foreground">{profile?.phone || user.email}</p>
+            <p className="text-muted-foreground">
+              {profile?.client_code ? `Code client: ${profile.client_code}` : user.email}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>

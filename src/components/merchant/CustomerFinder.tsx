@@ -10,11 +10,31 @@ type CustomerProfile = {
   last_name: string | null;
   phone: string | null;
   email: string | null;
+  client_code: string | null;
 };
 
 interface CustomerFinderProps {
   onSelect: (customer: CustomerProfile) => void;
 }
+
+// Fonctions pour masquer les informations
+const obfuscatePhone = (phone: string | null): string => {
+  if (!phone) return '-';
+  if (phone.length <= 4) return phone;
+  return `••••••${phone.slice(-4)}`;
+};
+
+const obfuscateEmail = (email: string | null): string => {
+  if (!email || !email.includes('@')) return email ?? '-';
+  const [local, domain] = email.split('@');
+  const obfuscatePart = (part: string, visibleStart: number, visibleEnd: number) => {
+    if (part.length <= visibleStart + visibleEnd) {
+      return part;
+    }
+    return `${part.slice(0, visibleStart)}...${part.slice(-visibleEnd)}`;
+  };
+  return `${obfuscatePart(local, 2, 1)}@${obfuscatePart(domain, 2, 3)}`;
+};
 
 export default function CustomerFinder({ onSelect }: CustomerFinderProps) {
   const [search, setSearch] = useState("");
@@ -28,43 +48,44 @@ export default function CustomerFinder({ onSelect }: CustomerFinderProps) {
     setLoading(true);
     setResults([]);
 
-    // Recherche par téléphone si 100% numérique, sinon par nom/prénom
-    if (search.match(/^\d{6,}$/)) {
-      // Recherche par téléphone
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id,first_name,last_name,phone,email")
-        .eq("phone", search.trim());
-      if (error) setError("Erreur lors de la recherche.");
-      else if (data && data.length > 0) setResults(data);
-      else setError("Aucun client trouvé avec ce numéro.");
-    } else {
-      // Recherche par nom ou prénom (insensible à la casse, partielle)
-      const cleaned = search.trim();
-      if (!cleaned) {
-        setError("Veuillez saisir un nom/prénom ou un téléphone.");
-        setLoading(false);
-        return;
-      }
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id,first_name,last_name,phone,email")
-        .ilike("first_name", `%${cleaned}%`)
-        .order("last_name");
-      // Recherche supplémentaire sur le nom si aucun résultat pour le prénom
-      let mergeResults = data || [];
-      if ((!data || data.length === 0) && cleaned.split(" ").length === 1) {
-        const { data: lname, error: err2 } = await supabase
-          .from("profiles")
-          .select("id,first_name,last_name,phone,email")
-          .ilike("last_name", `%${cleaned}%`)
-          .order("first_name");
-        if (!err2 && lname) mergeResults = lname;
-      }
-      if (error) setError("Erreur lors de la recherche.");
-      else if (mergeResults && mergeResults.length > 0) setResults(mergeResults);
-      else setError("Aucun client trouvé.");
+    const cleaned = search.trim();
+    if (!cleaned) {
+      setError("Veuillez saisir un code client, nom/prénom ou téléphone.");
+      setLoading(false);
+      return;
     }
+
+    try {
+      let query = supabase
+        .from("profiles")
+        .select("id,first_name,last_name,phone,email,client_code");
+
+      // Recherche par code client (format 123 AB 123)
+      if (cleaned.match(/^\d{3}\s[A-Z]{2}\s\d{3}$/)) {
+        query = query.eq("client_code", cleaned);
+      }
+      // Recherche par téléphone si 100% numérique
+      else if (cleaned.match(/^\d{6,}$/)) {
+        query = query.eq("phone", cleaned);
+      }
+      // Recherche par nom ou prénom
+      else {
+        query = query.or(`first_name.ilike.%${cleaned}%,last_name.ilike.%${cleaned}%`);
+      }
+
+      const { data, error } = await query.order("last_name").limit(10);
+
+      if (error) {
+        setError("Erreur lors de la recherche.");
+      } else if (data && data.length > 0) {
+        setResults(data);
+      } else {
+        setError("Aucun client trouvé.");
+      }
+    } catch (err) {
+      setError("Erreur lors de la recherche.");
+    }
+    
     setLoading(false);
   };
 
@@ -72,7 +93,7 @@ export default function CustomerFinder({ onSelect }: CustomerFinderProps) {
     <div>
       <form className="flex gap-2 mb-2" onSubmit={handleSearch}>
         <Input
-          placeholder="Nom, prénom ou téléphone"
+          placeholder="Code client, nom, prénom ou téléphone"
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -94,8 +115,9 @@ export default function CustomerFinder({ onSelect }: CustomerFinderProps) {
                   {profile.first_name} {profile.last_name}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  <span>Tél: {profile.phone || "-"}</span> &nbsp; | &nbsp;
-                  <span>Email: {profile.email || "-"}</span>
+                  <span>Code: {profile.client_code || "Non généré"}</span> &nbsp; | &nbsp;
+                  <span>Tél: {obfuscatePhone(profile.phone)}</span> &nbsp; | &nbsp;
+                  <span>Email: {obfuscateEmail(profile.email)}</span>
                 </div>
               </div>
               <Button variant="outline" size="sm" type="button">Sélectionner</Button>

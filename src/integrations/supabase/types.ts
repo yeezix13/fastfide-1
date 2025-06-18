@@ -89,6 +89,7 @@ export type Database = {
       profiles: {
         Row: {
           birth_date: string | null
+          client_code: string | null
           email: string
           first_name: string | null
           id: string
@@ -101,6 +102,7 @@ export type Database = {
         }
         Insert: {
           birth_date?: string | null
+          client_code?: string | null
           email?: string
           first_name?: string | null
           id: string
@@ -113,6 +115,7 @@ export type Database = {
         }
         Update: {
           birth_date?: string | null
+          client_code?: string | null
           email?: string
           first_name?: string | null
           id?: string
@@ -246,6 +249,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_client_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       record_visit: {
         Args: {
           customer_phone_number: string
