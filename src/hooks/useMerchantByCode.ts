@@ -9,7 +9,7 @@ export const useMerchantByCode = (merchantCode: string | null) => {
       if (!merchantCode) return null;
       const { data, error } = await supabase
         .from('merchants')
-        .select('id, name, theme_color')
+        .select('id, name, theme_color, logo_url')
         .eq('signup_code', merchantCode)
         .maybeSingle();
       

@@ -2,8 +2,8 @@
 import { useSearchParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Store } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ArrowLeft } from 'lucide-react';
+import MerchantLogo from '@/components/ui/merchant-logo';
 import Spinner from '@/components/ui/spinner';
 import CustomerSignUpForm from '@/components/auth/CustomerSignUpForm';
 import { useMerchantByCode } from '@/hooks/useMerchantByCode';
@@ -36,24 +36,16 @@ const CustomerSignUpPage = () => {
       
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          {/* Affichage du commerçant avec sa couleur */}
+          {/* Affichage du commerçant avec son logo ou initiales */}
           {merchant && (
             <div className="flex flex-col items-center mb-4">
-              <Avatar 
-                className="h-16 w-16 border-4 mb-3" 
-                style={{ borderColor: merchant.theme_color || '#2563eb' }}
-              >
-                <AvatarFallback 
-                  style={{ 
-                    backgroundColor: merchant.theme_color || '#2563eb', 
-                    color: 'white',
-                    fontSize: '1.5rem',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  {merchant.name.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <div className="mb-3">
+                <MerchantLogo 
+                  logoUrl={merchant.logo_url} 
+                  merchantName={merchant.name} 
+                  size="xl"
+                />
+              </div>
               <h3 
                 className="text-xl font-bold mb-2" 
                 style={{ color: merchant.theme_color || '#2563eb' }}

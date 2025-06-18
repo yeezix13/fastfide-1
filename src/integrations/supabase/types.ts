@@ -40,6 +40,7 @@ export type Database = {
           address: string | null
           contact_email: string | null
           id: string
+          logo_url: string | null
           name: string
           phone: string | null
           points_per_euro: number | null
@@ -51,6 +52,7 @@ export type Database = {
           address?: string | null
           contact_email?: string | null
           id?: string
+          logo_url?: string | null
           name: string
           phone?: string | null
           points_per_euro?: number | null
@@ -62,6 +64,7 @@ export type Database = {
           address?: string | null
           contact_email?: string | null
           id?: string
+          logo_url?: string | null
           name?: string
           phone?: string | null
           points_per_euro?: number | null

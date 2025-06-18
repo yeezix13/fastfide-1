@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +12,7 @@ import LoyaltySettings from '@/components/merchant/LoyaltySettings';
 import MerchantProfileForm from '@/components/merchant/MerchantProfileForm';
 import CustomerList from '@/components/merchant/CustomerList';
 import MerchantStats from '@/components/merchant/MerchantStats';
+import MerchantLogo from '@/components/ui/merchant-logo';
 import { LogOut } from "lucide-react";
 
 const MerchantDashboard = () => {
@@ -68,7 +68,6 @@ const MerchantDashboard = () => {
     }
   }, [merchantError, navigate]);
 
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/');
@@ -97,21 +96,19 @@ const MerchantDashboard = () => {
     <div className="min-h-screen bg-[#f8f9fb]">
       <div className="container mx-auto p-0 pt-1 md:p-4">
         <header className="flex justify-between items-center py-6 px-4 md:px-8 rounded-b-lg bg-white shadow-md mb-8">
-          <h1
-            className="text-3xl md:text-4xl font-bold tracking-tight flex items-center gap-3"
-            style={{ color: themeColor }}
-          >
-            <span
-              style={{
-                background: lightBg,
-                borderRadius: '10px',
-                padding: '0.3em 0.9em',
-              }}
-              className="shadow-sm"
+          <div className="flex items-center gap-4">
+            <MerchantLogo 
+              logoUrl={merchant.logo_url} 
+              merchantName={merchant.name} 
+              size="lg"
+            />
+            <h1
+              className="text-3xl md:text-4xl font-bold tracking-tight"
+              style={{ color: themeColor }}
             >
               {merchant.name}
-            </span>
-          </h1>
+            </h1>
+          </div>
           <Button
             onClick={handleLogout}
             variant="outline"
@@ -229,4 +226,3 @@ const MerchantDashboard = () => {
 };
 
 export default MerchantDashboard;
-

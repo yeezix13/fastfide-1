@@ -9,6 +9,7 @@ import type { User } from '@supabase/supabase-js';
 import CustomerRewardsList from "@/components/customer/CustomerRewardsList";
 import CustomerLoyaltyHistoryTable from "@/components/customer/CustomerLoyaltyHistoryTable";
 import CustomerLoyaltyInfoCard from "@/components/customer/CustomerLoyaltyInfoCard";
+import MerchantLogo from "@/components/ui/merchant-logo";
 
 const CustomerMerchantDetails = () => {
   const { merchantId } = useParams<{ merchantId: string }>();
@@ -38,7 +39,8 @@ const CustomerMerchantDetails = () => {
             address,
             phone,
             contact_email,
-            theme_color
+            theme_color,
+            logo_url
           )
         `)
         .eq('customer_id', user.id)
@@ -179,7 +181,14 @@ const CustomerMerchantDetails = () => {
         <p>Impossible de trouver les informations pour ce commerçant.</p>
       ) : (
         <>
-          <h1 className="text-3xl font-bold mb-6">{loyaltyAccount.merchants.name}</h1>
+          <div className="flex items-center gap-4 mb-6">
+            <MerchantLogo 
+              logoUrl={loyaltyAccount.merchants.logo_url} 
+              merchantName={loyaltyAccount.merchants.name} 
+              size="lg"
+            />
+            <h1 className="text-3xl font-bold">{loyaltyAccount.merchants.name}</h1>
+          </div>
           <div className="flex flex-col gap-8">
             <CustomerLoyaltyInfoCard
               points={loyaltyAccount.loyalty_points}

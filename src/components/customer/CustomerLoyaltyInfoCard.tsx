@@ -2,11 +2,14 @@
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { MapPin, Phone, Mail } from "lucide-react";
+import MerchantLogo from "@/components/ui/merchant-logo";
 
 interface MerchantInfo {
   address?: string | null;
   phone?: string | null;
   contact_email?: string | null;
+  logo_url?: string | null;
+  name?: string;
 }
 interface Props {
   points: number;
@@ -17,7 +20,16 @@ interface Props {
 const CustomerLoyaltyInfoCard: React.FC<Props> = ({ points, merchantInfo, themeColor = "#2563eb" }) => (
   <Card>
     <CardHeader>
-      <CardTitle>Mes Points & Infos</CardTitle>
+      <CardTitle className="flex items-center gap-3">
+        {merchantInfo.logo_url && merchantInfo.name && (
+          <MerchantLogo 
+            logoUrl={merchantInfo.logo_url} 
+            merchantName={merchantInfo.name} 
+            size="md"
+          />
+        )}
+        Mes Points & Infos
+      </CardTitle>
     </CardHeader>
     <CardContent className="space-y-4">
       <div
