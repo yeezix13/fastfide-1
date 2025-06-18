@@ -22,7 +22,7 @@ const CustomerSignUpPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4">
       {/* On affiche le bouton retour uniquement s'il n'y a pas de code commerçant dans l'URL */}
       {!merchantParam && (
         <div className="absolute top-4 left-4">
