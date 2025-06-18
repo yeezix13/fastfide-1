@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 
 const formSchema = z.object({
@@ -281,12 +280,17 @@ const MerchantSignUpForm = () => {
             </FormItem>
           )}
         />
-        <!-- Texte de consentement RGPD avec liens -->
-        <p class="text-xs text-gray-500">
-          En créant un compte, vous acceptez notre
-          <a href="/privacy" class="underline hover:text-gray-700">Politique de confidentialité</a>
-          et nos
-          <a href="/terms" class="underline hover:text-gray-700">Conditions générales d’utilisation</a>.
+        {/* Texte de consentement RGPD avec liens */}
+        <p className="text-xs text-gray-500">
+          En créant un compte, vous acceptez notre{" "}
+          <a href="/privacy" className="underline hover:text-gray-700">
+            Politique de confidentialité
+          </a>
+          {" "}et nos{" "}
+          <a href="/terms" className="underline hover:text-gray-700">
+            Conditions générales d'utilisation
+          </a>
+          .
         </p>
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "Création en cours..." : "Créer mon compte commerçant"}
