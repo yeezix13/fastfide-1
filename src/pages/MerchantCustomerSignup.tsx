@@ -71,17 +71,18 @@ const MerchantCustomerSignup = () => {
 
     setIsLoading(true);
     try {
-      // Vérifier si l'email existe déjà
-      const { data: existingUser, error: userError } = await supabase.auth.admin.listUsers();
-      
-      if (userError) {
-        // Si on ne peut pas vérifier, on essaie quand même d'inscrire
-        console.warn("Impossible de vérifier les utilisateurs existants:", userError);
+      // Vérifier si l'email existe déjà dans les profils
+      const { data: existingProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', values.email)
+        .maybeSingle();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.warn("Erreur lors de la vérification des profils:", profileError);
       }
 
-      const emailExists = existingUser?.users.some(u => u.email === values.email);
-      
-      if (emailExists) {
+      if (existingProfile) {
         toast({
           title: "Erreur",
           description: "Un compte avec cette adresse email existe déjà.",
