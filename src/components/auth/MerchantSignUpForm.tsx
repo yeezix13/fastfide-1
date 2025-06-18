@@ -1,9 +1,11 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -17,6 +19,12 @@ const formSchema = z.object({
   businessName: z.string().min(1, { message: "Le nom du commerce est requis." }),
   address: z.string().min(1, { message: "L'adresse est requise." }),
   phone: z.string().min(1, { message: "Le téléphone est requis." }),
+  rgpd_consent: z.boolean().refine(val => val === true, {
+    message: "Vous devez accepter le consentement RGPD pour créer votre compte."
+  }),
+  data_usage_commitment: z.boolean().refine(val => val === true, {
+    message: "Vous devez accepter l'engagement sur l'usage des données clients."
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Les mots de passe ne correspondent pas.",
   path: ["confirmPassword"],
@@ -52,6 +60,8 @@ const MerchantSignUpForm = () => {
       businessName: "",
       address: "",
       phone: "",
+      rgpd_consent: false,
+      data_usage_commitment: false,
     },
   });
 
@@ -131,6 +141,10 @@ const MerchantSignUpForm = () => {
             phone: values.phone,
             contact_email: values.email,
             points_per_euro: 1.0,
+            rgpd_consent: values.rgpd_consent,
+            data_usage_commitment: values.data_usage_commitment,
+            rgpd_consent_date: values.rgpd_consent ? new Date().toISOString() : null,
+            data_usage_commitment_date: values.data_usage_commitment ? new Date().toISOString() : null,
           });
 
         if (merchantError) {
@@ -281,9 +295,76 @@ const MerchantSignUpForm = () => {
           )}
         />
 
+        {/* Cases à cocher RGPD */}
+        <div className="space-y-3 border-t pt-4">
+          <FormField
+            control={form.control}
+            name="rgpd_consent"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel className="text-sm font-normal">
+                    J'accepte que mes données soient utilisées pour la gestion de mon compte commerçant et de mon programme de fidélité. *
+                  </FormLabel>
+                  <FormMessage />
+                </div>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="data_usage_commitment"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel className="text-sm font-normal">
+                    Je m'engage à respecter la réglementation en vigueur (RGPD) concernant les données des clients collectées via Fastfide, notamment en ce qui concerne les communications par email ou SMS. *
+                  </FormLabel>
+                  <FormMessage />
+                </div>
+              </FormItem>
+            )}
+          />
+        </div>
+
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "Création en cours..." : "Créer mon compte commerçant"}
         </Button>
+
+        {/* Texte légal */}
+        <p className="text-xs text-gray-500 text-center">
+          En créant un compte, vous acceptez notre{" "}
+          <a 
+            href="https://www.fastfide.com/politique-de-confidentialite/" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="underline hover:text-gray-700"
+          >
+            Politique de confidentialité
+          </a>{" "}
+          et nos{" "}
+          <a 
+            href="https://www.fastfide.com/cgu/" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="underline hover:text-gray-700"
+          >
+            Conditions générales d'utilisation
+          </a>.
+        </p>
       </form>
     </Form>
   );

@@ -39,11 +39,15 @@ export type Database = {
         Row: {
           address: string | null
           contact_email: string | null
+          data_usage_commitment: boolean | null
+          data_usage_commitment_date: string | null
           id: string
           logo_url: string | null
           name: string
           phone: string | null
           points_per_euro: number | null
+          rgpd_consent: boolean | null
+          rgpd_consent_date: string | null
           signup_code: string
           theme_color: string | null
           user_id: string
@@ -51,11 +55,15 @@ export type Database = {
         Insert: {
           address?: string | null
           contact_email?: string | null
+          data_usage_commitment?: boolean | null
+          data_usage_commitment_date?: string | null
           id?: string
           logo_url?: string | null
           name: string
           phone?: string | null
           points_per_euro?: number | null
+          rgpd_consent?: boolean | null
+          rgpd_consent_date?: string | null
           signup_code: string
           theme_color?: string | null
           user_id: string
@@ -63,11 +71,15 @@ export type Database = {
         Update: {
           address?: string | null
           contact_email?: string | null
+          data_usage_commitment?: boolean | null
+          data_usage_commitment_date?: string | null
           id?: string
           logo_url?: string | null
           name?: string
           phone?: string | null
           points_per_euro?: number | null
+          rgpd_consent?: boolean | null
+          rgpd_consent_date?: string | null
           signup_code?: string
           theme_color?: string | null
           user_id?: string
@@ -81,7 +93,11 @@ export type Database = {
           first_name: string | null
           id: string
           last_name: string | null
+          marketing_consent: boolean | null
+          marketing_consent_date: string | null
           phone: string | null
+          rgpd_consent: boolean | null
+          rgpd_consent_date: string | null
         }
         Insert: {
           birth_date?: string | null
@@ -89,7 +105,11 @@ export type Database = {
           first_name?: string | null
           id: string
           last_name?: string | null
+          marketing_consent?: boolean | null
+          marketing_consent_date?: string | null
           phone?: string | null
+          rgpd_consent?: boolean | null
+          rgpd_consent_date?: string | null
         }
         Update: {
           birth_date?: string | null
@@ -97,7 +117,11 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
+          marketing_consent?: boolean | null
+          marketing_consent_date?: string | null
           phone?: string | null
+          rgpd_consent?: boolean | null
+          rgpd_consent_date?: string | null
         }
         Relationships: []
       }
