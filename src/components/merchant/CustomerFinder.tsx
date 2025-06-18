@@ -60,9 +60,9 @@ export default function CustomerFinder({ onSelect }: CustomerFinderProps) {
         .from("profiles")
         .select("id,first_name,last_name,phone,email,client_code");
 
-      // Recherche par code client (format 123 AB 123)
-      if (cleaned.match(/^\d{3}\s[A-Z]{2}\s\d{3}$/)) {
-        query = query.eq("client_code", cleaned);
+      // Recherche par code client (format AB277564)
+      if (cleaned.match(/^[A-Z]{2}\d{6}$/)) {
+        query = query.eq("client_code", cleaned.toUpperCase());
       }
       // Recherche par téléphone si 100% numérique
       else if (cleaned.match(/^\d{6,}$/)) {
