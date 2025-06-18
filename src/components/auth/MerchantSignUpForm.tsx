@@ -281,7 +281,13 @@ const MerchantSignUpForm = () => {
             </FormItem>
           )}
         />
-
+        <!-- Texte de consentement RGPD avec liens -->
+        <p class="text-xs text-gray-500">
+          En créant un compte, vous acceptez notre
+          <a href="/privacy" class="underline hover:text-gray-700">Politique de confidentialité</a>
+          et nos
+          <a href="/terms" class="underline hover:text-gray-700">Conditions générales d’utilisation</a>.
+        </p>
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "Création en cours..." : "Créer mon compte commerçant"}
         </Button>
