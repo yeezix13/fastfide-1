@@ -26,7 +26,7 @@ const LandingPage = () => {
           <div className="bg-blue-100 rounded-full p-4 mb-4">
             <User className="text-blue-600" size={40} />
           </div>
-          <h2 className="text-2xl font-bold mb-3 text-gray-900 md:text-2xl">Je suis client</h2>
+          <h2 className="text-xl font-bold mb-3 text-gray-900 md:text-2xl">Je suis client</h2>
           <p className="text-gray-500 text-base mb-6 text-center max-w-xs">
             Cumulez des points chez vos commerçants et profitez d'avantages exclusifs.
           </p>
@@ -38,10 +38,10 @@ const LandingPage = () => {
         </div>
         {/* Carte Commerçant */}
         <div className="bg-white rounded-3xl shadow-xl flex flex-col items-center flex-1 px-6 py-10 md:py-14 md:px-10 animate-fade-in transition-shadow hover:shadow-2xl border border-violet-50">
-          <div className="bg-violet-100 rounded-full p-4 mb-4">
-            <Store className="text-violet-600" size={40} />
+          <div className="bg-green-100 rounded-full p-4 mb-4">
+            <Store className="text-green-600" size={40} />
           </div>
-          <h2 className="text-2xl font-bold mb-3 text-gray-900 md:text-2xl">Je suis commerçant</h2>
+            <h2 className="text-xl font-bold mb-3 text-gray-900 md:text-2xl">Je suis commerçant</h2>
           <p className="text-gray-500 text-base mb-6 text-center max-w-xs">
             Gérez vos programmes de fidélité et analysez vos statistiques simplement.
           </p>
