@@ -127,7 +127,7 @@ const AddMerchantForm = ({ userId }: AddMerchantFormProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full">
+        <Button variant="outline" size="sm" className="whitespace-nowrap">
           <Plus className="mr-2 h-4 w-4" />
           Ajouter un commerçant
         </Button>
