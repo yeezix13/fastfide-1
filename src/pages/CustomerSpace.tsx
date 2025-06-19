@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,7 +7,12 @@ import CustomerSignUpForm from "@/components/auth/CustomerSignUpForm";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 
 const CustomerSpace = () => {
-  const { loading } = useAuthRedirect();
+  const { loading, user, userType } = useAuthRedirect();
+
+  // Redirection automatique si l'utilisateur est connecté
+  if (!loading && user && userType) {
+    return null; // Le hook s'occupe de la redirection
+  }
 
   if (loading) {
     return (

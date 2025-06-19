@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Store, User } from "lucide-react";
@@ -6,7 +7,12 @@ import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { loading } = useAuthRedirect();
+  const { loading, user, userType } = useAuthRedirect();
+
+  // Redirection automatique si l'utilisateur est connecté
+  if (!loading && user && userType) {
+    return null; // Le hook s'occupe de la redirection
+  }
 
   if (loading) {
     return (

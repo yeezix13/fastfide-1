@@ -9,13 +9,34 @@ export const useAuthRedirect = () => {
   const location = useLocation();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userType, setUserType] = useState<'customer' | 'merchant' | null>(null);
 
   useEffect(() => {
     // Vérifier la session actuelle
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      setLoading(false);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        
+        if (currentUser) {
+          // Déterminer le type d'utilisateur
+          const { data: merchant } = await supabase
+            .from('merchants')
+            .select('id')
+            .eq('user_id', currentUser.id)
+            .single();
+          
+          setUserType(merchant ? 'merchant' : 'customer');
+        } else {
+          setUserType(null);
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+        setUserType('customer'); // Par défaut client en cas d'erreur
+      } finally {
+        setLoading(false);
+      }
     };
 
     checkSession();
@@ -23,48 +44,56 @@ export const useAuthRedirect = () => {
     // Écouter les changements d'état d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
-
-        // Redirection après connexion
-        if (event === 'SIGNED_IN' && session?.user) {
-          await redirectToDashboard(session.user);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        
+        if (currentUser && event === 'SIGNED_IN') {
+          // Déterminer le type d'utilisateur lors de la connexion
+          try {
+            const { data: merchant } = await supabase
+              .from('merchants')
+              .select('id')
+              .eq('user_id', currentUser.id)
+              .single();
+            
+            const type = merchant ? 'merchant' : 'customer';
+            setUserType(type);
+            
+            // Redirection immédiate après connexion
+            const targetPath = type === 'merchant' ? '/merchant-dashboard' : '/customer-dashboard';
+            navigate(targetPath);
+          } catch (error) {
+            setUserType('customer');
+            navigate('/customer-dashboard');
+          }
+        } else if (!currentUser) {
+          setUserType(null);
         }
+        
+        setLoading(false);
       }
     );
 
     return () => subscription.unsubscribe();
-  }, []);
-
-  const redirectToDashboard = async (user: User) => {
-    try {
-      // Vérifier si l'utilisateur est un commerçant
-      const { data: merchant } = await supabase
-        .from('merchants')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (merchant) {
-        navigate('/merchant-dashboard');
-      } else {
-        navigate('/customer-dashboard');
-      }
-    } catch (error) {
-      // Si erreur, considérer comme client par défaut
-      navigate('/customer-dashboard');
-    }
-  };
+  }, [navigate]);
 
   // Rediriger les utilisateurs connectés des pages publiques
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading && user && userType) {
       const publicPages = ['/', '/customer', '/merchant'];
       if (publicPages.includes(location.pathname)) {
-        redirectToDashboard(user);
+        const targetPath = userType === 'merchant' ? '/merchant-dashboard' : '/customer-dashboard';
+        navigate(targetPath);
       }
     }
-  }, [user, loading, location.pathname]);
+  }, [user, userType, loading, location.pathname, navigate]);
 
-  return { user, loading, redirectToDashboard };
+  const redirectToDashboard = async (user: User) => {
+    if (userType) {
+      const targetPath = userType === 'merchant' ? '/merchant-dashboard' : '/customer-dashboard';
+      navigate(targetPath);
+    }
+  };
+
+  return { user, loading, userType, redirectToDashboard };
 };
