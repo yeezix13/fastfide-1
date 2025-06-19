@@ -118,7 +118,11 @@ const CustomerMerchantDetails = () => {
         throw error;
       }
       // On filtre les rewards supprimées pour éviter le "null"
-      return (data || []).filter(r => r.rewards && (Array.isArray(r.rewards) ? r.rewards[0]?.name : r.rewards.name));
+      return (data || []).filter(r => {
+        if (!r.rewards) return false;
+        const reward = Array.isArray(r.rewards) ? r.rewards[0] : r.rewards;
+        return reward && typeof reward === 'object' && 'name' in reward && reward.name;
+      });
     },
     enabled: !!user && !!merchantId,
   });
@@ -152,12 +156,13 @@ const CustomerMerchantDetails = () => {
     });
     const redemptionsMap = (rewardRedemptions || []).map(redemption => {
       const reward = Array.isArray(redemption.rewards) ? redemption.rewards[0] : redemption.rewards;
+      const rewardName = reward && typeof reward === 'object' && 'name' in reward ? reward.name : null;
       return {
         type: "redemption" as const,
         id: redemption.id,
         date: redemption.redeemed_at,
         montant: null as number | null,
-        rewardName: reward ? reward.name : null,
+        rewardName,
         pointsList: [
           { value: -Math.abs(redemption.points_spent), label: "dépensés" }
         ],
