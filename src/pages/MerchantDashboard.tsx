@@ -250,7 +250,7 @@ const MerchantDashboard = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => document.querySelector('[value="customers"]')?.click()}
+                        onClick={() => (document.querySelector('[value="customers"]') as HTMLElement)?.click()}
                         style={{ color: themeColor, borderColor: themeColor }}
                       >
                         Clients
@@ -258,7 +258,7 @@ const MerchantDashboard = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => document.querySelector('[value="settings"]')?.click()}
+                        onClick={() => (document.querySelector('[value="settings"]') as HTMLElement)?.click()}
                         style={{ color: themeColor, borderColor: themeColor }}
                       >
                         Réglages
