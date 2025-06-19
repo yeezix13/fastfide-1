@@ -1,4 +1,3 @@
-
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,10 +64,7 @@ const CustomerVisits = () => {
         .order('redeemed_at', { ascending: false });
       if (error) throw error;
       // On filtre les rewards supprimées
-      return (data || []).filter(r => {
-        const reward = Array.isArray(r.rewards) ? r.rewards[0] : r.rewards;
-        return reward && reward.name;
-      });
+      return (data || []).filter(r => r.rewards && r.rewards.name);
     },
     enabled: !!merchantId && !!customerId,
   });
@@ -76,7 +72,7 @@ const CustomerVisits = () => {
   const isLoading = isLoadingVisits || isLoadingRewards;
   const error = errorVisits || errorRewards;
 
-  // Refacto : chaque visite peut être une rédemption (points_spent > 0, amount_spent nul)
+  // Refacto : chaque visite peut être une rédemption (points_spent > 0, amount_spent nul)
   const historique = React.useMemo(() => {
     const visitesMap = (visits || []).map(visit => {
       const pointsList: { value: number; label: string }[] = [];
@@ -98,19 +94,16 @@ const CustomerVisits = () => {
         pointsList,
       };
     });
-    const redemptionsMap = (rewardRedemptions || []).map(redemption => {
-      const reward = Array.isArray(redemption.rewards) ? redemption.rewards[0] : redemption.rewards;
-      return {
-        type: "redemption" as const,
-        id: redemption.id,
-        date: redemption.redeemed_at,
-        montant: null as number | null,
-        rewardName: reward ? reward.name : null,
-        pointsList: [
-          { value: -Math.abs(redemption.points_spent), label: "dépensés" }
-        ],
-      };
-    });
+    const redemptionsMap = (rewardRedemptions || []).map(redemption => ({
+      type: "redemption" as const,
+      id: redemption.id,
+      date: redemption.redeemed_at,
+      montant: null as number | null,
+      rewardName: redemption.rewards ? redemption.rewards.name : null,
+      pointsList: [
+        { value: -Math.abs(redemption.points_spent), label: "dépensés" }
+      ],
+    }));
 
     // Combine and sort all
     return [...visitesMap, ...redemptionsMap].sort(

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Link, useNavigate } from 'react-router-dom';
@@ -138,14 +137,11 @@ const CustomerDashboard = () => {
               {loyaltyAccounts.map((account) => {
                 if (!account.merchants) return null;
 
-                const merchant = Array.isArray(account.merchants) ? account.merchants[0] : account.merchants;
-                if (!merchant) return null;
-
-                const themeColor = merchant.theme_color || '#2563eb';
+                const themeColor = account.merchants.theme_color || '#2563eb';
                 const pastelBg = `${themeColor}1A`;
 
                 return (
-                  <Card key={merchant.id} className="rounded-2xl shadow-lg border-0 transition-all hover:shadow-xl hover:-translate-y-1" style={{ background: pastelBg }}>
+                  <Card key={account.merchants.id} className="rounded-2xl shadow-lg border-0 transition-all hover:shadow-xl hover:-translate-y-1" style={{ background: pastelBg }}>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-3 text-lg">
                         <Avatar className="h-12 w-12 border-2" style={{ borderColor: themeColor }}>
@@ -153,7 +149,7 @@ const CustomerDashboard = () => {
                             <Store size={24} />
                           </AvatarFallback>
                         </Avatar>
-                        <span className="font-bold">{merchant.name}</span>
+                        <span className="font-bold">{account.merchants.name}</span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -163,7 +159,7 @@ const CustomerDashboard = () => {
                           <p className="text-sm" style={{ color: themeColor }}>points</p>
                         </div>
                         <Button asChild variant="ghost" className="hover:bg-transparent" style={{ color: themeColor }}>
-                          <Link to={`/customer-dashboard/merchant/${merchant.id}`}>
+                          <Link to={`/customer-dashboard/merchant/${account.merchants.id}`}>
                             <span className="font-semibold">Voir détails</span>
                             <ArrowRight className="ml-2 h-5 w-5" />
                           </Link>
