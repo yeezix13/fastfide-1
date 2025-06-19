@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import MobileToast from "@/components/ui/mobile-toast";
@@ -6,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
 import { useTouchOptimization } from "@/hooks/useTouchOptimization";
+import { useAuthPersistence } from "@/hooks/useAuthPersistence";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import MerchantSpace from "./pages/MerchantSpace";
@@ -23,6 +25,7 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   useTouchOptimization();
+  useAuthPersistence();
   
   return (
     <>

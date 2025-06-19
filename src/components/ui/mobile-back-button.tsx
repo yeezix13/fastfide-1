@@ -29,15 +29,15 @@ const MobileBackButton: React.FC<MobileBackButtonProps> = ({
 
   if (isMobile) {
     return (
-      <div className="fixed top-4 left-4 z-50">
+      <div className="fixed top-16 left-4 z-[60] safe-area-top">
         <Button 
           variant="outline" 
-          size="sm"
+          size="lg"
           onClick={handleClick}
-          className={`bg-white/90 backdrop-blur-sm border-gray-300 shadow-lg ${className}`}
+          className={`bg-white/95 backdrop-blur-sm border-gray-300 shadow-xl px-4 py-3 min-h-[48px] ${className}`}
         >
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          {children}
+          <ArrowLeft className="h-5 w-5 mr-2" />
+          <span className="font-medium">{children}</span>
         </Button>
       </div>
     );
