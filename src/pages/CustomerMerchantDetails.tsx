@@ -1,3 +1,4 @@
+
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -117,7 +118,7 @@ const CustomerMerchantDetails = () => {
         throw error;
       }
       // On filtre les rewards supprimées pour éviter le "null"
-      return (data || []).filter(r => r.rewards && r.rewards.name);
+      return (data || []).filter(r => r.rewards && (Array.isArray(r.rewards) ? r.rewards[0]?.name : r.rewards.name));
     },
     enabled: !!user && !!merchantId,
   });
@@ -149,16 +150,19 @@ const CustomerMerchantDetails = () => {
         pointsList,
       };
     });
-    const redemptionsMap = (rewardRedemptions || []).map(redemption => ({
-      type: "redemption" as const,
-      id: redemption.id,
-      date: redemption.redeemed_at,
-      montant: null as number | null,
-      rewardName: redemption.rewards ? redemption.rewards.name : null,
-      pointsList: [
-        { value: -Math.abs(redemption.points_spent), label: "dépensés" }
-      ],
-    }));
+    const redemptionsMap = (rewardRedemptions || []).map(redemption => {
+      const reward = Array.isArray(redemption.rewards) ? redemption.rewards[0] : redemption.rewards;
+      return {
+        type: "redemption" as const,
+        id: redemption.id,
+        date: redemption.redeemed_at,
+        montant: null as number | null,
+        rewardName: reward ? reward.name : null,
+        pointsList: [
+          { value: -Math.abs(redemption.points_spent), label: "dépensés" }
+        ],
+      };
+    });
     return [...visitesMap, ...redemptionsMap].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
@@ -180,33 +184,44 @@ const CustomerMerchantDetails = () => {
         <p>Impossible de trouver les informations pour ce commerçant.</p>
       ) : (
         <>
-          <div className="flex items-center gap-4 mb-6">
-            <MerchantLogo 
-              logoUrl={loyaltyAccount.merchants.logo_url} 
-              merchantName={loyaltyAccount.merchants.name} 
-              size="lg"
-            />
-            <h1 className="text-3xl font-bold">{loyaltyAccount.merchants.name}</h1>
-          </div>
-          <div className="flex flex-col gap-8">
-            <CustomerLoyaltyInfoCard
-              points={loyaltyAccount.loyalty_points}
-              merchantInfo={{
-                address: loyaltyAccount.merchants.address,
-                phone: loyaltyAccount.merchants.phone,
-                contact_email: loyaltyAccount.merchants.contact_email,
-              }}
-              themeColor={loyaltyAccount.merchants.theme_color || "#2563eb"}
-            />
-            <CustomerRewardsList
-              rewards={rewards || []}
-              currentPoints={loyaltyAccount.loyalty_points}
-            />
-            <CustomerLoyaltyHistoryTable
-              historique={historique}
-              isLoading={isLoadingVisits || isLoadingRedemptions}
-            />
-          </div>
+          {(() => {
+            const merchant = Array.isArray(loyaltyAccount.merchants) ? loyaltyAccount.merchants[0] : loyaltyAccount.merchants;
+            if (!merchant) return <p>Informations du commerçant introuvables.</p>;
+            
+            return (
+              <>
+                <div className="flex items-center gap-4 mb-6">
+                  <MerchantLogo 
+                    logoUrl={merchant.logo_url} 
+                    merchantName={merchant.name} 
+                    size="lg"
+                  />
+                  <h1 className="text-3xl font-bold">{merchant.name}</h1>
+                </div>
+                <div className="flex flex-col gap-8">
+                  <CustomerLoyaltyInfoCard
+                    points={loyaltyAccount.loyalty_points}
+                    merchantInfo={{
+                      address: merchant.address,
+                      phone: merchant.phone,
+                      contact_email: merchant.contact_email,
+                      logo_url: merchant.logo_url,
+                      name: merchant.name,
+                    }}
+                    themeColor={merchant.theme_color || "#2563eb"}
+                  />
+                  <CustomerRewardsList
+                    rewards={rewards || []}
+                    currentPoints={loyaltyAccount.loyalty_points}
+                  />
+                  <CustomerLoyaltyHistoryTable
+                    historique={historique}
+                    isLoading={isLoadingVisits || isLoadingRedemptions}
+                  />
+                </div>
+              </>
+            );
+          })()}
         </>
       )}
     </div>
