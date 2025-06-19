@@ -11,14 +11,14 @@ const CustomerPreferences = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
-      <div className="absolute top-4 left-4">
+      <div className="absolute top-16 left-4">
         <Button variant="outline" asChild>
-          <Link to="/tableau-de-bord-client">
+          <Link to="/customer-dashboard">
             <ArrowLeft className="mr-2 h-4 w-4" /> Retour au tableau de bord
           </Link>
         </Button>
       </div>
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md mt-20">
         <CardHeader>
           <CardTitle>Mes Préférences</CardTitle>
           <CardDescription>Modifiez vos informations personnelles.</CardDescription>

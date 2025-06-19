@@ -22,7 +22,7 @@ const MerchantCustomerSignup = () => {
       if (session?.user) {
         setUser(session.user);
       } else {
-        navigate('/connexion-commercant');
+        navigate('/merchant');
       }
     };
     checkUser();
@@ -66,7 +66,7 @@ const MerchantCustomerSignup = () => {
           <div className="mb-6">
             <Button
               variant="outline"
-              onClick={() => navigate('/tableau-de-bord-commercant')}
+              onClick={() => navigate('/merchant-dashboard')}
               className="mb-4"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />

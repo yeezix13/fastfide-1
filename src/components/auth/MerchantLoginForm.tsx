@@ -59,11 +59,7 @@ const MerchantLoginForm = () => {
         });
         await supabase.auth.signOut();
       } else {
-        toast({
-          title: "Connexion réussie",
-          description: "Bienvenue, commerçant !",
-        });
-        navigate("/tableau-de-bord-commercant");
+        navigate("/merchant-dashboard");
       }
     }
   }

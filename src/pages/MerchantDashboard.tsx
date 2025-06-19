@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, Link } from 'react-router-dom';
@@ -27,14 +26,14 @@ const MerchantDashboard = () => {
       if (session?.user) {
         setUser(session.user);
       } else {
-        navigate('/connexion-commercant');
+        navigate('/merchant');
       }
     };
     checkUser();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
-        navigate('/connexion-commercant');
+        navigate('/merchant');
       } else if (event === 'SIGNED_IN' && session?.user) {
         setUser(session.user);
       }
@@ -124,7 +123,7 @@ const MerchantDashboard = () => {
                 }}
                 className="text-white hover:opacity-90"
               >
-                <Link to="/tableau-de-bord-commercant/inscrire-client">
+                <Link to="/merchant-dashboard/register-customer">
                   <UserPlus className="w-4 h-4 mr-2" />
                   Inscrire un client
                 </Link>

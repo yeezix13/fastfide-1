@@ -1,4 +1,3 @@
-
 import { useSearchParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,16 +24,16 @@ const CustomerSignUpPage = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4">
       {/* On affiche le bouton retour uniquement s'il n'y a pas de code commerçant dans l'URL */}
       {!merchantParam && (
-        <div className="absolute top-4 left-4">
+        <div className="absolute top-16 left-4">
           <Button variant="outline" asChild>
-            <Link to="/">
+            <Link to="/customer">
               <ArrowLeft className="mr-2 h-4 w-4" /> Retour à l'accueil
             </Link>
           </Button>
         </div>
       )}
       
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md mt-20">
         <CardHeader className="text-center">
           {/* Affichage du commerçant avec son logo ou initiales */}
           {merchant && (

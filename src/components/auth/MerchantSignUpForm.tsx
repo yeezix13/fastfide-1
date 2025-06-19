@@ -98,7 +98,7 @@ const MerchantSignUpForm = () => {
         email: values.email,
         password: values.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/connexion-commercant`,
+          emailRedirectTo: `${window.location.origin}/merchant`,
           data: {
             first_name: values.firstName,
             last_name: values.lastName,

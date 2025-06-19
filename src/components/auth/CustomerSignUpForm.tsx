@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -151,7 +150,7 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
             rgpd_consent_date: values.rgpd_consent ? new Date().toISOString() : null,
             marketing_consent_date: values.marketing_consent ? new Date().toISOString() : null,
           },
-          emailRedirectTo: `${window.location.origin}/tableau-de-bord-client`,
+          emailRedirectTo: `${window.location.origin}/customer-dashboard`,
         },
       });
 
@@ -194,7 +193,7 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
           description: "Votre compte a été créé avec succès.",
         });
         setFormLoading(false);
-        navigate("/tableau-de-bord-client");
+        navigate("/customer-dashboard");
       }
     } catch (error) {
       console.error("Erreur lors de l'inscription:", error);

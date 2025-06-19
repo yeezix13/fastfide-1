@@ -42,11 +42,7 @@ const CustomerLoginForm = () => {
         variant: "destructive",
       });
     } else {
-      toast({
-        title: "Connexion réussie",
-        description: "Bienvenue !",
-      });
-      navigate("/tableau-de-bord-client");
+      navigate("/customer-dashboard");
     }
   }
 

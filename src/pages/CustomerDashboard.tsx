@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Link, useNavigate } from 'react-router-dom';
@@ -21,14 +20,14 @@ const CustomerDashboard = () => {
       if (session) {
         setUser(session.user);
       } else {
-        navigate('/connexion-client');
+        navigate('/customer');
       }
     };
     getUserSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
-        navigate('/connexion-client');
+        navigate('/customer');
       } else if (session) {
         setUser(session.user);
       }
@@ -116,7 +115,7 @@ const CustomerDashboard = () => {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>
-              <Link to="/tableau-de-bord-client/preferences">
+              <Link to="/customer-dashboard/preferences">
                 <Settings />
                 <span>Préférences</span>
               </Link>
@@ -160,7 +159,7 @@ const CustomerDashboard = () => {
                           <p className="text-sm" style={{ color: themeColor }}>points</p>
                         </div>
                         <Button asChild variant="ghost" className="hover:bg-transparent" style={{ color: themeColor }}>
-                          <Link to={`/tableau-de-bord-client/commercant/${account.merchants.id}`}>
+                          <Link to={`/customer-dashboard/merchant/${account.merchants.id}`}>
                             <span className="font-semibold">Voir détails</span>
                             <ArrowRight className="ml-2 h-5 w-5" />
                           </Link>
