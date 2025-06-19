@@ -1,3 +1,4 @@
+
 import { useSearchParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,8 +21,22 @@ const CustomerSignUpPage = () => {
     );
   }
 
+  // Définir le style de background basé sur la couleur du commerçant
+  const backgroundStyle = merchant?.theme_color 
+    ? {
+        background: `linear-gradient(135deg, ${merchant.theme_color}15 0%, ${merchant.theme_color}08 50%, white 100%)`
+      }
+    : {};
+
+  const backgroundClass = merchant?.theme_color 
+    ? "" 
+    : "bg-gradient-to-br from-gray-50 to-white";
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4">
+    <div 
+      className={`min-h-screen flex flex-col items-center justify-center p-4 ${backgroundClass}`}
+      style={backgroundStyle}
+    >
       {/* On affiche le bouton retour uniquement s'il n'y a pas de code commerçant dans l'URL */}
       {!merchantParam && (
         <div className="absolute top-16 left-4">
