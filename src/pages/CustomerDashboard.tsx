@@ -12,6 +12,7 @@ import { Helmet } from 'react-helmet-async';
 import { useDeviceType } from '@/hooks/useDeviceType';
 import MobileSplashScreen from '@/components/mobile/MobileSplashScreen';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import MobileBottomNav from '@/components/mobile/MobileBottomNav';
 
 const CustomerDashboard = () => {
   const navigate = useNavigate();
@@ -220,9 +221,14 @@ const CustomerDashboard = () => {
           )}
         </main>
 
+        {/* Navigation mobile */}
+        {isMobile && (
+          <MobileBottomNav userType="customer" />
+        )}
+
         {/* Indicateur d'application native */}
         {isNative && (
-          <div className="fixed bottom-4 right-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs">
+          <div className="fixed bottom-16 right-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs z-40">
             📱 App Mobile
           </div>
         )}
