@@ -23,6 +23,11 @@ function Calendar({
         month: "space-y-4",
         caption: "flex justify-center pt-1 relative items-center",
         caption_label: "text-sm font-medium",
+        caption_dropdowns: "flex justify-center gap-1",
+        dropdown_year: "relative inline-flex items-center bg-transparent text-sm font-medium border border-input rounded-md px-3 py-1 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring",
+        dropdown_month: "relative inline-flex items-center bg-transparent text-sm font-medium border border-input rounded-md px-3 py-1 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring",
+        dropdown: "absolute z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md",
+        dropdown_icon: "ml-1 h-4 w-4 opacity-50",
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
