@@ -5,21 +5,39 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { CalendarIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { useEffect } from 'react';
 import type { User } from '@supabase/supabase-js';
+
+// Fonction pour valider le format JJ/MM/AAAA
+const validateDateFormat = (dateString: string): boolean => {
+  const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+  const match = dateString.match(regex);
+  
+  if (!match) return false;
+  
+  const day = parseInt(match[1], 10);
+  const month = parseInt(match[2], 10);
+  const year = parseInt(match[3], 10);
+  
+  // Vérifier que les valeurs sont dans des plages valides
+  if (month < 1 || month > 12) return false;
+  if (day < 1 || day > 31) return false;
+  if (year < 1900 || year > new Date().getFullYear()) return false;
+  
+  // Vérifier que la date existe réellement
+  const date = new Date(year, month - 1, day);
+  return date.getDate() === day && date.getMonth() === month - 1 && date.getFullYear() === year;
+};
 
 const profileFormSchema = z.object({
   first_name: z.string().min(2, { message: "Le prénom doit contenir au moins 2 caractères." }),
   last_name: z.string().min(2, { message: "Le nom de famille doit contenir au moins 2 caractères." }),
   phone: z.string().optional(),
   email: z.string().email({ message: "Veuillez saisir une adresse e-mail valide." }),
-  birth_date: z.date({ coerce: true }).optional().nullable(),
+  birth_date: z.string().optional().refine((val) => {
+    if (!val || val === '') return true; // Champ optionnel
+    return validateDateFormat(val);
+  }, { message: "Format de date invalide. Utilisez JJ/MM/AAAA (ex: 15/03/1990)" }),
 });
 
 export type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -39,18 +57,28 @@ const CustomerPreferencesForm = ({ profile, user, onSubmit, isLoading }: Custome
       last_name: '',
       phone: '',
       email: '',
-      birth_date: null,
+      birth_date: '',
     },
   });
 
   useEffect(() => {
     if (profile && user) {
+      // Convertir la date de format YYYY-MM-DD vers JJ/MM/AAAA
+      let formattedBirthDate = '';
+      if (profile.birth_date) {
+        const date = new Date(`${profile.birth_date}T00:00:00`);
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        formattedBirthDate = `${day}/${month}/${year}`;
+      }
+
       form.reset({
         first_name: profile.first_name || '',
         last_name: profile.last_name || '',
         phone: profile.phone || '',
         email: user.email || '',
-        birth_date: profile.birth_date ? new Date(`${profile.birth_date}T00:00:00`) : null,
+        birth_date: formattedBirthDate,
       });
     }
   }, [profile, user, form]);
@@ -114,43 +142,14 @@ const CustomerPreferencesForm = ({ profile, user, onSubmit, isLoading }: Custome
           control={form.control}
           name="birth_date"
           render={({ field }) => (
-            <FormItem className="flex flex-col">
+            <FormItem>
               <FormLabel>Date de naissance</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "PPP", { locale: fr })
-                      ) : (
-                        <span>Choisissez une date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1900-01-01")
-                    }
-                    initialFocus
-                    locale={fr}
-                    captionLayout="dropdown-buttons"
-                    fromYear={1930}
-                    toYear={new Date().getFullYear()}
-                  />
-                </PopoverContent>
-              </Popover>
+              <FormControl>
+                <Input 
+                  placeholder="JJ/MM/AAAA (ex: 15/03/1990)" 
+                  {...field} 
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
 import type { User } from '@supabase/supabase-js';
 import type { ProfileFormValues } from '@/components/customer/CustomerPreferencesForm';
 
@@ -47,13 +46,20 @@ export const useCustomerProfile = () => {
     mutationFn: async (data: ProfileFormValues) => {
       if (!user) throw new Error("Utilisateur non authentifié.");
 
+      // Convertir la date de JJ/MM/AAAA vers YYYY-MM-DD
+      let formattedBirthDate = null;
+      if (data.birth_date && data.birth_date.trim() !== '') {
+        const [day, month, year] = data.birth_date.split('/');
+        formattedBirthDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
           first_name: data.first_name,
           last_name: data.last_name,
           phone: data.phone,
-          birth_date: data.birth_date ? format(data.birth_date, 'yyyy-MM-dd') : null,
+          birth_date: formattedBirthDate,
         })
         .eq('id', user.id);
 

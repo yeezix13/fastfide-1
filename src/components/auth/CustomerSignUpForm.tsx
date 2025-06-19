@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -9,14 +10,30 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import CustomerDuplicateHandler from "./CustomerDuplicateHandler";
+
+// Fonction pour valider le format JJ/MM/AAAA
+const validateDateFormat = (dateString: string): boolean => {
+  const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+  const match = dateString.match(regex);
+  
+  if (!match) return false;
+  
+  const day = parseInt(match[1], 10);
+  const month = parseInt(match[2], 10);
+  const year = parseInt(match[3], 10);
+  
+  // Vérifier que les valeurs sont dans des plages valides
+  if (month < 1 || month > 12) return false;
+  if (day < 1 || day > 31) return false;
+  if (year < 1900 || year > new Date().getFullYear()) return false;
+  
+  // Vérifier que la date existe réellement
+  const date = new Date(year, month - 1, day);
+  return date.getDate() === day && date.getMonth() === month - 1 && date.getFullYear() === year;
+};
 
 const baseSchema = {
   firstName: z.string().min(1, { message: "Le prénom est requis." }),
@@ -24,7 +41,10 @@ const baseSchema = {
   phone: z.string().min(1, { message: "Le numéro de téléphone est requis." }),
   email: z.string().email({ message: "Veuillez saisir une adresse e-mail valide." }),
   password: z.string().min(6, { message: "Le mot de passe doit contenir au moins 6 caractères." }),
-  birth_date: z.date({ coerce: true }).optional(),
+  birth_date: z.string().optional().refine((val) => {
+    if (!val || val === '') return true; // Champ optionnel
+    return validateDateFormat(val);
+  }, { message: "Format de date invalide. Utilisez JJ/MM/AAAA (ex: 15/03/1990)" }),
   rgpd_consent: z.boolean().refine(val => val === true, {
     message: "Vous devez accepter le consentement RGPD pour créer votre compte."
   }),
@@ -62,7 +82,7 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
       phone: "",
       email: "",
       password: "",
-      birth_date: undefined,
+      birth_date: "",
       rgpd_consent: false,
       marketing_consent: false,
       ...(merchantId ? {} : { merchantCode: "" }),
@@ -134,6 +154,13 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
         merchant = { id: data.id };
       }
 
+      // Convertir la date de JJ/MM/AAAA vers YYYY-MM-DD
+      let formattedBirthDate = null;
+      if (values.birth_date && values.birth_date.trim() !== '') {
+        const [day, month, year] = values.birth_date.split('/');
+        formattedBirthDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+
       // Nouvelle inscription avec email obligatoire
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: values.email,
@@ -144,7 +171,7 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
             last_name: values.lastName,
             phone: values.phone,
             email: values.email,
-            birth_date: values.birth_date ? format(values.birth_date, 'yyyy-MM-dd') : null,
+            birth_date: formattedBirthDate,
             rgpd_consent: values.rgpd_consent,
             marketing_consent: values.marketing_consent || false,
             rgpd_consent_date: values.rgpd_consent ? new Date().toISOString() : null,
@@ -236,43 +263,14 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
           control={form.control}
           name="birth_date"
           render={({ field }) => (
-            <FormItem className="flex flex-col">
+            <FormItem>
               <FormLabel>Date de naissance</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "PPP", { locale: fr })
-                      ) : (
-                        <span>Choisissez une date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1900-01-01")
-                    }
-                    initialFocus
-                    locale={fr}
-                    captionLayout="dropdown-buttons"
-                    fromYear={1930}
-                    toYear={new Date().getFullYear()}
-                  />
-                </PopoverContent>
-              </Popover>
+              <FormControl>
+                <Input 
+                  placeholder="JJ/MM/AAAA (ex: 15/03/1990)" 
+                  {...field} 
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
