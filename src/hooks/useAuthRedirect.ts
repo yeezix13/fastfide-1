@@ -10,6 +10,7 @@ export const useAuthRedirect = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [userType, setUserType] = useState<'customer' | 'merchant' | null>(null);
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
     // Vérifier la session actuelle
@@ -27,7 +28,16 @@ export const useAuthRedirect = () => {
             .eq('user_id', currentUser.id)
             .single();
           
-          setUserType(merchant ? 'merchant' : 'customer');
+          const type = merchant ? 'merchant' : 'customer';
+          setUserType(type);
+          
+          // Redirection immédiate si on est sur une page publique
+          const publicPages = ['/', '/customer', '/merchant'];
+          if (publicPages.includes(location.pathname) && !hasRedirected) {
+            const targetPath = type === 'merchant' ? '/merchant-dashboard' : '/customer-dashboard';
+            setHasRedirected(true);
+            navigate(targetPath, { replace: true });
+          }
         } else {
           setUserType(null);
         }
@@ -61,13 +71,14 @@ export const useAuthRedirect = () => {
             
             // Redirection immédiate après connexion
             const targetPath = type === 'merchant' ? '/merchant-dashboard' : '/customer-dashboard';
-            navigate(targetPath);
+            navigate(targetPath, { replace: true });
           } catch (error) {
             setUserType('customer');
-            navigate('/customer-dashboard');
+            navigate('/customer-dashboard', { replace: true });
           }
         } else if (!currentUser) {
           setUserType(null);
+          setHasRedirected(false);
         }
         
         setLoading(false);
@@ -75,23 +86,12 @@ export const useAuthRedirect = () => {
     );
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
-
-  // Rediriger les utilisateurs connectés des pages publiques
-  useEffect(() => {
-    if (!loading && user && userType) {
-      const publicPages = ['/', '/customer', '/merchant'];
-      if (publicPages.includes(location.pathname)) {
-        const targetPath = userType === 'merchant' ? '/merchant-dashboard' : '/customer-dashboard';
-        navigate(targetPath);
-      }
-    }
-  }, [user, userType, loading, location.pathname, navigate]);
+  }, [navigate, location.pathname, hasRedirected]);
 
   const redirectToDashboard = async (user: User) => {
     if (userType) {
       const targetPath = userType === 'merchant' ? '/merchant-dashboard' : '/customer-dashboard';
-      navigate(targetPath);
+      navigate(targetPath, { replace: true });
     }
   };
 
