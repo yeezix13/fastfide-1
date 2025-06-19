@@ -154,7 +154,7 @@ const MerchantDashboard = () => {
       </Helmet>
       <div className="min-h-screen bg-[#f8f9fb] pb-16 md:pb-0">
         <div className={`container mx-auto p-0 pt-1 ${isMobile ? 'md:p-4' : 'md:p-4'}`}>
-          <header className={`flex ${isMobile ? 'flex-col space-y-4 pt-6 pb-4' : 'justify-between items-center'} py-6 px-4 md:px-8 rounded-b-lg bg-white shadow-md mb-8`}>
+          <header className={`flex ${isMobile ? 'flex-col space-y-4 pt-8 pb-4' : 'justify-between items-center'} py-6 px-4 md:px-8 rounded-b-lg bg-white shadow-md mb-8`}>
             <div className={`flex items-center gap-4 ${isMobile ? 'justify-center' : ''}`}>
               <MerchantLogo 
                 logoUrl={merchant.logo_url} 
@@ -172,111 +172,35 @@ const MerchantDashboard = () => {
               {isMobile ? (
                 <MobileMenu />
               ) : (
-                // Interface desktop avec tabs
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-white rounded-xl shadow-sm mb-8">
-                    <TabsTrigger
-                      value="actions"
-                      style={{ color: themeColor }}
-                      className="data-[state=active]:bg-[var(--themeColor)] data-[state=active]:text-white data-[state=active]:font-bold px-4"
-                    >
-                      Actions
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="stats"
-                      style={{ color: themeColor }}
-                      className="data-[state=active]:bg-[var(--themeColor)] data-[state=active]:text-white data-[state=active]:font-bold px-4"
-                    >
-                      Stats
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="customers"
-                      style={{ color: themeColor }}
-                      className="data-[state=active]:bg-[var(--themeColor)] data-[state=active]:text-white data-[state=active]:font-bold px-4"
-                    >
-                      Clients
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="settings"
-                      style={{ color: themeColor }}
-                      className="data-[state=active]:bg-[var(--themeColor)] data-[state=active]:text-white data-[state=active]:font-bold px-4"
-                    >
-                      Réglages
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="actions" className="mt-0">
-                    <div className="grid md:grid-cols-2 gap-8 px-0">
-                      <Card className="rounded-2xl shadow-lg border-0 bg-white">
-                        <CardHeader>
-                          <CardTitle style={{ color: themeColor, fontSize: 22, fontWeight: 800 }}>
-                            Enregistrer une visite
-                          </CardTitle>
-                          <CardDescription>
-                            Ajoutez des points à un client après un achat.
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <RecordVisitForm merchant={merchant} themeColor={themeColor} />
-                        </CardContent>
-                      </Card>
-                      <Card className="rounded-2xl shadow-lg border-0 bg-white">
-                        <CardHeader>
-                          <CardTitle style={{ color: themeColor, fontSize: 22, fontWeight: 800 }}>
-                            Utiliser une récompense
-                          </CardTitle>
-                          <CardDescription>
-                            Permettez à un client d'utiliser ses points.
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <RedeemRewardForm merchant={merchant} themeColor={themeColor} />
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="settings" className="mt-0">
-                    <div className="grid md:grid-cols-2 gap-8 px-0">
-                      <Card className="rounded-2xl shadow-lg border-0 bg-white">
-                        <CardHeader>
-                          <CardTitle style={{ color: themeColor, fontSize: 22, fontWeight: 800 }}>
-                            Règles & Récompenses
-                          </CardTitle>
-                          <CardDescription>
-                            Gérez comment vos clients gagnent et utilisent des points.
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <LoyaltySettings merchant={merchant} themeColor={themeColor} />
-                        </CardContent>
-                      </Card>
-                      <Card className="rounded-2xl shadow-lg border-0 bg-white">
-                        <CardHeader>
-                          <CardTitle style={{ color: themeColor, fontSize: 22, fontWeight: 800 }}>
-                            Informations du commerce
-                          </CardTitle>
-                          <CardDescription>
-                            Modifiez vos coordonnées ici.
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <MerchantProfileForm merchant={merchant} />
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="customers" className="mt-0">
-                    <div className="px-0">
-                      <CustomerList merchant={merchant} themeColor={themeColor} />
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="stats" className="mt-0">
-                    <div className="px-0">
-                      <MerchantStats merchant={merchant} themeColor={themeColor} />
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                <>
+                  <Button
+                    asChild
+                    style={{
+                      backgroundColor: themeColor,
+                      borderColor: themeColor,
+                    }}
+                    className="text-white hover:opacity-90"
+                  >
+                    <Link to="/tableau-de-bord-commercant/inscrire-client">
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Inscrire un client
+                    </Link>
+                  </Button>
+                  <Button
+                    onClick={handleLogout}
+                    variant="outline"
+                    style={{
+                      color: themeColor,
+                      borderColor: themeColor,
+                      background: lightBg,
+                      fontWeight: 600,
+                    }}
+                    className="hover:bg-opacity-15"
+                  >
+                    <LogOut className="w-5 h-5 mr-2" />
+                    Déconnexion
+                  </Button>
+                </>
               )}
             </div>
           </header>
@@ -287,7 +211,6 @@ const MerchantDashboard = () => {
             
             <div className="w-full mx-auto rounded-xl p-0 pt-0">
               {isMobile ? (
-                // Interface mobile avec boutons cards plus petits
                 <div className="px-4 space-y-4">
                   {/* Actions rapides */}
                   <div className="grid grid-cols-2 gap-3">
@@ -440,7 +363,6 @@ const MerchantDashboard = () => {
                   )}
                 </div>
               ) : (
-                // Interface desktop avec tabs
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                   <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-white rounded-xl shadow-sm mb-8">
                     <TabsTrigger

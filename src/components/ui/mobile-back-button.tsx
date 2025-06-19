@@ -29,7 +29,7 @@ const MobileBackButton: React.FC<MobileBackButtonProps> = ({
 
   if (isMobile) {
     return (
-      <div className="fixed top-24 left-4 z-[60] safe-area-top">
+      <div className="fixed top-16 left-4 z-[60] safe-area-top">
         <Button 
           variant="outline" 
           size="sm"

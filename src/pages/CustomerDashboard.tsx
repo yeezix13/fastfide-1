@@ -131,9 +131,9 @@ const CustomerDashboard = () => {
         <title>Tableau de bord - Mes cartes de fidélité</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
       </Helmet>
-      <div className={`container mx-auto p-4 ${isMobile ? 'pb-16' : 'md:p-8'}`}>
+      <div className={`container mx-auto p-4 ${isMobile ? 'pb-16 pt-6' : 'md:p-8'}`}>
         {/* Header avec logo FastFide */}
-        <div className="flex items-center justify-center mb-6">
+        <div className={`flex items-center justify-center ${isMobile ? 'mb-4 pt-2' : 'mb-6'}`}>
           <img 
             src="/lovable-uploads/9c24c620-d700-43f2-bb91-b498726fd2ff.png" 
             alt="FastFide" 
