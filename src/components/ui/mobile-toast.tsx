@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useDeviceType } from '@/hooks/useDeviceType';
 import { CheckCircle, XCircle, X } from 'lucide-react';
@@ -8,25 +8,40 @@ import { Button } from '@/components/ui/button';
 const MobileToast: React.FC = () => {
   const { toasts, dismiss } = useToast();
   const { isMobile } = useDeviceType();
+  const timersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
-  // Auto-dismiss toasts after 3 seconds (reduced from 5)
+  // Auto-dismiss toasts after 3 seconds
   useEffect(() => {
     toasts.forEach((toast) => {
-      if (!toast.id) return;
+      if (!toast.id || timersRef.current.has(toast.id)) return;
       
       const timer = setTimeout(() => {
         dismiss(toast.id);
+        timersRef.current.delete(toast.id);
       }, 3000);
 
-      // Cleanup function for each toast
-      return () => clearTimeout(timer);
+      timersRef.current.set(toast.id, timer);
     });
+
+    // Cleanup timers for toasts that no longer exist
+    timersRef.current.forEach((timer, toastId) => {
+      if (!toasts.find(t => t.id === toastId)) {
+        clearTimeout(timer);
+        timersRef.current.delete(toastId);
+      }
+    });
+
+    // Cleanup all timers when component unmounts
+    return () => {
+      timersRef.current.forEach(timer => clearTimeout(timer));
+      timersRef.current.clear();
+    };
   }, [toasts, dismiss]);
 
   if (!isMobile || toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-16 left-4 right-4 z-[80] pointer-events-none safe-area-top">
+    <div className="fixed top-20 left-4 right-4 z-[80] pointer-events-none safe-area-top">
       {toasts.map((toast) => {
         const isSuccess = toast.variant !== 'destructive';
         const Icon = isSuccess ? CheckCircle : XCircle;
@@ -56,7 +71,15 @@ const MobileToast: React.FC = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => dismiss(toast.id)}
+                onClick={() => {
+                  // Clear the timer when manually dismissed
+                  const timer = timersRef.current.get(toast.id);
+                  if (timer) {
+                    clearTimeout(timer);
+                    timersRef.current.delete(toast.id);
+                  }
+                  dismiss(toast.id);
+                }}
                 className="h-6 w-6 p-0 hover:bg-white/20 text-white flex-shrink-0"
               >
                 <X className="h-3 w-3" />
