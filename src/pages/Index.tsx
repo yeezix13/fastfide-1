@@ -1,5 +1,4 @@
 
-import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Store, Users, Gift, Smartphone } from "lucide-react";
@@ -8,7 +7,7 @@ import { Helmet } from 'react-helmet-async';
 import { useDeviceType } from '@/hooks/useDeviceType';
 
 const Index = () => {
-  const { isMobile } = useDeviceType();
+  const { isMobile, isNative } = useDeviceType();
 
   return (
     <>
@@ -18,7 +17,23 @@ const Index = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
       </Helmet>
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-        <Header />
+        {/* Header - masqué sur mobile/app native */}
+        {!isMobile && !isNative && (
+          <header className="py-6 px-4 md:px-8 lg:px-16 flex items-center justify-between bg-background border-b">
+            <Link to="/" className="flex items-center gap-2 text-2xl font-bold text-primary">
+              <Store className="h-7 w-7" />
+              <span>FastFide</span>
+            </Link>
+            <nav className="flex items-center gap-4">
+              <Button variant="ghost" asChild>
+                <Link to="/connexion-commercant">Espace Commerçant</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/connexion-client">Espace Client</Link>
+              </Button>
+            </nav>
+          </header>
+        )}
         
         <main className={`${isMobile ? 'px-4' : 'px-4 md:px-8 lg:px-16'}`}>
           {/* Hero Section */}

@@ -23,6 +23,7 @@ const MerchantDashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('actions');
   const { isMobile, isNative } = useDeviceType();
 
   useEffect(() => {
@@ -152,15 +153,15 @@ const MerchantDashboard = () => {
       </Helmet>
       <div className="min-h-screen bg-[#f8f9fb]">
         <div className={`container mx-auto p-0 pt-1 ${isMobile ? 'md:p-4' : 'md:p-4'}`}>
-          <header className={`flex ${isMobile ? 'flex-col space-y-4' : 'justify-between items-center'} py-6 px-4 md:px-8 rounded-b-lg bg-white shadow-md mb-8`}>
+          <header className={`flex ${isMobile ? 'flex-col space-y-4 pt-4' : 'justify-between items-center'} py-6 px-4 md:px-8 rounded-b-lg bg-white shadow-md mb-8`}>
             <div className={`flex items-center gap-4 ${isMobile ? 'justify-center' : ''}`}>
               <MerchantLogo 
                 logoUrl={merchant.logo_url} 
                 merchantName={merchant.name} 
-                size={isMobile ? "md" : "lg"}
+                size={isMobile ? "sm" : "lg"}
               />
               <h1
-                className={`${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl'} font-bold tracking-tight`}
+                className={`${isMobile ? 'text-xl' : 'text-3xl md:text-4xl'} font-bold tracking-tight`}
                 style={{ color: themeColor }}
               >
                 {merchant.name}
@@ -208,7 +209,7 @@ const MerchantDashboard = () => {
             </p>
             
             <div className="w-full mx-auto rounded-xl p-0 pt-0">
-              <Tabs defaultValue="actions" className="w-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'} bg-white rounded-xl shadow-sm mb-8`}>
                   <TabsTrigger
                     value="actions"
@@ -250,16 +251,24 @@ const MerchantDashboard = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => (document.querySelector('[value="customers"]') as HTMLElement)?.click()}
-                        style={{ color: themeColor, borderColor: themeColor }}
+                        onClick={() => setActiveTab('customers')}
+                        style={{ 
+                          color: activeTab === 'customers' ? 'white' : themeColor, 
+                          borderColor: themeColor,
+                          backgroundColor: activeTab === 'customers' ? themeColor : 'transparent'
+                        }}
                       >
                         Clients
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => (document.querySelector('[value="settings"]') as HTMLElement)?.click()}
-                        style={{ color: themeColor, borderColor: themeColor }}
+                        onClick={() => setActiveTab('settings')}
+                        style={{ 
+                          color: activeTab === 'settings' ? 'white' : themeColor, 
+                          borderColor: themeColor,
+                          backgroundColor: activeTab === 'settings' ? themeColor : 'transparent'
+                        }}
                       >
                         Réglages
                       </Button>
