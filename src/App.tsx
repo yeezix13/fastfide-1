@@ -3,8 +3,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
+import HomePage from "./pages/HomePage";
 import NotFound from "./pages/NotFound";
 import MerchantSpace from "./pages/MerchantSpace";
 import CustomerSpace from "./pages/CustomerSpace";
@@ -27,8 +28,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Redirect root to merchant by default */}
-            <Route path="/" element={<Navigate to="/merchant" replace />} />
+            {/* Page d'accueil */}
+            <Route path="/" element={<HomePage />} />
             
             {/* Main entry points */}
             <Route path="/merchant" element={<MerchantSpace />} />
@@ -47,14 +48,6 @@ const App = () => (
             
             {/* Auth routes */}
             <Route path="/reset-password" element={<ResetPasswordPage />} />
-            
-            {/* Legacy redirects for backwards compatibility */}
-            <Route path="/connexion-commercant" element={<Navigate to="/merchant" replace />} />
-            <Route path="/connexion-client" element={<Navigate to="/customer" replace />} />
-            <Route path="/tableau-de-bord-client" element={<Navigate to="/customer-dashboard" replace />} />
-            <Route path="/tableau-de-bord-commercant" element={<Navigate to="/merchant-dashboard" replace />} />
-            <Route path="/inscription" element={<Navigate to="/customer-signup" replace />} />
-            <Route path="/reinitialiser-mot-de-passe" element={<Navigate to="/reset-password" replace />} />
             
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
