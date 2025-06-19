@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { UserPlus } from 'lucide-react';
-import { useDeviceType } from '@/hooks/useDeviceType';
 
 const formSchema = z.object({
   firstName: z.string().min(2, { message: "Le prénom doit contenir au moins 2 caractères." }),
@@ -22,8 +21,6 @@ interface CustomerSignupFormProps {
 }
 
 const CustomerSignupForm = ({ onSubmit, isLoading, themeColor }: CustomerSignupFormProps) => {
-  const { isMobile } = useDeviceType();
-  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -91,13 +88,12 @@ const CustomerSignupForm = ({ onSubmit, isLoading, themeColor }: CustomerSignupF
             </FormItem>
           )}
         />
-        <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'justify-end space-x-2'} pt-4`}>
+        <div className="flex justify-end space-x-2 pt-4">
           <Button
             type="button"
             variant="outline"
             onClick={() => form.reset()}
             disabled={isLoading}
-            className={isMobile ? 'w-full' : ''}
           >
             Réinitialiser
           </Button>
@@ -105,7 +101,7 @@ const CustomerSignupForm = ({ onSubmit, isLoading, themeColor }: CustomerSignupF
             type="submit" 
             disabled={isLoading}
             style={{ backgroundColor: themeColor }}
-            className={`text-white hover:opacity-90 ${isMobile ? 'w-full' : ''}`}
+            className="text-white hover:opacity-90"
           >
             <UserPlus className="mr-2 h-4 w-4" />
             {isLoading ? "Inscription en cours..." : "Inscrire le client"}

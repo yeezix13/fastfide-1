@@ -1,22 +1,19 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import type { User } from '@supabase/supabase-js';
 import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Settings, Store, ArrowRight } from 'lucide-react';
 import AddMerchantForm from '@/components/customer/AddMerchantForm';
 import { Helmet } from 'react-helmet-async';
-import { useDeviceType } from '@/hooks/useDeviceType';
-import MobileSplashScreen from '@/components/mobile/MobileSplashScreen';
-import MobileBottomNav from '@/components/mobile/MobileBottomNav';
-import CustomerDashboardHeader from '@/components/customer/CustomerDashboardHeader';
-import LoyaltyCardsList from '@/components/customer/LoyaltyCardsList';
 
 const CustomerDashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { isMobile, isNative } = useDeviceType();
 
   useEffect(() => {
     const getUserSession = async () => {
@@ -26,7 +23,6 @@ const CustomerDashboard = () => {
       } else {
         navigate('/connexion-client');
       }
-      setIsLoading(false);
     };
     getUserSession();
 
@@ -52,7 +48,7 @@ const CustomerDashboard = () => {
         .select('first_name, last_name, phone, client_code')
         .eq('id', user.id)
         .single();
-      if (error && error.code !== 'PGRST116') {
+      if (error && error.code !== 'PGRST116') { // Ignore error when no profile is found
         console.error("Error fetching profile:", error);
       }
       return data;
@@ -92,10 +88,6 @@ const CustomerDashboard = () => {
 
   const displayName = profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : user?.email;
 
-  if (isLoading) {
-    return <MobileSplashScreen />;
-  }
-
   if (!user) {
     return <div className="flex h-screen items-center justify-center">Chargement...</div>;
   }
@@ -104,47 +96,88 @@ const CustomerDashboard = () => {
     <>
       <Helmet>
         <title>Tableau de bord - Mes cartes de fidélité</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
       </Helmet>
-      <div className={`container mx-auto p-4 ${isMobile ? 'pb-16 pt-6' : 'md:p-8'}`}>
+      <div className="container mx-auto p-4 md:p-8">
         {/* Header avec logo FastFide */}
-        <div className={`flex items-center justify-center ${isMobile ? 'mb-4 pt-2' : 'mb-6'}`}>
+        <div className="flex items-center justify-center mb-6">
           <img 
             src="/lovable-uploads/9c24c620-d700-43f2-bb91-b498726fd2ff.png" 
             alt="FastFide" 
-            className={`${isMobile ? 'h-16' : 'h-24'} w-auto`}
+            className="h-24 w-auto"
           />
         </div>
 
-        <CustomerDashboardHeader
-          displayName={displayName || ''}
-          clientCode={profile?.client_code}
-          email={user.email || ''}
-          onLogout={handleLogout}
-        />
-
+        <header className="flex flex-wrap gap-4 justify-between items-center py-4 mb-8">
+          <div>
+            <h1 className="text-2xl font-bold">Bonjour, {displayName}</h1>
+            <p className="text-muted-foreground">
+              {profile?.client_code ? `Code client: ${profile.client_code}` : user.email}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/tableau-de-bord-client/preferences">
+                <Settings />
+                <span>Préférences</span>
+              </Link>
+            </Button>
+            <Button onClick={handleLogout} variant="outline">Déconnexion</Button>
+          </div>
+        </header>
         <main>
-          <div className={`flex ${isMobile ? 'flex-col space-y-4' : 'justify-between items-center'} mb-4`}>
-            <h2 className={`${isMobile ? 'text-lg text-center' : 'text-xl'} font-semibold`}>Mes cartes de fidélité</h2>
-            <div className={`flex ${isMobile ? 'justify-center' : 'justify-end'}`}>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Mes cartes de fidélité</h2>
+            <div className="flex justify-end">
               {user && <AddMerchantForm userId={user.id} />}
             </div>
           </div>
-          
-          <LoyaltyCardsList loyaltyAccounts={loyaltyAccounts || []} isLoading={isLoadingAccounts} />
+          {isLoadingAccounts ? (
+            <p>Chargement de vos cartes...</p>
+          ) : loyaltyAccounts && loyaltyAccounts.length > 0 ? (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {loyaltyAccounts.map((account) => {
+                if (!account.merchants) return null;
+
+                const themeColor = account.merchants.theme_color || '#2563eb';
+                const pastelBg = `${themeColor}1A`;
+
+                return (
+                  <Card key={account.merchants.id} className="rounded-2xl shadow-lg border-0 transition-all hover:shadow-xl hover:-translate-y-1" style={{ background: pastelBg }}>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-3 text-lg">
+                        <Avatar className="h-12 w-12 border-2" style={{ borderColor: themeColor }}>
+                          <AvatarFallback style={{ backgroundColor: themeColor, color: 'white' }}>
+                            <Store size={24} />
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="font-bold">{account.merchants.name}</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex justify-between items-center mt-2">
+                        <div>
+                          <p className="font-extrabold text-4xl" style={{ color: themeColor }}>{account.loyalty_points}</p>
+                          <p className="text-sm" style={{ color: themeColor }}>points</p>
+                        </div>
+                        <Button asChild variant="ghost" className="hover:bg-transparent" style={{ color: themeColor }}>
+                          <Link to={`/tableau-de-bord-client/commercant/${account.merchants.id}`}>
+                            <span className="font-semibold">Voir détails</span>
+                            <ArrowRight className="ml-2 h-5 w-5" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="my-8 p-8 border-dashed border-2 rounded-lg text-center text-muted-foreground">
+              <p>Vous n'avez encore aucune carte de fidélité.</p>
+              <p className="text-sm mt-2">Scannez le QR Code chez un commerçant partenaire ou utilisez le bouton "Ajouter un commerçant" ci-dessus !</p>
+            </div>
+          )}
         </main>
-
-        {/* Navigation mobile */}
-        {isMobile && (
-          <MobileBottomNav userType="customer" />
-        )}
-
-        {/* Indicateur d'application native */}
-        {isNative && (
-          <div className="fixed bottom-16 right-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs z-40">
-            📱 App Mobile
-          </div>
-        )}
       </div>
     </>
   );

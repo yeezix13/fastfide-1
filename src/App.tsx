@@ -5,8 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
-import { useTouchOptimization } from "@/hooks/useTouchOptimization";
-import { useAuthPersistence } from "@/hooks/useAuthPersistence";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import MerchantSpace from "./pages/MerchantSpace";
@@ -22,31 +20,6 @@ import MerchantCustomerSignup from "./pages/MerchantCustomerSignup";
 
 const queryClient = new QueryClient();
 
-const AppContent = () => {
-  useTouchOptimization();
-  useAuthPersistence();
-  
-  return (
-    <>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/connexion-commercant" element={<MerchantSpace />} />
-        <Route path="/connexion-client" element={<CustomerSpace />} />
-        <Route path="/tableau-de-bord-client" element={<CustomerDashboard />} />
-        <Route path="/tableau-de-bord-commercant" element={<MerchantDashboard />} />
-        <Route path="/tableau-de-bord-client/commercant/:merchantId" element={<CustomerMerchantDetails />} />
-        <Route path="/tableau-de-bord-client/preferences" element={<CustomerPreferences />} />
-        <Route path="/tableau-de-bord-commercant/visites-client/:merchantId/:customerId" element={<CustomerVisits />} />
-        <Route path="/tableau-de-bord-commercant/inscrire-client" element={<MerchantCustomerSignup />} />
-        <Route path="/inscription" element={<CustomerSignUpPage />} />
-        <Route path="/reinitialiser-mot-de-passe" element={<ResetPasswordPage />} />
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </>
-  );
-};
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <HelmetProvider>
@@ -54,7 +27,21 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AppContent />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/connexion-commercant" element={<MerchantSpace />} />
+            <Route path="/connexion-client" element={<CustomerSpace />} />
+            <Route path="/tableau-de-bord-client" element={<CustomerDashboard />} />
+            <Route path="/tableau-de-bord-commercant" element={<MerchantDashboard />} />
+            <Route path="/tableau-de-bord-client/commercant/:merchantId" element={<CustomerMerchantDetails />} />
+            <Route path="/tableau-de-bord-client/preferences" element={<CustomerPreferences />} />
+            <Route path="/tableau-de-bord-commercant/visites-client/:merchantId/:customerId" element={<CustomerVisits />} />
+            <Route path="/tableau-de-bord-commercant/inscrire-client" element={<MerchantCustomerSignup />} />
+            <Route path="/inscription" element={<CustomerSignUpPage />} />
+            <Route path="/reinitialiser-mot-de-passe" element={<ResetPasswordPage />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </BrowserRouter>
       </TooltipProvider>
     </HelmetProvider>

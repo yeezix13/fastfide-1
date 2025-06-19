@@ -13,7 +13,6 @@ import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEffect } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { useDeviceType } from '@/hooks/useDeviceType';
 
 const profileFormSchema = z.object({
   first_name: z.string().min(2, { message: "Le prénom doit contenir au moins 2 caractères." }),
@@ -33,8 +32,6 @@ interface CustomerPreferencesFormProps {
 }
 
 const CustomerPreferencesForm = ({ profile, user, onSubmit, isLoading }: CustomerPreferencesFormProps) => {
-  const { isMobile } = useDeviceType();
-  
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {

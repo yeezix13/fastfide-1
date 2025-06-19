@@ -42,7 +42,10 @@ const CustomerLoginForm = () => {
         variant: "destructive",
       });
     } else {
-      // Connexion réussie - redirection directe sans toast
+      toast({
+        title: "Connexion réussie",
+        description: "Bienvenue !",
+      });
       navigate("/tableau-de-bord-client");
     }
   }

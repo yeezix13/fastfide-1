@@ -11,13 +11,10 @@ import { useQuery } from '@tanstack/react-query';
 import CustomerSignupForm from '@/components/merchant/CustomerSignupForm';
 import CustomerSignupHeader from '@/components/merchant/CustomerSignupHeader';
 import { useCustomerSignup } from '@/hooks/useCustomerSignup';
-import { useDeviceType } from '@/hooks/useDeviceType';
-import MobileBackButton from '@/components/ui/mobile-back-button';
 
 const MerchantCustomerSignup = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
-  const { isMobile } = useDeviceType();
 
   useEffect(() => {
     const checkUser = async () => {
@@ -66,22 +63,18 @@ const MerchantCustomerSignup = () => {
       </Helmet>
       <div className="min-h-screen bg-[#f8f9fb] p-4">
         <div className="container mx-auto max-w-2xl">
-          {isMobile ? (
-            <MobileBackButton to="/tableau-de-bord-commercant" />
-          ) : (
-            <div className="mb-6">
-              <Button
-                variant="outline"
-                onClick={() => navigate('/tableau-de-bord-commercant')}
-                className="mb-4"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Retour au tableau de bord
-              </Button>
-            </div>
-          )}
+          <div className="mb-6">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/tableau-de-bord-commercant')}
+              className="mb-4"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Retour au tableau de bord
+            </Button>
+          </div>
 
-          <Card className={`rounded-2xl shadow-lg border-0 ${isMobile ? 'mt-20' : ''}`}>
+          <Card className="rounded-2xl shadow-lg border-0">
             <CustomerSignupHeader merchant={merchant} themeColor={themeColor} />
             <CardContent>
               <CustomerSignupForm 

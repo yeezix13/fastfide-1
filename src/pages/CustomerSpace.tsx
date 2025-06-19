@@ -6,12 +6,17 @@ import { ArrowLeft } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CustomerLoginForm from "@/components/auth/CustomerLoginForm";
 import CustomerSignUpForm from "@/components/auth/CustomerSignUpForm";
-import MobileBackButton from "@/components/ui/mobile-back-button";
 
 const CustomerSpace = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
-      <MobileBackButton to="/" />
+      <div className="absolute top-4 left-4">
+        <Button variant="outline" asChild>
+          <Link to="/">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Retour à l'accueil
+          </Link>
+        </Button>
+      </div>
       
       {/* Logo FastFide en haut */}
       <div className="flex flex-col items-center mb-6">
