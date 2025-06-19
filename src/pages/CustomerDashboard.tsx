@@ -131,7 +131,7 @@ const CustomerDashboard = () => {
         <title>Tableau de bord - Mes cartes de fidélité</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
       </Helmet>
-      <div className={`container mx-auto p-4 ${isMobile ? 'pb-20' : 'md:p-8'}`}>
+      <div className={`container mx-auto p-4 ${isMobile ? 'pb-16' : 'md:p-8'}`}>
         {/* Header avec logo FastFide */}
         <div className="flex items-center justify-center mb-6">
           <img 

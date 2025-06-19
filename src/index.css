@@ -101,6 +101,29 @@
   }
 }
 
+/* Mobile form improvements */
+@layer utilities {
+  /* Stack form buttons vertically on mobile */
+  @media (max-width: 640px) {
+    .form-buttons {
+      @apply flex flex-col gap-3 !important;
+    }
+    
+    .form-buttons > * {
+      @apply w-full !important;
+    }
+    
+    /* Better spacing for mobile forms */
+    .mobile-form {
+      @apply space-y-4;
+    }
+    
+    .mobile-form .form-group {
+      @apply space-y-2;
+    }
+  }
+}
+
 /* Animations pour les toasts mobiles */
 @keyframes slide-in-from-top-4 {
   from {

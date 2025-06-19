@@ -32,15 +32,15 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userType, themeColor 
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-bottom">
-      <div className="flex justify-around items-center py-2 px-2">
+      <div className="flex justify-around items-center py-1 px-1">
         {/* Bouton Retour */}
         <Button
           variant="ghost"
           size="sm"
           onClick={handleBack}
-          className="flex flex-col items-center py-3 px-3 rounded-xl transition-colors min-h-[64px]"
+          className="flex flex-col items-center py-2 px-2 rounded-lg transition-colors min-h-[44px] text-xs"
         >
-          <ArrowLeft className="h-5 w-5 mb-1 text-gray-600" />
+          <ArrowLeft className="h-4 w-4 mb-0.5 text-gray-600" />
           <span className="text-xs font-medium text-gray-600">Retour</span>
         </Button>
 
@@ -54,14 +54,14 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userType, themeColor 
               key={item.path}
               to={item.path}
               className={cn(
-                "flex flex-col items-center py-3 px-3 rounded-xl transition-colors min-h-[64px]",
+                "flex flex-col items-center py-2 px-2 rounded-lg transition-colors min-h-[44px]",
                 isActive 
                   ? "text-white" 
                   : "text-gray-500 hover:text-gray-700"
               )}
               style={isActive ? { backgroundColor: themeColor } : {}}
             >
-              <Icon className="h-5 w-5 mb-1" />
+              <Icon className="h-4 w-4 mb-0.5" />
               <span className="text-xs font-medium">{item.label}</span>
             </Link>
           );
@@ -72,10 +72,10 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userType, themeColor 
           <Button
             variant="ghost"
             size="sm"
-            className="flex flex-col items-center py-3 px-3 rounded-xl transition-colors min-h-[64px]"
+            className="flex flex-col items-center py-2 px-2 rounded-lg transition-colors min-h-[44px] text-xs"
             style={{ color: themeColor }}
           >
-            <BarChart3 className="h-5 w-5 mb-1" />
+            <BarChart3 className="h-4 w-4 mb-0.5" />
             <span className="text-xs font-medium">Stats</span>
           </Button>
         )}
