@@ -10,8 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import CustomerDuplicateHandler from "./CustomerDuplicateHandler";
 
 // Fonction pour valider le format JJ/MM/AAAA
@@ -73,7 +71,6 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
     }),
   });
 
-  // React hook form
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -161,7 +158,9 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
         formattedBirthDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
       }
 
-      // Nouvelle inscription avec email obligatoire
+      const currentDate = new Date().toISOString();
+
+      // Nouvelle inscription avec toutes les métadonnées nécessaires
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
@@ -174,14 +173,15 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
             birth_date: formattedBirthDate,
             rgpd_consent: values.rgpd_consent,
             marketing_consent: values.marketing_consent || false,
-            rgpd_consent_date: values.rgpd_consent ? new Date().toISOString() : null,
-            marketing_consent_date: values.marketing_consent ? new Date().toISOString() : null,
+            rgpd_consent_date: values.rgpd_consent ? currentDate : null,
+            marketing_consent_date: values.marketing_consent ? currentDate : null,
           },
           emailRedirectTo: `${window.location.origin}/customer-dashboard`,
         },
       });
 
       if (signUpError) {
+        console.error("Erreur d'inscription:", signUpError);
         toast({
           title: "Erreur d'inscription",
           description: signUpError.message,
@@ -207,6 +207,7 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
           .insert({ customer_id: authData.user.id, merchant_id: merchant.id });
 
         if (linkError) {
+          console.error("Erreur d'association:", linkError);
           toast({
             title: "Erreur lors de l'association",
             description: "Nous n'avons pas pu vous associer au commerçant. Veuillez réessayer plus tard.",

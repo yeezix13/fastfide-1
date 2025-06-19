@@ -69,7 +69,6 @@ const MerchantSignUpForm = () => {
     setIsLoading(true);
     
     try {
-      // Vérifier d'abord si l'email existe déjà dans la table auth
       console.log("Tentative d'inscription pour:", values.email);
       
       // Générer le code d'inscription automatiquement
@@ -93,6 +92,8 @@ const MerchantSignUpForm = () => {
         return;
       }
 
+      const currentDate = new Date().toISOString();
+
       // Créer le compte utilisateur avec validation par email
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
@@ -103,6 +104,11 @@ const MerchantSignUpForm = () => {
             first_name: values.firstName,
             last_name: values.lastName,
             email: values.email,
+            phone: values.phone,
+            rgpd_consent: values.rgpd_consent,
+            data_usage_commitment: values.data_usage_commitment,
+            rgpd_consent_date: values.rgpd_consent ? currentDate : null,
+            data_usage_commitment_date: values.data_usage_commitment ? currentDate : null,
           }
         }
       });
@@ -143,8 +149,8 @@ const MerchantSignUpForm = () => {
             points_per_euro: 1.0,
             rgpd_consent: values.rgpd_consent,
             data_usage_commitment: values.data_usage_commitment,
-            rgpd_consent_date: values.rgpd_consent ? new Date().toISOString() : null,
-            data_usage_commitment_date: values.data_usage_commitment ? new Date().toISOString() : null,
+            rgpd_consent_date: values.rgpd_consent ? currentDate : null,
+            data_usage_commitment_date: values.data_usage_commitment ? currentDate : null,
           });
 
         if (merchantError) {
