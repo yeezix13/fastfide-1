@@ -1,4 +1,3 @@
-
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -119,7 +118,7 @@ const CustomerVisits = () => {
           <CardTitle>
             <Link
               className="text-sm text-muted-foreground underline mr-2"
-              to="/tableau-de-bord-commercant?tab=clients"
+              to="/merchant-dashboard?tab=clients"
             >
               &larr; Retour
             </Link>

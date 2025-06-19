@@ -1,4 +1,3 @@
-
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -169,7 +168,7 @@ const CustomerMerchantDetails = () => {
     <div className="container mx-auto p-4 md:p-8">
       <div className="mb-4">
         <Button variant="outline" asChild>
-          <Link to="/tableau-de-bord-client">
+          <Link to="/customer-dashboard">
             <ArrowLeft className="mr-2 h-4 w-4" /> Retour
           </Link>
         </Button>

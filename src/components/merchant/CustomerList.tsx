@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
@@ -139,7 +138,7 @@ const CustomerList = ({ merchant, themeColor }: CustomerListProps) => {
                       <button
                         className="text-primary underline hover:opacity-80 transition"
                         onClick={() =>
-                          navigate(`/tableau-de-bord-commercant/visites-client/${merchant.id}/${profile.id}`)
+                          navigate(`/merchant-dashboard/customer-visits/${merchant.id}/${profile.id}`)
                         }
                         style={themeColor ? { color: themeColor } : undefined}
                       >
