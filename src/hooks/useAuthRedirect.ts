@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
@@ -10,14 +10,31 @@ export const useAuthRedirect = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [userType, setUserType] = useState<'customer' | 'merchant' | null>(null);
-  const [hasRedirected, setHasRedirected] = useState(false);
+  const hasRedirectedRef = useRef(false);
 
   useEffect(() => {
+    let isMounted = true;
+
+    const checkAndRedirect = (currentUser: User | null, type: 'customer' | 'merchant' | null) => {
+      if (!isMounted) return;
+      
+      if (currentUser && type && !hasRedirectedRef.current) {
+        const publicPages = ['/', '/customer', '/merchant'];
+        if (publicPages.includes(location.pathname)) {
+          const targetPath = type === 'merchant' ? '/merchant-dashboard' : '/customer-dashboard';
+          hasRedirectedRef.current = true;
+          navigate(targetPath, { replace: true });
+        }
+      }
+    };
+
     // Vérifier la session actuelle
     const checkSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         const currentUser = session?.user ?? null;
+        
+        if (!isMounted) return;
         setUser(currentUser);
         
         if (currentUser) {
@@ -29,23 +46,22 @@ export const useAuthRedirect = () => {
             .single();
           
           const type = merchant ? 'merchant' : 'customer';
+          if (!isMounted) return;
           setUserType(type);
-          
-          // Redirection immédiate si on est sur une page publique
-          const publicPages = ['/', '/customer', '/merchant'];
-          if (publicPages.includes(location.pathname) && !hasRedirected) {
-            const targetPath = type === 'merchant' ? '/merchant-dashboard' : '/customer-dashboard';
-            setHasRedirected(true);
-            navigate(targetPath, { replace: true });
-          }
+          checkAndRedirect(currentUser, type);
         } else {
+          if (!isMounted) return;
           setUserType(null);
+          hasRedirectedRef.current = false;
         }
       } catch (error) {
         console.error('Error checking session:', error);
-        setUserType('customer'); // Par défaut client en cas d'erreur
+        if (!isMounted) return;
+        setUserType('customer');
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -54,11 +70,12 @@ export const useAuthRedirect = () => {
     // Écouter les changements d'état d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!isMounted) return;
+        
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         
         if (currentUser && event === 'SIGNED_IN') {
-          // Déterminer le type d'utilisateur lors de la connexion
           try {
             const { data: merchant } = await supabase
               .from('merchants')
@@ -67,26 +84,34 @@ export const useAuthRedirect = () => {
               .single();
             
             const type = merchant ? 'merchant' : 'customer';
+            if (!isMounted) return;
             setUserType(type);
             
-            // Redirection immédiate après connexion
+            // Redirection après connexion
             const targetPath = type === 'merchant' ? '/merchant-dashboard' : '/customer-dashboard';
             navigate(targetPath, { replace: true });
           } catch (error) {
+            if (!isMounted) return;
             setUserType('customer');
             navigate('/customer-dashboard', { replace: true });
           }
         } else if (!currentUser) {
+          if (!isMounted) return;
           setUserType(null);
-          setHasRedirected(false);
+          hasRedirectedRef.current = false;
         }
         
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     );
 
-    return () => subscription.unsubscribe();
-  }, [navigate, location.pathname, hasRedirected]);
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [navigate, location.pathname]);
 
   const redirectToDashboard = async (user: User) => {
     if (userType) {
