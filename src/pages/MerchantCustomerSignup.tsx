@@ -33,7 +33,7 @@ const MerchantCustomerSignup = () => {
       if (!user) return null;
       const { data, error } = await supabase
         .from('merchants')
-        .select('*')
+        .select('id, name, logo_url, theme_color, signup_code')
         .eq('user_id', user.id)
         .single();
       if (error) throw error;

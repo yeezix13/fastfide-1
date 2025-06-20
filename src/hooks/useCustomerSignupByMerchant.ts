@@ -11,7 +11,7 @@ interface CustomerSignupData {
 interface Merchant {
   id: string;
   name: string;
-  code?: string;
+  signup_code?: string;
 }
 
 export const useCustomerSignupByMerchant = (merchant: Merchant | null) => {
@@ -86,8 +86,8 @@ export const useCustomerSignupByMerchant = (merchant: Merchant | null) => {
         }
 
         toast({
-          title: "Client ajouté !",
-          description: `${existingProfile.first_name} ${existingProfile.last_name} a été ajouté à votre base de clients.`,
+          title: "✅ Inscription réussie !",
+          description: `${existingProfile.first_name} ${existingProfile.last_name} a été ajouté avec succès à votre programme de fidélité.`,
         });
 
         console.log("Client existant ajouté avec succès");
@@ -96,9 +96,11 @@ export const useCustomerSignupByMerchant = (merchant: Merchant | null) => {
         // Le client n'existe pas, envoyer un email d'invitation
         console.log("Client non trouvé, envoi d'une invitation");
 
-        const signupUrl = merchant.code 
-          ? `https://app.fastfide.com/customer-signup?merchant=${merchant.code}`
+        const signupUrl = merchant.signup_code 
+          ? `https://app.fastfide.com/customer-signup?merchant=${merchant.signup_code}`
           : `https://app.fastfide.com/customer-signup`;
+
+        console.log("URL d'inscription générée:", signupUrl);
 
         // Envoyer l'email d'invitation via notre edge function
         const { error: emailError } = await supabase.functions.invoke('send-auth-email', {
@@ -117,8 +119,8 @@ export const useCustomerSignupByMerchant = (merchant: Merchant | null) => {
         }
 
         toast({
-          title: "Invitation envoyée !",
-          description: `Un email d'invitation a été envoyé à ${values.email} pour rejoindre votre programme de fidélité.`,
+          title: "📧 Email d'invitation envoyé !",
+          description: `Un lien d'inscription personnalisé a été envoyé à ${values.email} pour rejoindre votre programme de fidélité.`,
         });
 
         console.log("Email d'invitation envoyé avec succès");
