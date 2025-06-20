@@ -34,8 +34,8 @@ export const useCustomerSignupByMerchant = (merchant: Merchant | null) => {
       // Vérifier si l'email existe déjà dans les profils
       const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name')
-        .eq('email', values.email)
+        .select('id, first_name, last_name, email')
+        .eq('email', values.email.toLowerCase().trim())
         .maybeSingle();
 
       if (profileError) {
@@ -43,6 +43,8 @@ export const useCustomerSignupByMerchant = (merchant: Merchant | null) => {
         handleError(profileError, "CustomerSignupByMerchant - Profile check");
         return false;
       }
+
+      console.log("Résultat recherche profil:", existingProfile);
 
       if (existingProfile) {
         // Le client existe déjà, vérifier s'il est déjà lié à ce commerçant
@@ -61,6 +63,8 @@ export const useCustomerSignupByMerchant = (merchant: Merchant | null) => {
           return false;
         }
 
+        console.log("Lien existant:", existingLink);
+
         if (existingLink) {
           toast({
             title: "Client déjà inscrit",
@@ -71,6 +75,7 @@ export const useCustomerSignupByMerchant = (merchant: Merchant | null) => {
         }
 
         // Créer le lien client-commerçant
+        console.log("Création du lien client-commerçant");
         const { error: newLinkError } = await supabase
           .from('customer_merchant_link')
           .insert({
@@ -127,6 +132,7 @@ export const useCustomerSignupByMerchant = (merchant: Merchant | null) => {
         return true;
       }
     } catch (error: any) {
+      console.error("Erreur générale:", error);
       handleError(error, "CustomerSignupByMerchant", {
         fallbackMessage: "Une erreur est survenue lors du traitement."
       });
@@ -134,8 +140,6 @@ export const useCustomerSignupByMerchant = (merchant: Merchant | null) => {
     } finally {
       setIsLoading(false);
     }
-
-    return false;
   };
 
   return {

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -45,11 +46,12 @@ const MerchantCustomerSignup = () => {
   const { signupCustomer, isLoading } = useCustomerSignupByMerchant(merchant);
 
   const handleSubmit = async (values: any) => {
+    console.log("Soumission du formulaire avec:", values);
     const success = await signupCustomer(values);
-    if (success) {
-      // Réinitialiser le formulaire après succès
-      window.location.reload();
-    }
+    console.log("Résultat de l'ajout:", success);
+    
+    // Ne pas recharger la page, juste réinitialiser le formulaire si succès
+    // Le message de succès/erreur sera géré par le hook via les toasts
   };
 
   if (!user || !merchant) {
