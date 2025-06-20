@@ -10,7 +10,6 @@ import { UserPlus } from 'lucide-react';
 const formSchema = z.object({
   firstName: z.string().min(2, { message: "Le prénom doit contenir au moins 2 caractères." }),
   lastName: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères." }),
-  phone: z.string().min(10, { message: "Le numéro de téléphone doit contenir au moins 10 chiffres." }),
   email: z.string().email({ message: "Veuillez entrer une adresse email valide." }),
 });
 
@@ -26,7 +25,6 @@ const CustomerSignupForm = ({ onSubmit, isLoading, themeColor }: CustomerSignupF
     defaultValues: {
       firstName: "",
       lastName: "",
-      phone: "",
       email: "",
     },
   });
@@ -40,7 +38,7 @@ const CustomerSignupForm = ({ onSubmit, isLoading, themeColor }: CustomerSignupF
             name="firstName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Prénom</FormLabel>
+                <FormLabel>Prénom *</FormLabel>
                 <FormControl>
                   <Input placeholder="Prénom du client" {...field} />
                 </FormControl>
@@ -53,7 +51,7 @@ const CustomerSignupForm = ({ onSubmit, isLoading, themeColor }: CustomerSignupF
             name="lastName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nom</FormLabel>
+                <FormLabel>Nom *</FormLabel>
                 <FormControl>
                   <Input placeholder="Nom du client" {...field} />
                 </FormControl>
@@ -64,23 +62,10 @@ const CustomerSignupForm = ({ onSubmit, isLoading, themeColor }: CustomerSignupF
         </div>
         <FormField
           control={form.control}
-          name="phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Numéro de téléphone</FormLabel>
-              <FormControl>
-                <Input placeholder="0123456789" type="tel" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Adresse email</FormLabel>
+              <FormLabel>Adresse email *</FormLabel>
               <FormControl>
                 <Input placeholder="client@email.com" type="email" {...field} />
               </FormControl>
