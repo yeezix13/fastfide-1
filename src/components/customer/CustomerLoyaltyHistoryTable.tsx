@@ -23,7 +23,7 @@ const CustomerLoyaltyHistoryTable: React.FC<Props> = ({ historique, isLoading })
     <div className="font-bold text-lg mb-2 flex items-center">Historique des Visites et Récompenses</div>
     <div className="text-muted-foreground mb-4">Vos passages et les récompenses utilisées, regroupés.</div>
     {isLoading ? (
-      <div className="text-sm text-gray-500">Chargement de l’historique…</div>
+      <div className="text-sm text-gray-500">Chargement de l'historique…</div>
     ) : historique.length > 0 ? (
       <Table>
         <TableHeader>
@@ -43,7 +43,7 @@ const CustomerLoyaltyHistoryTable: React.FC<Props> = ({ historique, isLoading })
               <TableCell>
                 {entry.type === "visit"
                   ? entry.montant !== null ? `${entry.montant} €` : ""
-                  : `-- €${entry.rewardName ? ` (${entry.rewardName})` : ""}`}
+                  : `Récompense utilisée${entry.rewardName ? ` (${entry.rewardName})` : ""}`}
               </TableCell>
               <TableCell className="text-right font-medium">
                 {entry.pointsList && entry.pointsList.length > 0 ? (
@@ -53,7 +53,7 @@ const CustomerLoyaltyHistoryTable: React.FC<Props> = ({ historique, isLoading })
                         key={pt.label + i}
                         className={pt.value > 0 ? "text-green-600" : "text-red-600"}
                       >
-                        {pt.value > 0 ? `+${pt.value}` : pt.value}{" "}
+                        {pt.value > 0 ? `+${pt.value}` : `${pt.value}`}{" "}
                         <span className="text-xs text-muted-foreground normal-case">{pt.label}</span>
                       </span>
                     ))}

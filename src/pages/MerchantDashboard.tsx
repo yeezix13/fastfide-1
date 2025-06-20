@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, Link } from 'react-router-dom';
@@ -11,7 +12,6 @@ import RedeemRewardForm from '@/components/merchant/RedeemRewardForm';
 import LoyaltySettings from '@/components/merchant/LoyaltySettings';
 import MerchantProfileForm from '@/components/merchant/MerchantProfileForm';
 import CustomerList from '@/components/merchant/CustomerList';
-import MerchantStats from '@/components/merchant/MerchantStats';
 import MerchantLogo from '@/components/ui/merchant-logo';
 import { LogOut, UserPlus } from "lucide-react";
 import { Helmet } from 'react-helmet-async';
@@ -150,20 +150,13 @@ const MerchantDashboard = () => {
             
             <div className="w-full mx-auto rounded-xl p-0 pt-0">
               <Tabs defaultValue="actions" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-white rounded-xl shadow-sm mb-8">
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-white rounded-xl shadow-sm mb-8">
                   <TabsTrigger
                     value="actions"
                     style={{ color: themeColor }}
                     className="data-[state=active]:bg-[var(--themeColor)] data-[state=active]:text-white data-[state=active]:font-bold px-4"
                   >
                     Actions
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="stats"
-                    style={{ color: themeColor }}
-                    className="data-[state=active]:bg-[var(--themeColor)] data-[state=active]:text-white data-[state=active]:font-bold px-4"
-                  >
-                    Statistiques
                   </TabsTrigger>
                   <TabsTrigger
                     value="analytics"
@@ -243,11 +236,6 @@ const MerchantDashboard = () => {
                 <TabsContent value="customers" className="mt-0">
                   <div className="px-2 md:px-0">
                     <CustomerList merchant={merchant} themeColor={themeColor} />
-                  </div>
-                </TabsContent>
-                <TabsContent value="stats" className="mt-0">
-                  <div className="px-2 md:px-0">
-                    <MerchantStats merchant={merchant} themeColor={themeColor} />
                   </div>
                 </TabsContent>
               </Tabs>

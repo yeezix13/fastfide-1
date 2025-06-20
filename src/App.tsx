@@ -39,6 +39,7 @@ function App() {
               <Route path="/customer-merchant/:merchantId" element={<CustomerMerchantDetails />} />
               <Route path="/merchant-customer-signup" element={<MerchantCustomerSignup />} />
               <Route path="/merchant-dashboard/register-customer" element={<MerchantCustomerSignup />} />
+              <Route path="/merchant-dashboard/customer-visits/:merchantId/:customerId" element={<CustomerVisits />} />
               <Route path="/customer-signup" element={<CustomerSignUpPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/reset-password-custom" element={<ResetPasswordCustomPage />} />
