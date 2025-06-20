@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -10,7 +9,7 @@ import type { User } from '@supabase/supabase-js';
 import { useQuery } from '@tanstack/react-query';
 import CustomerSignupForm from '@/components/merchant/CustomerSignupForm';
 import CustomerSignupHeader from '@/components/merchant/CustomerSignupHeader';
-import { useCustomerSignup } from '@/hooks/useCustomerSignup';
+import { useCustomerSignupByMerchant } from '@/hooks/useCustomerSignupByMerchant';
 
 const MerchantCustomerSignup = () => {
   const navigate = useNavigate();
@@ -43,11 +42,14 @@ const MerchantCustomerSignup = () => {
     enabled: !!user,
   });
 
-  const { signupCustomer, isLoading } = useCustomerSignup(merchant);
+  const { signupCustomer, isLoading } = useCustomerSignupByMerchant(merchant);
 
   const handleSubmit = async (values: any) => {
     const success = await signupCustomer(values);
-    // Le formulaire sera réinitialisé via le hook si succès
+    if (success) {
+      // Réinitialiser le formulaire après succès
+      window.location.reload();
+    }
   };
 
   if (!user || !merchant) {

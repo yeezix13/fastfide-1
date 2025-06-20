@@ -6,33 +6,18 @@ import { UseFormReturn } from 'react-hook-form';
 interface ContactInfoFieldsProps {
   form: UseFormReturn<any>;
   showMerchantCode?: boolean;
+  showPhone?: boolean;
 }
 
-const ContactInfoFields = ({ form, showMerchantCode = false }: ContactInfoFieldsProps) => {
+const ContactInfoFields = ({ form, showMerchantCode = false, showPhone = false }: ContactInfoFieldsProps) => {
   return (
     <>
-      {showMerchantCode && (
-        <FormField
-          control={form.control}
-          name="phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>N° de téléphone *</FormLabel>
-              <FormControl>
-                <Input type="tel" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      )}
-
       <FormField
         control={form.control}
         name="email"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Email {showMerchantCode ? '*' : ''}</FormLabel>
+            <FormLabel>Email *</FormLabel>
             <FormControl>
               <Input type="email" {...field} />
             </FormControl>
@@ -41,7 +26,7 @@ const ContactInfoFields = ({ form, showMerchantCode = false }: ContactInfoFields
         )}
       />
 
-      {!showMerchantCode && (
+      {showPhone && (
         <FormField
           control={form.control}
           name="phone"
@@ -49,7 +34,7 @@ const ContactInfoFields = ({ form, showMerchantCode = false }: ContactInfoFields
             <FormItem>
               <FormLabel>Téléphone</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="0123456789" />
+                <Input type="tel" placeholder="0123456789" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -63,9 +48,9 @@ const ContactInfoFields = ({ form, showMerchantCode = false }: ContactInfoFields
           name="merchantCode"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Code commerçant *</FormLabel>
+              <FormLabel>Code commerçant (optionnel)</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input placeholder="Saisissez le code de votre commerçant" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

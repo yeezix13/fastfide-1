@@ -38,6 +38,7 @@ function App() {
               <Route path="/customer-preferences" element={<CustomerPreferences />} />
               <Route path="/customer-merchant/:merchantId" element={<CustomerMerchantDetails />} />
               <Route path="/merchant-customer-signup" element={<MerchantCustomerSignup />} />
+              <Route path="/merchant-dashboard/register-customer" element={<MerchantCustomerSignup />} />
               <Route path="/customer-signup" element={<CustomerSignUpPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/reset-password-custom" element={<ResetPasswordCustomPage />} />

@@ -34,12 +34,8 @@ export const createCustomerFormSchema = (hasMerchantId: boolean) => {
   const baseSchema = z.object({
     firstName: z.string().min(2, { message: "Le prénom doit contenir au moins 2 caractères." }),
     lastName: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères." }),
-    phone: z.string().regex(/^(?:(?:\+|00)33|0)\s*[1-9](?:[\s.-]*\d{2}){4}$/, { 
-      message: "Veuillez saisir un numéro de téléphone français valide." 
-    }),
     email: z.string().email({ message: "Veuillez saisir une adresse e-mail valide." }),
     password: z.string().min(8, { message: "Le mot de passe doit contenir au moins 8 caractères." }),
-    birth_date: z.string().optional(),
     rgpd_consent: z.boolean().refine(val => val === true, {
       message: "Vous devez accepter la politique de confidentialité."
     }),
@@ -48,10 +44,15 @@ export const createCustomerFormSchema = (hasMerchantId: boolean) => {
   });
 
   if (hasMerchantId) {
-    return baseSchema;
+    // Pour les inscriptions par merchant : téléphone et date de naissance optionnels
+    return baseSchema.extend({
+      phone: z.string().optional(),
+      birth_date: z.string().optional(),
+    });
   }
 
+  // Pour les inscriptions depuis /customer : code commerçant optionnel
   return baseSchema.extend({
-    merchantCode: z.string().min(1, { message: "Le code commerçant est requis." }),
+    merchantCode: z.string().optional(),
   });
 };

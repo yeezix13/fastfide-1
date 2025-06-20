@@ -51,15 +51,19 @@ const CustomerSignUpForm = ({ merchantId, onBackToLogin }: CustomerSignUpFormPro
     try {
       console.log("=== Vérification des doublons ===");
       
-      // Vérifier les doublons avant de procéder
-      const duplicates = await checkDuplicates(values.email, values.phone);
+      // Pour les inscriptions depuis /customer, vérifier seulement l'email
+      // Pour les inscriptions avec merchantId, vérifier email et téléphone
+      const duplicates = await checkDuplicates(
+        values.email, 
+        merchantId ? values.phone : null
+      );
       
-      if (duplicates.emailError || duplicates.phoneError) {
+      if (duplicates.emailError || (merchantId && duplicates.phoneError)) {
         console.error("Erreur lors de la vérification des doublons:", duplicates);
         return;
       }
 
-      if (duplicates.emailExists || duplicates.phoneExists) {
+      if (duplicates.emailExists || (merchantId && duplicates.phoneExists)) {
         console.log("Doublon détecté:", duplicates);
         setDuplicateInfo({
           email: duplicates.emailExists,
@@ -69,7 +73,7 @@ const CustomerSignUpForm = ({ merchantId, onBackToLogin }: CustomerSignUpFormPro
         return;
       }
 
-      // Convertir la date de JJ/MM/AAAA vers YYYY-MM-DD
+      // Convertir la date de JJ/MM/AAAA vers YYYY-MM-DD seulement si elle existe
       let formattedBirthDate = null;
       if (values.birth_date && values.birth_date.trim() !== '') {
         const [day, month, year] = values.birth_date.split('/');
@@ -81,7 +85,7 @@ const CustomerSignUpForm = ({ merchantId, onBackToLogin }: CustomerSignUpFormPro
         password: values.password,
         firstName: values.firstName,
         lastName: values.lastName,
-        phone: values.phone,
+        phone: values.phone || "",
         userType: 'customer',
         birthDate: formattedBirthDate,
         rgpdConsent: values.rgpd_consent,
@@ -110,8 +114,8 @@ const CustomerSignUpForm = ({ merchantId, onBackToLogin }: CustomerSignUpFormPro
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
-        <PersonalInfoFields form={form} showBirthDate />
-        <ContactInfoFields form={form} showMerchantCode={!merchantId} />
+        <PersonalInfoFields form={form} showBirthDate={!!merchantId} />
+        <ContactInfoFields form={form} showMerchantCode={!merchantId} showPhone={!!merchantId} />
         <PasswordFields form={form} />
         <AntiSpamField form={form} />
         <ConsentCheckboxes form={form} type="customer" />
