@@ -249,10 +249,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_client_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
       record_visit: {
         Args: {
           customer_phone_number: string

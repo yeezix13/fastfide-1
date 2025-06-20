@@ -106,10 +106,22 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
     setDuplicateInfo(null);
 
     try {
+      console.log("=== Début du processus d'inscription client ===");
+      console.log("Données du formulaire:", {
+        email: values.email,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        phone: values.phone,
+        rgpdConsent: values.rgpd_consent,
+        marketingConsent: values.marketing_consent,
+        merchantId: merchantId
+      });
+
       // Vérifier les doublons avant de procéder
       const duplicates = await checkDuplicates(values.email, values.phone);
       
       if (duplicates.emailError || duplicates.phoneError) {
+        console.error("Erreur lors de la vérification des doublons:", duplicates);
         toast({
           title: "Erreur",
           description: "Erreur lors de la vérification des données existantes.",
@@ -120,6 +132,7 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
       }
 
       if (duplicates.emailExists || duplicates.phoneExists) {
+        console.log("Doublon détecté:", duplicates);
         setDuplicateInfo({
           email: duplicates.emailExists,
           phone: duplicates.phoneExists,
@@ -133,6 +146,7 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
       let merchant: { id: string } | null = null;
       if (merchantId) {
         merchant = { id: merchantId };
+        console.log("Utilisation du merchantId fourni:", merchantId);
       } else {
         const { data, error } = await supabase
           .from("merchants")
@@ -140,6 +154,7 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
           .eq("signup_code", values.merchantCode)
           .maybeSingle();
         if (error || !data) {
+          console.error("Code commerçant invalide:", error);
           toast({
             title: "Erreur",
             description: "Code commerçant invalide ou introuvable.",
@@ -149,6 +164,7 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
           return;
         }
         merchant = { id: data.id };
+        console.log("Commerçant trouvé via code:", data.id);
       }
 
       // Convertir la date de JJ/MM/AAAA vers YYYY-MM-DD
@@ -156,32 +172,39 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
       if (values.birth_date && values.birth_date.trim() !== '') {
         const [day, month, year] = values.birth_date.split('/');
         formattedBirthDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        console.log("Date de naissance formatée:", formattedBirthDate);
       }
 
       const currentDate = new Date().toISOString();
+      console.log("Date actuelle pour les consentements:", currentDate);
+
+      // Préparer les métadonnées pour l'inscription
+      const userMetadata = {
+        first_name: values.firstName,
+        last_name: values.lastName,
+        phone: values.phone,
+        email: values.email,
+        birth_date: formattedBirthDate,
+        rgpd_consent: values.rgpd_consent,
+        marketing_consent: values.marketing_consent || false,
+        rgpd_consent_date: values.rgpd_consent ? currentDate : null,
+        marketing_consent_date: values.marketing_consent ? currentDate : null,
+      };
+
+      console.log("Métadonnées utilisateur pour inscription:", userMetadata);
 
       // Nouvelle inscription avec toutes les métadonnées nécessaires
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
-          data: {
-            first_name: values.firstName,
-            last_name: values.lastName,
-            phone: values.phone,
-            email: values.email,
-            birth_date: formattedBirthDate,
-            rgpd_consent: values.rgpd_consent,
-            marketing_consent: values.marketing_consent || false,
-            rgpd_consent_date: values.rgpd_consent ? currentDate : null,
-            marketing_consent_date: values.marketing_consent ? currentDate : null,
-          },
+          data: userMetadata,
           emailRedirectTo: `${window.location.origin}/customer-dashboard`,
         },
       });
 
       if (signUpError) {
-        console.error("Erreur d'inscription:", signUpError);
+        console.error("Erreur d'inscription Supabase:", signUpError);
         toast({
           title: "Erreur d'inscription",
           description: signUpError.message,
@@ -191,7 +214,13 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
         return;
       }
 
+      console.log("Inscription Supabase réussie:", {
+        userId: authData.user?.id,
+        hasSession: !!authData.session
+      });
+
       if (authData.user && !authData.session) {
+        console.log("Utilisateur créé, email de confirmation envoyé");
         toast({
           title: "Inscription réussie !",
           description: "Veuillez vérifier votre boîte de réception pour confirmer votre adresse e-mail.",
@@ -201,13 +230,14 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
       }
 
       if (authData.user && authData.session) {
+        console.log("Utilisateur connecté automatiquement, création du lien commerçant");
         // Associer au commerçant immédiatement
         const { error: linkError } = await supabase
           .from('customer_merchant_link')
           .insert({ customer_id: authData.user.id, merchant_id: merchant.id });
 
         if (linkError) {
-          console.error("Erreur d'association:", linkError);
+          console.error("Erreur d'association au commerçant:", linkError);
           toast({
             title: "Erreur lors de l'association",
             description: "Nous n'avons pas pu vous associer au commerçant. Veuillez réessayer plus tard.",
@@ -216,6 +246,8 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
           setFormLoading(false);
           return;
         }
+        
+        console.log("Association au commerçant réussie");
         toast({
           title: "Bienvenue !",
           description: "Votre compte a été créé avec succès.",
@@ -224,7 +256,7 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
         navigate("/customer-dashboard");
       }
     } catch (error) {
-      console.error("Erreur lors de l'inscription:", error);
+      console.error("Erreur inattendue lors de l'inscription:", error);
       toast({
         title: "Erreur",
         description: "Une erreur inattendue est survenue.",

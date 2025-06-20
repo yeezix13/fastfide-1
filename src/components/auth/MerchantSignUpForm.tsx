@@ -69,7 +69,16 @@ const MerchantSignUpForm = () => {
     setIsLoading(true);
     
     try {
-      console.log("Tentative d'inscription pour:", values.email);
+      console.log("=== Début du processus d'inscription commerçant ===");
+      console.log("Données du formulaire:", {
+        email: values.email,
+        businessName: values.businessName,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        phone: values.phone,
+        rgpdConsent: values.rgpd_consent,
+        dataUsageCommitment: values.data_usage_commitment
+      });
       
       // Générer le code d'inscription automatiquement
       const signupCode = generateSignupCode(values.businessName);
@@ -83,6 +92,7 @@ const MerchantSignUpForm = () => {
         .maybeSingle();
 
       if (existingMerchant) {
+        console.log("Code d'inscription déjà existant:", signupCode);
         toast({
           title: "Erreur",
           description: "Un commerce avec un nom similaire existe déjà. Veuillez modifier le nom de votre commerce.",
@@ -93,6 +103,21 @@ const MerchantSignUpForm = () => {
       }
 
       const currentDate = new Date().toISOString();
+      console.log("Date actuelle pour les consentements:", currentDate);
+
+      // Préparer les métadonnées pour l'inscription
+      const userMetadata = {
+        first_name: values.firstName,
+        last_name: values.lastName,
+        email: values.email,
+        phone: values.phone,
+        rgpd_consent: values.rgpd_consent,
+        data_usage_commitment: values.data_usage_commitment,
+        rgpd_consent_date: values.rgpd_consent ? currentDate : null,
+        data_usage_commitment_date: values.data_usage_commitment ? currentDate : null,
+      };
+
+      console.log("Métadonnées utilisateur pour inscription:", userMetadata);
 
       // Créer le compte utilisateur avec validation par email
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -100,21 +125,12 @@ const MerchantSignUpForm = () => {
         password: values.password,
         options: {
           emailRedirectTo: `${window.location.origin}/merchant`,
-          data: {
-            first_name: values.firstName,
-            last_name: values.lastName,
-            email: values.email,
-            phone: values.phone,
-            rgpd_consent: values.rgpd_consent,
-            data_usage_commitment: values.data_usage_commitment,
-            rgpd_consent_date: values.rgpd_consent ? currentDate : null,
-            data_usage_commitment_date: values.data_usage_commitment ? currentDate : null,
-          }
+          data: userMetadata
         }
       });
 
       if (authError) {
-        console.error("Auth error:", authError);
+        console.error("Erreur d'inscription Supabase:", authError);
         
         if (authError.message.includes('already registered') || authError.message.includes('User already registered') || authError.code === 'user_already_exists') {
           toast({
@@ -134,27 +150,34 @@ const MerchantSignUpForm = () => {
       }
 
       if (authData.user) {
-        console.log("Utilisateur créé avec succès:", authData.user.id);
+        console.log("Utilisateur créé avec succès:", {
+          userId: authData.user.id,
+          email: authData.user.email
+        });
         
         // Créer l'entrée commerçant
+        const merchantData = {
+          user_id: authData.user.id,
+          name: values.businessName,
+          signup_code: signupCode,
+          address: values.address,
+          phone: values.phone,
+          contact_email: values.email,
+          points_per_euro: 1.0,
+          rgpd_consent: values.rgpd_consent,
+          data_usage_commitment: values.data_usage_commitment,
+          rgpd_consent_date: values.rgpd_consent ? currentDate : null,
+          data_usage_commitment_date: values.data_usage_commitment ? currentDate : null,
+        };
+
+        console.log("Création du profil commerçant:", merchantData);
+
         const { error: merchantError } = await supabase
           .from('merchants')
-          .insert({
-            user_id: authData.user.id,
-            name: values.businessName,
-            signup_code: signupCode,
-            address: values.address,
-            phone: values.phone,
-            contact_email: values.email,
-            points_per_euro: 1.0,
-            rgpd_consent: values.rgpd_consent,
-            data_usage_commitment: values.data_usage_commitment,
-            rgpd_consent_date: values.rgpd_consent ? currentDate : null,
-            data_usage_commitment_date: values.data_usage_commitment ? currentDate : null,
-          });
+          .insert(merchantData);
 
         if (merchantError) {
-          console.error("Merchant creation error:", merchantError);
+          console.error("Erreur lors de la création du profil commerçant:", merchantError);
           toast({
             title: "Erreur",
             description: "Erreur lors de la création du profil commerçant. Veuillez réessayer.",
@@ -173,7 +196,7 @@ const MerchantSignUpForm = () => {
         form.reset();
       }
     } catch (error) {
-      console.error("Unexpected error:", error);
+      console.error("Erreur inattendue lors de l'inscription:", error);
       toast({
         title: "Erreur",
         description: "Une erreur inattendue s'est produite. Veuillez réessayer.",
