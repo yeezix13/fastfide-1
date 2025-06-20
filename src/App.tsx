@@ -1,67 +1,56 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { HelmetProvider } from 'react-helmet-async';
+import { Toaster } from "@/components/ui/toaster";
+import { HelmetProvider } from "react-helmet-async";
 import HomePage from "./pages/HomePage";
-import NotFound from "./pages/NotFound";
-import MerchantSpace from "./pages/MerchantSpace";
 import CustomerSpace from "./pages/CustomerSpace";
+import MerchantSpace from "./pages/MerchantSpace";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import MerchantDashboard from "./pages/MerchantDashboard";
-import CustomerMerchantDetails from "./pages/CustomerMerchantDetails";
-import CustomerPreferences from "./pages/CustomerPreferences";
 import CustomerVisits from "./pages/CustomerVisits";
+import CustomerPreferences from "./pages/CustomerPreferences";
+import CustomerMerchantDetails from "./pages/CustomerMerchantDetails";
+import MerchantCustomerSignup from "./pages/MerchantCustomerSignup";
 import CustomerSignUpPage from "./pages/CustomerSignUpPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
-import MerchantCustomerSignup from "./pages/MerchantCustomerSignup";
-import ConfirmEmailPage from "./pages/ConfirmEmailPage";
 import ResetPasswordCustomPage from "./pages/ResetPasswordCustomPage";
+import ConfirmEmailPage from "./pages/ConfirmEmailPage";
+import ConfirmEmailCustomPage from "./pages/ConfirmEmailCustomPage";
+import NotFound from "./pages/NotFound";
+import "./App.css";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+function App() {
+  return (
     <HelmetProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Page d'accueil */}
-            <Route path="/" element={<HomePage />} />
-            
-            {/* Main entry points */}
-            <Route path="/merchant" element={<MerchantSpace />} />
-            <Route path="/customer" element={<CustomerSpace />} />
-            
-            {/* Customer routes */}
-            <Route path="/customer-dashboard" element={<CustomerDashboard />} />
-            <Route path="/customer-dashboard/merchant/:merchantId" element={<CustomerMerchantDetails />} />
-            <Route path="/customer-dashboard/preferences" element={<CustomerPreferences />} />
-            <Route path="/customer-signup" element={<CustomerSignUpPage />} />
-            
-            {/* Merchant routes */}
-            <Route path="/merchant-dashboard" element={<MerchantDashboard />} />
-            <Route path="/merchant-dashboard/customer-visits/:merchantId/:customerId" element={<CustomerVisits />} />
-            <Route path="/merchant-dashboard/register-customer" element={<MerchantCustomerSignup />} />
-            
-            {/* Auth routes */}
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/reinitialiser-mot-de-passe" element={<ResetPasswordPage />} />
-            
-            {/* New custom auth routes */}
-            <Route path="/confirm-email" element={<ConfirmEmailPage />} />
-            <Route path="/reset-password-custom" element={<ResetPasswordCustomPage />} />
-            
-            {/* Catch-all route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <div className="min-h-screen bg-gray-50">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/customer" element={<CustomerSpace />} />
+              <Route path="/merchant" element={<MerchantSpace />} />
+              <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+              <Route path="/merchant-dashboard" element={<MerchantDashboard />} />
+              <Route path="/customer-visits" element={<CustomerVisits />} />
+              <Route path="/customer-preferences" element={<CustomerPreferences />} />
+              <Route path="/customer-merchant/:merchantId" element={<CustomerMerchantDetails />} />
+              <Route path="/merchant-customer-signup" element={<MerchantCustomerSignup />} />
+              <Route path="/customer-signup" element={<CustomerSignUpPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/reset-password-custom" element={<ResetPasswordCustomPage />} />
+              <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+              <Route path="/confirm-email" element={<ConfirmEmailCustomPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <Toaster />
+          </div>
+        </Router>
+      </QueryClientProvider>
     </HelmetProvider>
-  </QueryClientProvider>
-);
+  );
+}
 
 export default App;
