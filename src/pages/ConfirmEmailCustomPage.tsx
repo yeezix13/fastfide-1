@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -62,8 +61,8 @@ const ConfirmEmailCustomPage = () => {
           throw usersError;
         }
 
-        // Trouver l'utilisateur correspondant
-        const matchingUser = usersData?.users?.find(u => 
+        // Trouver l'utilisateur correspondant avec un typage explicite
+        const matchingUser = usersData?.users?.find((u: any) => 
           u.email === email && 
           u.id.substring(0, 8) === userIdPrefix
         );
