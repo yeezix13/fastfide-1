@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -98,7 +97,6 @@ const MerchantSignUpForm = () => {
           description: "Un commerce avec un nom similaire existe déjà. Veuillez modifier le nom de votre commerce.",
           variant: "destructive",
         });
-        setIsLoading(false);
         return;
       }
 
@@ -119,7 +117,7 @@ const MerchantSignUpForm = () => {
 
       console.log("Métadonnées utilisateur pour inscription:", userMetadata);
 
-      // Créer le compte utilisateur avec validation par email
+      // Créer le compte utilisateur
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
@@ -129,10 +127,14 @@ const MerchantSignUpForm = () => {
         }
       });
 
+      console.log("Résultat inscription:", { authData, authError });
+
       if (authError) {
         console.error("Erreur d'inscription Supabase:", authError);
         
-        if (authError.message.includes('already registered') || authError.message.includes('User already registered') || authError.code === 'user_already_exists') {
+        if (authError.message.includes('already registered') || 
+            authError.message.includes('User already registered') || 
+            authError.code === 'user_already_exists') {
           toast({
             title: "Email déjà utilisé",
             description: `L'adresse email ${values.email} est déjà associée à un compte. Veuillez utiliser une autre adresse email ou vous connecter si c'est votre compte.`,
@@ -145,7 +147,6 @@ const MerchantSignUpForm = () => {
             variant: "destructive",
           });
         }
-        setIsLoading(false);
         return;
       }
 
@@ -154,6 +155,9 @@ const MerchantSignUpForm = () => {
           userId: authData.user.id,
           email: authData.user.email
         });
+        
+        // Attendre un peu pour que le trigger handle_new_user se termine
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Créer l'entrée commerçant
         const merchantData = {
@@ -183,7 +187,6 @@ const MerchantSignUpForm = () => {
             description: "Erreur lors de la création du profil commerçant. Veuillez réessayer.",
             variant: "destructive",
           });
-          setIsLoading(false);
           return;
         }
 
