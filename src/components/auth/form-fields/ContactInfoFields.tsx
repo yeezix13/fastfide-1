@@ -9,7 +9,7 @@ interface ContactInfoFieldsProps {
   showPhone?: boolean;
 }
 
-const ContactInfoFields = ({ form, showMerchantCode = false, showPhone = false }: ContactInfoFieldsProps) => {
+const ContactInfoFields = ({ form, showMerchantCode = false, showPhone = true }: ContactInfoFieldsProps) => {
   return (
     <>
       <FormField
@@ -32,7 +32,7 @@ const ContactInfoFields = ({ form, showMerchantCode = false, showPhone = false }
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Téléphone</FormLabel>
+              <FormLabel>Téléphone *</FormLabel>
               <FormControl>
                 <Input type="tel" placeholder="0123456789" {...field} />
               </FormControl>

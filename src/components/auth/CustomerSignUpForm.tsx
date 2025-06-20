@@ -51,19 +51,15 @@ const CustomerSignUpForm = ({ merchantId, onBackToLogin }: CustomerSignUpFormPro
     try {
       console.log("=== Vérification des doublons ===");
       
-      // Pour les inscriptions depuis /customer, vérifier seulement l'email
-      // Pour les inscriptions avec merchantId, vérifier email et téléphone
-      const duplicates = await checkDuplicates(
-        values.email, 
-        merchantId ? values.phone : null
-      );
+      // Vérifier toujours l'email et le téléphone
+      const duplicates = await checkDuplicates(values.email, values.phone);
       
-      if (duplicates.emailError || (merchantId && duplicates.phoneError)) {
+      if (duplicates.emailError || duplicates.phoneError) {
         console.error("Erreur lors de la vérification des doublons:", duplicates);
         return;
       }
 
-      if (duplicates.emailExists || (merchantId && duplicates.phoneExists)) {
+      if (duplicates.emailExists || duplicates.phoneExists) {
         console.log("Doublon détecté:", duplicates);
         setDuplicateInfo({
           email: duplicates.emailExists,
@@ -115,7 +111,7 @@ const CustomerSignUpForm = ({ merchantId, onBackToLogin }: CustomerSignUpFormPro
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
         <PersonalInfoFields form={form} showBirthDate={!!merchantId} />
-        <ContactInfoFields form={form} showMerchantCode={!merchantId} showPhone={!!merchantId} />
+        <ContactInfoFields form={form} showMerchantCode={!merchantId} showPhone={true} />
         <PasswordFields form={form} />
         <AntiSpamField form={form} />
         <ConsentCheckboxes form={form} type="customer" />

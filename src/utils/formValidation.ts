@@ -36,6 +36,9 @@ export const createCustomerFormSchema = (hasMerchantId: boolean) => {
     lastName: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères." }),
     email: z.string().email({ message: "Veuillez saisir une adresse e-mail valide." }),
     password: z.string().min(8, { message: "Le mot de passe doit contenir au moins 8 caractères." }),
+    phone: z.string().regex(/^(?:(?:\+|00)33|0)\s*[1-9](?:[\s.-]*\d{2}){4}$/, { 
+      message: "Veuillez saisir un numéro de téléphone français valide." 
+    }),
     rgpd_consent: z.boolean().refine(val => val === true, {
       message: "Vous devez accepter la politique de confidentialité."
     }),
@@ -44,9 +47,8 @@ export const createCustomerFormSchema = (hasMerchantId: boolean) => {
   });
 
   if (hasMerchantId) {
-    // Pour les inscriptions par merchant : téléphone et date de naissance optionnels
+    // Pour les inscriptions par merchant : date de naissance optionnelle
     return baseSchema.extend({
-      phone: z.string().optional(),
       birth_date: z.string().optional(),
     });
   }
