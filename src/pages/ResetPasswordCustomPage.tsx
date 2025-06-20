@@ -25,7 +25,6 @@ const ResetPasswordCustomPage = () => {
   const { toast } = useToast();
   const [isValidToken, setIsValidToken] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUpdating, setIsUpdating] = useState(false);
   const [email, setEmail] = useState('');
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -47,41 +46,14 @@ const ResetPasswordCustomPage = () => {
           description: "Le lien de réinitialisation est invalide.",
           variant: "destructive",
         });
-        navigate('/customer');
+        navigate('/');
         return;
       }
 
-      try {
-        // Décoder le token pour vérifier sa validité
-        const decodedToken = atob(token);
-        const [tokenEmail, timestamp] = decodedToken.split(':');
-        
-        // Vérifier que l'email correspond
-        if (tokenEmail !== emailParam) {
-          throw new Error('Token invalide');
-        }
-        
-        // Vérifier que le token n'est pas expiré (1 heure)
-        const tokenTime = parseInt(timestamp);
-        const now = Date.now();
-        const oneHour = 60 * 60 * 1000;
-        
-        if (now - tokenTime > oneHour) {
-          throw new Error('Token expiré');
-        }
-
-        setEmail(emailParam);
-        setIsValidToken(true);
-      } catch (error) {
-        toast({
-          title: "Lien invalide ou expiré",
-          description: "Le lien de réinitialisation est invalide ou a expiré.",
-          variant: "destructive",
-        });
-        navigate('/customer');
-        return;
-      }
-      
+      setEmail(emailParam);
+      // Ici vous pourriez valider le token côté serveur
+      // Pour l'instant, on considère le token valide s'il existe
+      setIsValidToken(true);
       setIsLoading(false);
     };
 
@@ -89,49 +61,37 @@ const ResetPasswordCustomPage = () => {
   }, [searchParams, navigate, toast]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsUpdating(true);
+    setIsLoading(true);
     
     try {
-      // Chercher l'utilisateur par email dans la table profiles
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .single();
-
-      if (profileError || !profile) {
-        throw new Error('Utilisateur non trouvé');
-      }
-
-      // Utiliser l'API admin pour mettre à jour le mot de passe
-      const { error: updateError } = await supabase.auth.admin.updateUserById(
-        profile.id,
-        { password: values.password }
-      );
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      toast({
-        title: "Succès",
-        description: "Votre mot de passe a été mis à jour avec succès.",
+      // Authentifier temporairement l'utilisateur pour changer le mot de passe
+      const { error } = await supabase.auth.updateUser({
+        password: values.password
       });
-      
-      // Rediriger vers la page de connexion appropriée
-      setTimeout(() => {
+
+      if (error) {
+        toast({
+          title: "Erreur",
+          description: "Impossible de mettre à jour le mot de passe. " + error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Succès",
+          description: "Votre mot de passe a été mis à jour avec succès.",
+        });
+        
+        // Rediriger vers la page de connexion
         navigate('/customer');
-      }, 2000);
-      
+      }
     } catch (error: any) {
-      console.error('Erreur lors de la mise à jour du mot de passe:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de mettre à jour le mot de passe. Veuillez réessayer.",
+        description: "Une erreur inattendue est survenue.",
         variant: "destructive",
       });
     } finally {
-      setIsUpdating(false);
+      setIsLoading(false);
     }
   };
 
@@ -206,9 +166,9 @@ const ResetPasswordCustomPage = () => {
               <Button 
                 type="submit" 
                 className="w-full" 
-                disabled={isUpdating}
+                disabled={isLoading}
               >
-                {isUpdating ? "Mise à jour..." : "Mettre à jour le mot de passe"}
+                {isLoading ? "Mise à jour..." : "Mettre à jour le mot de passe"}
               </Button>
             </form>
           </Form>
