@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +16,8 @@ import CustomerVisits from "./pages/CustomerVisits";
 import CustomerSignUpPage from "./pages/CustomerSignUpPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import MerchantCustomerSignup from "./pages/MerchantCustomerSignup";
+import ConfirmEmailPage from "./pages/ConfirmEmailPage";
+import ResetPasswordCustomPage from "./pages/ResetPasswordCustomPage";
 
 const queryClient = new QueryClient();
 
@@ -46,9 +47,13 @@ const App = () => (
             <Route path="/merchant-dashboard/customer-visits/:merchantId/:customerId" element={<CustomerVisits />} />
             <Route path="/merchant-dashboard/register-customer" element={<MerchantCustomerSignup />} />
             
-            {/* Auth routes - FIXED: Added the missing route */}
+            {/* Auth routes */}
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/reinitialiser-mot-de-passe" element={<ResetPasswordPage />} />
+            
+            {/* New custom auth routes */}
+            <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+            <Route path="/reset-password-custom" element={<ResetPasswordCustomPage />} />
             
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />

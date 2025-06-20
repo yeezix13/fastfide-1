@@ -5,9 +5,8 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
+import { useAuthEmail } from "@/hooks/useAuthEmail";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Veuillez saisir une adresse e-mail valide." }),
@@ -18,8 +17,8 @@ interface MerchantForgotPasswordFormProps {
 }
 
 const MerchantForgotPasswordForm = ({ onBackToLogin }: MerchantForgotPasswordFormProps) => {
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const { sendResetPasswordEmail } = useAuthEmail();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -32,39 +31,14 @@ const MerchantForgotPasswordForm = ({ onBackToLogin }: MerchantForgotPasswordFor
     setIsLoading(true);
     
     try {
-      // Utiliser l'URL actuelle de l'application au lieu de app.fastfide.com
-      const currentUrl = window.location.origin;
-      const redirectUrl = `${currentUrl}/reinitialiser-mot-de-passe`;
-      
-      console.log('Sending password reset email with redirect URL:', redirectUrl);
-      
-      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-        redirectTo: redirectUrl,
+      await sendResetPasswordEmail({
+        email: values.email,
+        userType: 'merchant'
       });
-
-      if (error) {
-        console.error('Password reset error:', error);
-        toast({
-          title: "Erreur",
-          description: "Une erreur est survenue lors de l'envoi de l'email. Vérifiez que l'adresse email est correcte.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Email envoyé",
-          description: "Un lien de réinitialisation a été envoyé à votre adresse email. Vérifiez également vos spams.",
-        });
-        form.reset();
-      }
-    } catch (error) {
-      console.error('Unexpected error:', error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur inattendue est survenue.",
-        variant: "destructive",
-      });
+      
+      form.reset();
     } finally {
-      setIsLoading(false);
+      setIs/false);
     }
   }
 
