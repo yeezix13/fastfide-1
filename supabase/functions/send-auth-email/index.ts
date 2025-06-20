@@ -95,7 +95,7 @@ const handler = async (req: Request): Promise<Response> => {
         </div>
       `;
     } else if (type === 'password_reset') {
-      const resetUrl = `${appUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+      const resetUrl = `${appUrl}/reset-password-custom?token=${resetToken}&email=${encodeURIComponent(email)}`;
       
       subject = `Réinitialisation de votre mot de passe - FastFide`;
 
