@@ -13,10 +13,12 @@ interface SignUpData {
   phone?: string | null;
   userType: 'customer' | 'merchant';
   businessName?: string;
+  address?: string;
   birthDate?: string | null;
   rgpdConsent: boolean;
   marketingConsent?: boolean;
   merchantCode?: string;
+  dataUsageCommitment?: boolean;
 }
 
 export const useCustomSignup = () => {
@@ -46,11 +48,14 @@ export const useCustomSignup = () => {
             phone: userData.phone,
             user_type: userData.userType,
             business_name: userData.businessName,
+            address: userData.address,
             birth_date: userData.birthDate,
             rgpd_consent: userData.rgpdConsent,
             marketing_consent: userData.marketingConsent || false,
             rgpd_consent_date: userData.rgpdConsent ? new Date().toISOString() : null,
             marketing_consent_date: userData.marketingConsent ? new Date().toISOString() : null,
+            data_usage_commitment: userData.dataUsageCommitment || false,
+            data_usage_commitment_date: userData.dataUsageCommitment ? new Date().toISOString() : null,
           },
         },
       });
