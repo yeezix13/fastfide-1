@@ -30,24 +30,27 @@ export const useCustomSignup = () => {
       console.log('=== Début inscription personnalisée ===');
       console.log('Type:', data.userType, 'Email:', data.email);
 
-      // Créer l'utilisateur directement via l'API admin pour éviter l'envoi d'email automatique
-      const { data: authData, error: signUpError } = await supabase.auth.admin.createUser({
+      // Créer le compte utilisateur avec confirmation désactivée
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
-        email_confirm: false, // Pas de confirmation automatique
-        user_metadata: {
-          user_type: data.userType,
-          first_name: data.firstName,
-          last_name: data.lastName,
-          phone: data.phone,
-          email: data.email,
-          ...(data.businessName && { business_name: data.businessName }),
-          ...(data.address && { address: data.address }),
-          ...(data.birthDate && { birth_date: data.birthDate }),
-          rgpd_consent: data.rgpdConsent,
-          ...(data.marketingConsent !== undefined && { marketing_consent: data.marketingConsent }),
-          ...(data.dataUsageCommitment !== undefined && { data_usage_commitment: data.dataUsageCommitment }),
-          ...(data.merchantCode && { merchant_code: data.merchantCode }),
+        options: {
+          // Ne pas rediriger automatiquement
+          emailRedirectTo: undefined,
+          data: {
+            user_type: data.userType,
+            first_name: data.firstName,
+            last_name: data.lastName,
+            phone: data.phone,
+            email: data.email,
+            ...(data.businessName && { business_name: data.businessName }),
+            ...(data.address && { address: data.address }),
+            ...(data.birthDate && { birth_date: data.birthDate }),
+            rgpd_consent: data.rgpdConsent,
+            ...(data.marketingConsent !== undefined && { marketing_consent: data.marketingConsent }),
+            ...(data.dataUsageCommitment !== undefined && { data_usage_commitment: data.dataUsageCommitment }),
+            ...(data.merchantCode && { merchant_code: data.merchantCode }),
+          }
         }
       });
 
