@@ -3,6 +3,14 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { Resend } from "npm:resend@2.0.0";
 
+import { EmailRequest } from "./types.ts";
+import { corsHeaders, handleCorsRequest } from "./utils/cors.ts";
+import { handleCustomerInvitation } from "./handlers/customerInvitation.ts";
+import { handleEmailConfirmation } from "./handlers/emailConfirmation.ts";
+import { handlePasswordReset } from "./handlers/passwordReset.ts";
+import { handleSignupConfirmation } from "./handlers/signupConfirmation.ts";
+import { handleAdminPasswordUpdate } from "./handlers/adminPasswordUpdate.ts";
+
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 // Client admin pour les opérations administratives
@@ -17,295 +25,43 @@ const supabaseAdmin = createClient(
   }
 );
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-// Fonction pour générer un token plus court et plus sûr
-const generateShortToken = (userId: string, email: string): string => {
-  const timestamp = Date.now().toString();
-  const randomString = Math.random().toString(36).substring(2, 8);
-  return btoa(`${userId.substring(0, 8)}:${randomString}:${timestamp}`);
-};
-
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsRequest();
   }
 
   try {
-    const body = await req.json();
+    const body: EmailRequest = await req.json();
     console.log('Request body:', { ...body, newPassword: body.newPassword ? '[HIDDEN]' : undefined });
 
-    const { type, email, userType, resetToken, confirmationToken, firstName, lastName, businessName, newPassword, userId, token, merchantName, signupUrl } = body;
+    const { type } = body;
 
-    // Nouveau type pour l'invitation client par le commerçant
-    if (type === 'customer_invitation') {
-      console.log('Customer invitation for:', email);
+    // Router vers le bon handler selon le type d'email
+    switch (type) {
+      case 'customer_invitation':
+        return await handleCustomerInvitation(resend, body);
       
-      const subject = `${merchantName} vous invite à rejoindre son programme de fidélité !`;
+      case 'confirm_email':
+        return await handleEmailConfirmation(supabaseAdmin, body);
       
-      const emailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="text-align: center; padding: 20px;">
-            <h1 style="color: #2563eb;">FastFide</h1>
-            <h2>Invitation de ${merchantName}</h2>
-          </div>
-          
-          <div style="padding: 20px; background-color: #f8fafc; border-radius: 8px; margin: 20px 0;">
-            <p>Bonjour,</p>
-            <p><strong>${merchantName}</strong> vous invite à rejoindre son programme de fidélité via FastFide !</p>
-            <p>Cliquez sur le bouton ci-dessous pour créer votre compte et commencer à cumuler des points :</p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${signupUrl}" 
-                 style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-                Créer mon compte fidélité
-              </a>
-            </div>
-            
-            <p>Une fois votre compte créé, vous serez automatiquement associé à ${merchantName} et pourrez profiter de toutes les récompenses disponibles.</p>
-            
-            <p>À bientôt !<br>L'équipe FastFide</p>
-          </div>
-          
-          <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 12px;">
-            <p>© 2024 FastFide. Tous droits réservés.</p>
-          </div>
-        </div>
-      `;
-
-      const emailResponse = await resend.emails.send({
-        from: "FastFide <noreply@fastfide.com>",
-        to: [email],
-        subject: subject,
-        html: emailHtml,
-      });
-
-      console.log("Email sent successfully:", emailResponse);
-
-      return new Response(JSON.stringify(emailResponse), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Nouveau type pour la confirmation d'email
-    if (type === 'confirm_email') {
-      console.log('Email confirmation for:', email);
+      case 'admin_password_update':
+        return await handleAdminPasswordUpdate(supabaseAdmin, body);
       
-      try {
-        // Décoder le token pour extraire les informations
-        const decodedToken = atob(token);
-        const [userIdPrefix, randomString, timestamp] = decodedToken.split(':');
-        
-        console.log('Token décodé:', { userIdPrefix, randomString, timestamp });
-
-        // Vérifier que le token n'est pas expiré (24h)
-        const tokenTime = parseInt(timestamp);
-        const now = Date.now();
-        const twentyFourHours = 24 * 60 * 60 * 1000;
-        
-        if (now - tokenTime > twentyFourHours) {
-          console.log('Token expiré');
-          return new Response(
-            JSON.stringify({ error: 'Token expiré' }),
-            { 
-              status: 400, 
-              headers: { ...corsHeaders, "Content-Type": "application/json" } 
-            }
-          );
-        }
-
-        // Rechercher l'utilisateur par email et vérifier le préfixe de l'ID
-        const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
-        
-        if (usersError) {
-          console.error('Erreur récupération utilisateurs:', usersError);
-          throw usersError;
-        }
-
-        // Trouver l'utilisateur correspondant
-        const matchingUser = usersData?.users?.find((u: any) => 
-          u.email === email && 
-          u.id.substring(0, 8) === userIdPrefix
-        );
-
-        if (!matchingUser) {
-          console.log('Utilisateur non trouvé');
-          return new Response(
-            JSON.stringify({ error: 'Utilisateur non trouvé' }),
-            { 
-              status: 404, 
-              headers: { ...corsHeaders, "Content-Type": "application/json" } 
-            }
-          );
-        }
-
-        // Confirmer l'utilisateur via l'API admin
-        const { data, error } = await supabaseAdmin.auth.admin.updateUserById(matchingUser.id, {
-          email_confirm: true
-        });
-
-        if (error) {
-          console.error('Erreur confirmation:', error);
-          return new Response(
-            JSON.stringify({ error: error.message }),
-            { 
-              status: 400, 
-              headers: { ...corsHeaders, "Content-Type": "application/json" } 
-            }
-          );
-        }
-
-        console.log('Email confirmé avec succès');
+      case 'password_reset':
+        return await handlePasswordReset(resend, body);
+      
+      case 'signup_confirmation':
+        return await handleSignupConfirmation(resend, body);
+      
+      default:
         return new Response(
-          JSON.stringify({ success: true }),
-          { 
-            status: 200, 
-            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          JSON.stringify({ error: `Type d'email non supporté: ${type}` }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
           }
         );
-
-      } catch (error: any) {
-        console.error('Erreur lors de la confirmation:', error);
-        return new Response(
-          JSON.stringify({ error: error.message }),
-          { 
-            status: 500, 
-            headers: { ...corsHeaders, "Content-Type": "application/json" } 
-          }
-        );
-      }
     }
-
-    // Nouveau type pour la mise à jour de mot de passe via admin
-    if (type === 'admin_password_update') {
-      console.log('Admin password update for:', email);
-      
-      // Mettre à jour le mot de passe via l'API admin
-      const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
-        (await supabaseAdmin.auth.admin.listUsers()).data.users.find(u => u.email === email)?.id || '',
-        { password: newPassword }
-      );
-
-      if (error) {
-        console.error('Admin password update error:', error);
-        return new Response(
-          JSON.stringify({ error: error.message }),
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, "Content-Type": "application/json" } 
-          }
-        );
-      }
-
-      console.log('Password updated successfully');
-      return new Response(
-        JSON.stringify({ success: true }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, "Content-Type": "application/json" } 
-        }
-      );
-    }
-
-    // Logique pour les autres types d'emails (password_reset, signup_confirmation)
-    let emailHtml = '';
-    let subject = '';
-    let redirectUrl = '';
-
-    if (type === 'password_reset') {
-      console.log(`Sending password_reset email to ${email} for ${userType}`);
-      
-      subject = 'Réinitialisation de votre mot de passe FastFide';
-      redirectUrl = `https://app.fastfide.com/reset-password-custom?token=${resetToken}&email=${encodeURIComponent(email)}`;
-      
-      emailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="text-align: center; padding: 20px;">
-            <h1 style="color: #2563eb;">FastFide</h1>
-            <h2>Réinitialisation de votre mot de passe</h2>
-          </div>
-          
-          <div style="padding: 20px; background-color: #f8fafc; border-radius: 8px; margin: 20px 0;">
-            <p>Bonjour,</p>
-            <p>Vous avez demandé la réinitialisation de votre mot de passe pour votre compte FastFide.</p>
-            <p>Cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe :</p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${redirectUrl}" 
-                 style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-                Réinitialiser mon mot de passe
-              </a>
-            </div>
-            
-            <p><strong>Important :</strong> Ce lien est valide pendant 24 heures.</p>
-            <p>Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet email.</p>
-            
-            <p>Cordialement,<br>L'équipe FastFide</p>
-          </div>
-          
-          <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 12px;">
-            <p>© 2024 FastFide. Tous droits réservés.</p>
-          </div>
-        </div>
-      `;
-    } else if (type === 'signup_confirmation') {
-      console.log(`Sending signup_confirmation email to ${email} for ${userType}`);
-      
-      subject = 'Confirmez votre inscription à FastFide';
-      
-      // Générer un token plus court et plus sûr
-      const shortToken = generateShortToken(userId || '', email);
-      redirectUrl = `https://app.fastfide.com/confirm-email?token=${shortToken}&email=${encodeURIComponent(email)}`;
-      
-      const displayName = userType === 'merchant' ? businessName : `${firstName} ${lastName}`;
-      
-      emailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="text-align: center; padding: 20px;">
-            <h1 style="color: #2563eb;">FastFide</h1>
-            <h2>Bienvenue ${displayName} !</h2>
-          </div>
-          
-          <div style="padding: 20px; background-color: #f8fafc; border-radius: 8px; margin: 20px 0;">
-            <p>Merci de vous être inscrit(e) à FastFide !</p>
-            <p>Pour finaliser votre inscription, veuillez confirmer votre adresse email en cliquant sur le bouton ci-dessous :</p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${redirectUrl}" 
-                 style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-                Confirmer mon email
-              </a>
-            </div>
-            
-            <p>Une fois votre email confirmé, vous pourrez vous connecter à votre espace ${userType === 'merchant' ? 'commerçant' : 'client'} et profiter de tous nos services.</p>
-            
-            <p>Cordialement,<br>L'équipe FastFide</p>
-          </div>
-          
-          <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 12px;">
-            <p>© 2024 FastFide. Tous droits réservés.</p>
-          </div>
-        </div>
-      `;
-    }
-
-    const emailResponse = await resend.emails.send({
-      from: "FastFide <noreply@fastfide.com>",
-      to: [email],
-      subject: subject,
-      html: emailHtml,
-    });
-
-    console.log("Email sent successfully:", emailResponse);
-
-    return new Response(JSON.stringify(emailResponse), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
 
   } catch (error: any) {
     console.error("Error in send-auth-email function:", error);
