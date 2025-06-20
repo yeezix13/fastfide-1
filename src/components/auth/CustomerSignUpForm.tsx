@@ -123,8 +123,9 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
       const currentDate = new Date().toISOString();
       console.log("Date actuelle pour les consentements:", currentDate);
 
-      // Préparer les métadonnées pour l'inscription
+      // Préparer les métadonnées pour l'inscription avec user_type
       const userMetadata = {
+        user_type: 'customer',
         first_name: values.firstName,
         last_name: values.lastName,
         phone: values.phone,

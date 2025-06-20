@@ -54,12 +54,13 @@ export const useCustomerSignup = (merchant: Merchant | null) => {
       const tempPassword = Math.random().toString(36).slice(-8);
       console.log("Mot de passe temporaire généré");
 
-      // Créer le compte utilisateur
+      // Créer le compte utilisateur avec user_type customer
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
         password: tempPassword,
         options: {
           data: {
+            user_type: 'customer',
             first_name: values.firstName,
             last_name: values.lastName,
             phone: values.phone,
