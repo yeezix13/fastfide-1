@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -87,7 +86,7 @@ export const useCustomSignup = () => {
             lastName: data.lastName,
             businessName: data.businessName,
             userType: data.userType,
-            confirmationToken: btoa(`${authData.user.id}:${data.email}:${Date.now()}`),
+            userId: authData.user.id, // Ajouter l'userId pour générer un token plus court
           },
         });
 

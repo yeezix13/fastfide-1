@@ -34,19 +34,9 @@ const ConfirmEmailCustomPage = () => {
       try {
         // Décoder le token pour extraire les informations
         const decodedToken = atob(token);
-        const [userId, tokenEmail, timestamp] = decodedToken.split(':');
+        const [userIdPrefix, randomString, timestamp] = decodedToken.split(':');
         
-        // Vérifier que l'email correspond
-        if (tokenEmail !== email) {
-          console.log('Email ne correspond pas');
-          toast({
-            title: "Lien invalide",
-            description: "Le lien de confirmation est invalide.",
-            variant: "destructive",
-          });
-          navigate('/customer');
-          return;
-        }
+        console.log('Token décodé:', { userIdPrefix, randomString, timestamp });
 
         // Vérifier que le token n'est pas expiré (24h)
         const tokenTime = parseInt(timestamp);
@@ -64,8 +54,32 @@ const ConfirmEmailCustomPage = () => {
           return;
         }
 
+        // Rechercher l'utilisateur par email et vérifier le préfixe de l'ID
+        const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
+        
+        if (usersError) {
+          console.error('Erreur récupération utilisateurs:', usersError);
+          throw usersError;
+        }
+
+        const user = users.users.find(u => 
+          u.email === email && 
+          u.id.substring(0, 8) === userIdPrefix
+        );
+
+        if (!user) {
+          console.log('Utilisateur non trouvé');
+          toast({
+            title: "Lien invalide",
+            description: "Le lien de confirmation est invalide ou l'utilisateur n'existe pas.",
+            variant: "destructive",
+          });
+          navigate('/customer');
+          return;
+        }
+
         // Confirmer l'utilisateur via l'API admin
-        const { data, error } = await supabase.auth.admin.updateUserById(userId, {
+        const { data, error } = await supabase.auth.admin.updateUserById(user.id, {
           email_confirm: true
         });
 

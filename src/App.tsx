@@ -41,7 +41,6 @@ function App() {
               <Route path="/customer-signup" element={<CustomerSignUpPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/reset-password-custom" element={<ResetPasswordCustomPage />} />
-              <Route path="/confirm-email" element={<ConfirmEmailPage />} />
               <Route path="/confirm-email" element={<ConfirmEmailCustomPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

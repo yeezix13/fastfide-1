@@ -22,6 +22,13 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Fonction pour générer un token plus court et plus sûr
+const generateShortToken = (userId: string, email: string): string => {
+  const timestamp = Date.now().toString();
+  const randomString = Math.random().toString(36).substring(2, 8);
+  return btoa(`${userId.substring(0, 8)}:${randomString}:${timestamp}`);
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -31,7 +38,7 @@ const handler = async (req: Request): Promise<Response> => {
     const body = await req.json();
     console.log('Request body:', { ...body, newPassword: body.newPassword ? '[HIDDEN]' : undefined });
 
-    const { type, email, userType, resetToken, confirmationToken, firstName, lastName, businessName, newPassword } = body;
+    const { type, email, userType, resetToken, confirmationToken, firstName, lastName, businessName, newPassword, userId } = body;
 
     // Nouveau type pour la mise à jour de mot de passe via admin
     if (type === 'admin_password_update') {
@@ -109,7 +116,10 @@ const handler = async (req: Request): Promise<Response> => {
       console.log(`Sending signup_confirmation email to ${email} for ${userType}`);
       
       subject = 'Confirmez votre inscription à FastFide';
-      redirectUrl = `https://app.fastfide.com/confirm-email?token=${confirmationToken}&email=${encodeURIComponent(email)}`;
+      
+      // Générer un token plus court et plus sûr
+      const shortToken = generateShortToken(userId || '', email);
+      redirectUrl = `https://app.fastfide.com/confirm-email?token=${shortToken}&email=${encodeURIComponent(email)}`;
       
       const displayName = userType === 'merchant' ? businessName : `${firstName} ${lastName}`;
       
