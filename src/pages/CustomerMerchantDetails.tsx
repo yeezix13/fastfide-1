@@ -1,224 +1,173 @@
-
-import { useParams, Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import React from 'react';
 import { useEffect, useState } from 'react';
-import type { User } from '@supabase/supabase-js';
-import CustomerRewardsList from "@/components/customer/CustomerRewardsList";
-import CustomerLoyaltyHistoryTable from "@/components/customer/CustomerLoyaltyHistoryTable";
-import CustomerLoyaltyInfoCard from "@/components/customer/CustomerLoyaltyInfoCard";
-import DetailedVisitHistory from "@/components/customer/DetailedVisitHistory";
-import MerchantLogo from "@/components/ui/merchant-logo";
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import CustomerLoyaltyInfoCard from '@/components/customer/CustomerLoyaltyInfoCard';
+import { useQuery } from '@tanstack/react-query';
+import { CalendarDays, ChevronLeft, ShoppingBag } from 'lucide-react';
+import { formatDate } from '@/lib/utils';
+import { Helmet } from 'react-helmet-async';
+import RewardsDisplay from '@/components/customer/RewardsDisplay';
+import { useRewards } from '@/hooks/useRewards';
 
 const CustomerMerchantDetails = () => {
   const { merchantId } = useParams<{ merchantId: string }>();
-  const [user, setUser] = useState<User | null>(null);
+  const navigate = useNavigate();
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const getUserSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setUser(session.user);
+    const getUserId = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      } else {
+        navigate('/customer');
       }
     };
-    getUserSession();
-  }, []);
-
-  const { data: loyaltyAccount, isLoading: isLoadingAccount } = useQuery({
-    queryKey: ['loyaltyAccount', user?.id, merchantId],
+    getUserId();
+  }, [navigate]);
+  
+  const { data: merchantData, isLoading: isLoadingMerchant } = useQuery({
+    queryKey: ['merchantDetails', merchantId],
     queryFn: async () => {
-      if (!user || !merchantId) return null;
+      if (!merchantId) return null;
       const { data, error } = await supabase
-        .from('customer_merchant_link')
-        .select(`
-          loyalty_points,
-          merchants (
-            id,
-            name,
-            address,
-            phone,
-            contact_email,
-            theme_color,
-            logo_url
-          )
-        `)
-        .eq('customer_id', user.id)
-        .eq('merchant_id', merchantId)
-        .maybeSingle();
-
-      if (error) {
-        console.error("Error fetching loyalty account details:", error);
-        throw error;
-      }
+        .from('merchants')
+        .select('id, name, theme_color, logo_url, address, phone, contact_email')
+        .eq('id', merchantId)
+        .single();
+      if (error) throw error;
       return data;
-    },
-    enabled: !!user && !!merchantId,
-  });
-
-  const { data: rewards, isLoading: isLoadingRewards } = useQuery({
-    queryKey: ['rewards', merchantId],
-    queryFn: async () => {
-      if (!merchantId) return [];
-      const { data, error } = await supabase
-        .from('rewards')
-        .select('id, name, points_required')
-        .eq('merchant_id', merchantId)
-        .order('points_required', { ascending: true });
-      if (error) {
-        console.error("Error fetching rewards:", error);
-        throw error;
-      }
-      return data || [];
     },
     enabled: !!merchantId,
   });
 
-  // Ajout : on récupère points_earned ET points_spent pour les visites
-  const { data: visits, isLoading: isLoadingVisits } = useQuery({
-    queryKey: ['visits', user?.id, merchantId],
+  const { data: loyaltyData, isLoading: isLoadingLoyalty } = useQuery({
+    queryKey: ['loyaltyPoints', userId, merchantId],
     queryFn: async () => {
-      if (!user || !merchantId) return [];
+      if (!userId || !merchantId) return null;
+      const { data, error } = await supabase
+        .from('customer_merchant_link')
+        .select('loyalty_points')
+        .eq('customer_id', userId)
+        .eq('merchant_id', merchantId)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId && !!merchantId,
+  });
+
+  const { data: visitHistory, isLoading: isLoadingVisits } = useQuery({
+    queryKey: ['visits', userId, merchantId],
+    queryFn: async () => {
+      if (!userId || !merchantId) return null;
       const { data, error } = await supabase
         .from('visits')
-        .select('id, created_at, amount_spent, points_earned, points_spent')
-        .eq('customer_id', user.id)
+        .select('created_at, amount_spent, points_earned')
+        .eq('customer_id', userId)
         .eq('merchant_id', merchantId)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error("Error fetching visits:", error);
-        throw error;
-      }
-      return data || [];
+        .order('created_at', { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return data;
     },
-    enabled: !!user && !!merchantId,
+    enabled: !!userId && !!merchantId,
   });
+  
+  const { data: rewards } = useRewards(merchantId);
 
-  const { data: rewardRedemptions, isLoading: isLoadingRedemptions } = useQuery({
-    queryKey: ['rewardRedemptions', user?.id, merchantId],
-    queryFn: async () => {
-      if (!user || !merchantId) return [];
-      const { data, error } = await supabase
-        .from('reward_redemptions')
-        .select(`
-          id,
-          redeemed_at,
-          points_spent,
-          reward_id,
-          rewards (
-            name
-          )
-        `)
-        .eq('customer_id', user.id)
-        .eq('merchant_id', merchantId)
-        .order('redeemed_at', { ascending: false });
-      if (error) {
-        console.error("Error fetching reward redemptions:", error);
-        throw error;
-      }
-      // On filtre les rewards supprimées pour éviter le "null"
-      return (data || []).filter(r => r.rewards && r.rewards.name);
-    },
-    enabled: !!user && !!merchantId,
-  });
+  if (isLoadingMerchant || isLoadingLoyalty) {
+    return <div className="flex h-screen items-center justify-center">Chargement...</div>;
+  }
 
-  const isLoading = isLoadingAccount || isLoadingRewards || isLoadingVisits || isLoadingRedemptions;
-
-  // Logique simplifiée pour l'historique
-  const historique = (() => {
-    if (!visits && !rewardRedemptions) return [];
-    const visitesMap = (visits || []).map(visit => {
-      const pointsList: { value: number; label: string }[] = [];
-      let mainType: "visit" | "redemption" = "visit";
-      let rewardName: string | null = null;
-      
-      if (typeof visit.points_spent === "number" && visit.points_spent > 0) {
-        mainType = "redemption";
-        pointsList.push({ value: -Math.abs(visit.points_spent), label: "dépensés" });
-      }
-      
-      if (typeof visit.points_earned === "number" && visit.points_earned > 0) {
-        pointsList.push({ value: visit.points_earned, label: "gagnés" });
-      }
-      
-      return {
-        type: mainType,
-        id: visit.id,
-        date: visit.created_at,
-        montant: typeof visit.amount_spent === "number" ? visit.amount_spent : null,
-        rewardName,
-        pointsList,
-      };
-    });
-    
-    const redemptionsMap = (rewardRedemptions || []).map(redemption => ({
-      type: "redemption" as const,
-      id: redemption.id,
-      date: redemption.redeemed_at,
-      montant: null as number | null,
-      rewardName: redemption.rewards ? redemption.rewards.name : null,
-      pointsList: [
-        { value: -Math.abs(redemption.points_spent), label: "dépensés" }
-      ],
-    }));
-    
-    return [...visitesMap, ...redemptionsMap].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-  })();
+  if (!merchantData) {
+    return <div className="flex h-screen items-center justify-center">Commerçant introuvable.</div>;
+  }
 
   return (
-    <div className="container mx-auto p-4 md:p-8">
-      <div className="mb-4">
-        <Button variant="outline" asChild>
-          <Link to="/customer-dashboard">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Retour
-          </Link>
-        </Button>
-      </div>
+    <>
+      <Helmet>
+        <title>{merchantData?.name} - Mes points de fidélité</title>
+      </Helmet>
+      <div className="container mx-auto p-4 md:p-8">
+        {/* En-tête avec le bouton de retour */}
+        <header className="flex items-center justify-between py-4">
+          <div>
+            <Button variant="ghost" asChild>
+              <Link to="/customer-dashboard">
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                Retour
+              </Link>
+            </Button>
+          </div>
+        </header>
 
-      {isLoading ? (
-        <p>Chargement des informations du commerçant...</p>
-      ) : !loyaltyAccount || !loyaltyAccount.merchants ? (
-        <p>Impossible de trouver les informations pour ce commerçant.</p>
-      ) : (
-        <>
-          <div className="flex items-center gap-4 mb-6">
-            <MerchantLogo 
-              logoUrl={loyaltyAccount.merchants.logo_url} 
-              merchantName={loyaltyAccount.merchants.name} 
-              size="lg"
-            />
-            <h1 className="text-3xl font-bold">{loyaltyAccount.merchants.name}</h1>
-          </div>
-          <div className="flex flex-col gap-8">
+        <main className="grid md:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            {/* Carte d'informations sur la fidélité */}
             <CustomerLoyaltyInfoCard
-              points={loyaltyAccount.loyalty_points}
-              merchantInfo={{
-                address: loyaltyAccount.merchants.address,
-                phone: loyaltyAccount.merchants.phone,
-                contact_email: loyaltyAccount.merchants.contact_email,
-              }}
-              themeColor={loyaltyAccount.merchants.theme_color || "#2563eb"}
+              points={loyaltyData?.loyalty_points || 0}
+              merchantInfo={merchantData}
+              themeColor={merchantData?.theme_color}
             />
-            <CustomerRewardsList
+            
+            {/* Nouveau composant pour les récompenses */}
+            <RewardsDisplay 
               rewards={rewards || []}
-              currentPoints={loyaltyAccount.loyalty_points}
-            />
-            
-            {/* Nouveau composant d'historique détaillé */}
-            <DetailedVisitHistory customerId={user?.id || null} />
-            
-            <CustomerLoyaltyHistoryTable
-              historique={historique}
-              isLoading={isLoadingVisits || isLoadingRedemptions}
+              currentPoints={loyaltyData?.loyalty_points || 0}
+              themeColor={merchantData?.theme_color}
             />
           </div>
-        </>
-      )}
-    </div>
+
+          <div>
+            {/* Historique des visites */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CalendarDays className="h-5 w-5" />
+                  Historique récent
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoadingVisits ? (
+                  <p>Chargement de l'historique...</p>
+                ) : visitHistory && visitHistory.length > 0 ? (
+                  <ul className="space-y-3">
+                    {visitHistory.map((visit) => (
+                      <li key={visit.created_at} className="border rounded-md p-3">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="text-sm font-medium">
+                              {formatDate(visit.created_at)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {visit.amount_spent ? `Dépense: ${visit.amount_spent}€` : 'Utilisation de points'}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold">
+                              {visit.points_earned > 0 ? `+${visit.points_earned}` : `-${visit.points_earned}`} points
+                            </p>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="text-center py-4">
+                    <ShoppingBag className="mx-auto h-6 w-6 text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">Aucune visite récente.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    </>
   );
 };
 

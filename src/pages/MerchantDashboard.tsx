@@ -15,6 +15,7 @@ import MerchantStats from '@/components/merchant/MerchantStats';
 import MerchantLogo from '@/components/ui/merchant-logo';
 import { LogOut, UserPlus } from "lucide-react";
 import { Helmet } from 'react-helmet-async';
+import MerchantAnalytics from '@/components/merchant/MerchantAnalytics';
 
 const MerchantDashboard = () => {
   const navigate = useNavigate();
@@ -149,7 +150,7 @@ const MerchantDashboard = () => {
             
             <div className="w-full mx-auto rounded-xl p-0 pt-0">
               <Tabs defaultValue="actions" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-white rounded-xl shadow-sm mb-8">
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-white rounded-xl shadow-sm mb-8">
                   <TabsTrigger
                     value="actions"
                     style={{ color: themeColor }}
@@ -163,6 +164,13 @@ const MerchantDashboard = () => {
                     className="data-[state=active]:bg-[var(--themeColor)] data-[state=active]:text-white data-[state=active]:font-bold px-4"
                   >
                     Statistiques
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="analytics"
+                    style={{ color: themeColor }}
+                    className="data-[state=active]:bg-[var(--themeColor)] data-[state=active]:text-white data-[state=active]:font-bold px-4"
+                  >
+                    Analytics
                   </TabsTrigger>
                   <TabsTrigger
                     value="customers"
@@ -203,6 +211,11 @@ const MerchantDashboard = () => {
                         <RedeemRewardForm merchant={merchant} themeColor={themeColor} />
                       </CardContent>
                     </Card>
+                  </div>
+                </TabsContent>
+                <TabsContent value="analytics" className="mt-0">
+                  <div className="px-2 md:px-0">
+                    <MerchantAnalytics merchantId={merchant.id} themeColor={themeColor} />
                   </div>
                 </TabsContent>
                 <TabsContent value="settings" className="mt-0">
