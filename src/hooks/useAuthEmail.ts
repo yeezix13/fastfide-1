@@ -21,10 +21,7 @@ export const useAuthEmail = () => {
 
   const sendConfirmationEmail = async (params: SendConfirmationEmailParams) => {
     try {
-      console.log('Sending confirmation email:', params);
-
-      // Générer un token de confirmation simple (en production, utilisez un token plus sécurisé)
-      const confirmationToken = btoa(`${params.userId}:${params.email}:${Date.now()}`);
+      console.log('Sending confirmation email via Resend:', params);
 
       const { data, error } = await supabase.functions.invoke('send-auth-email', {
         body: {
@@ -34,7 +31,7 @@ export const useAuthEmail = () => {
           lastName: params.lastName,
           businessName: params.businessName,
           userType: params.userType,
-          confirmationToken,
+          userId: params.userId,
         },
       });
 
@@ -62,17 +59,14 @@ export const useAuthEmail = () => {
 
   const sendResetPasswordEmail = async (params: SendResetPasswordEmailParams) => {
     try {
-      console.log('Sending reset password email:', params);
-
-      // Générer un token de reset password (en production, utilisez un token plus sécurisé)
-      const resetToken = btoa(`${params.email}:${Date.now()}`);
+      console.log('Sending reset password email via Resend:', params);
 
       const { data, error } = await supabase.functions.invoke('send-auth-email', {
         body: {
           type: 'password_reset',
           email: params.email,
           userType: params.userType,
-          resetToken,
+          resetToken: btoa(`${params.email}:${Date.now()}`),
         },
       });
 

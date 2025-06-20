@@ -5,11 +5,9 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { UserPlus } from 'lucide-react';
+import { Mail } from 'lucide-react';
 
 const formSchema = z.object({
-  firstName: z.string().min(2, { message: "Le prénom doit contenir au moins 2 caractères." }),
-  lastName: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères." }),
   email: z.string().email({ message: "Veuillez entrer une adresse email valide." }),
 });
 
@@ -23,8 +21,6 @@ const CustomerSignupForm = ({ onSubmit, isLoading, themeColor }: CustomerSignupF
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
       email: "",
     },
   });
@@ -32,40 +28,12 @@ const CustomerSignupForm = ({ onSubmit, isLoading, themeColor }: CustomerSignupF
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Prénom *</FormLabel>
-                <FormControl>
-                  <Input placeholder="Prénom du client" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nom *</FormLabel>
-                <FormControl>
-                  <Input placeholder="Nom du client" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Adresse email *</FormLabel>
+              <FormLabel>Adresse email du client *</FormLabel>
               <FormControl>
                 <Input placeholder="client@email.com" type="email" {...field} />
               </FormControl>
@@ -88,8 +56,8 @@ const CustomerSignupForm = ({ onSubmit, isLoading, themeColor }: CustomerSignupF
             style={{ backgroundColor: themeColor }}
             className="text-white hover:opacity-90"
           >
-            <UserPlus className="mr-2 h-4 w-4" />
-            {isLoading ? "Inscription en cours..." : "Inscrire le client"}
+            <Mail className="mr-2 h-4 w-4" />
+            {isLoading ? "Traitement en cours..." : "Ajouter le client"}
           </Button>
         </div>
       </form>
