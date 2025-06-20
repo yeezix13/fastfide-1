@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,34 +54,13 @@ const ConfirmEmailCustomPage = () => {
           return;
         }
 
-        // Rechercher l'utilisateur par email et vérifier le préfixe de l'ID
-        const { data: usersData, error: usersError } = await supabase.auth.admin.listUsers();
-        
-        if (usersError) {
-          console.error('Erreur récupération utilisateurs:', usersError);
-          throw usersError;
-        }
-
-        // Trouver l'utilisateur correspondant avec un typage explicite
-        const matchingUser = usersData?.users?.find((u: any) => 
-          u.email === email && 
-          u.id.substring(0, 8) === userIdPrefix
-        );
-
-        if (!matchingUser) {
-          console.log('Utilisateur non trouvé');
-          toast({
-            title: "Lien invalide",
-            description: "Le lien de confirmation est invalide ou l'utilisateur n'existe pas.",
-            variant: "destructive",
-          });
-          navigate('/customer');
-          return;
-        }
-
-        // Confirmer l'utilisateur via l'API admin
-        const { data, error } = await supabase.auth.admin.updateUserById(matchingUser.id, {
-          email_confirm: true
+        // Utiliser notre fonction edge pour confirmer l'utilisateur via l'API admin
+        const { data, error } = await supabase.functions.invoke('send-auth-email', {
+          body: {
+            type: 'confirm_email',
+            token: token,
+            email: email
+          },
         });
 
         if (error) {
@@ -90,12 +70,19 @@ const ConfirmEmailCustomPage = () => {
             description: "Impossible de confirmer votre email. Veuillez réessayer.",
             variant: "destructive",
           });
-        } else {
+        } else if (data?.success) {
           console.log('Email confirmé avec succès');
           setIsConfirmed(true);
           toast({
             title: "Email confirmé !",
             description: "Votre adresse email a été confirmée avec succès. Vous pouvez maintenant vous connecter.",
+          });
+        } else {
+          console.log('Confirmation échouée:', data);
+          toast({
+            title: "Erreur",
+            description: data?.error || "La confirmation a échoué.",
+            variant: "destructive",
           });
         }
       } catch (error) {
