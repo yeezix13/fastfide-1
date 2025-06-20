@@ -20,7 +20,7 @@ const ExistingCustomerLogin = ({ merchantCode, merchantName, themeColor }: Exist
       </CardHeader>
       <CardContent className="text-center">
         <p className="text-sm text-muted-foreground mb-4">
-          Si vous avez déjà un compte FastFide, connectez-vous pour rejoindre {merchantName} avec le code {merchantCode}.
+          Si vous avez déjà un compte FastFide, connectez-vous pour rejoindre {merchantName} avec le code <strong>{merchantCode}</strong>
         </p>
         <Button 
           asChild
