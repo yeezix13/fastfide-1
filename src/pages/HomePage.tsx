@@ -22,7 +22,28 @@ const HomePage = () => {
       </div>
 
       {/* Deux blocs de redirection */}
-
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+        {/* Bloc Commerçant */}
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <CardHeader className="text-center pb-4">
+            <div className="mx-auto mb-4 p-4 bg-blue-100 rounded-full w-fit">
+              <Store className="h-8 w-8 text-blue-600" />
+            </div>
+            <CardTitle className="text-xl">Espace Commerçant</CardTitle>
+            <CardDescription>
+              Gérez votre programme de fidélité et vos clients
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <Button 
+              onClick={() => navigate("/merchant")}
+              className="w-full"
+              size="lg"
+            >
+              Accéder à l'espace commerçant
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Bloc Client */}
         <Card className="hover:shadow-lg transition-shadow cursor-pointer">
@@ -42,29 +63,6 @@ const HomePage = () => {
               size="lg"
             >
               Accéder à l'espace client
-            </Button>
-          </CardContent>
-        </Card>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
-        {/* Bloc Commerçant */}
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-          <CardHeader className="text-center pb-4">
-            <div className="mx-auto mb-4 p-4 bg-blue-100 rounded-full w-fit">
-              <Store className="h-8 w-8 text-blue-600" />
-            </div>
-            <CardTitle className="text-xl">Espace Commerçant</CardTitle>
-            <CardDescription>
-              Gérez votre programme de fidélité et vos clients
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <Button 
-              onClick={() => navigate("/merchant")}
-              className="w-full"
-              size="lg"
-            >
-              Accéder à l'espace commerçant
             </Button>
           </CardContent>
         </Card>
