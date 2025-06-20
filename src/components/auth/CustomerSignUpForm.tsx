@@ -22,10 +22,11 @@ const formSchema = z.object({
 });
 
 interface CustomerSignUpFormProps {
-  onBackToLogin: () => void;
+  onBackToLogin?: () => void;
+  merchantId?: string;
 }
 
-const CustomerSignUpForm = ({ onBackToLogin }: CustomerSignUpFormProps) => {
+const CustomerSignUpForm = ({ onBackToLogin, merchantId }: CustomerSignUpFormProps) => {
   const { signupCustomer, isLoading } = useCustomSignup();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -72,7 +73,7 @@ const CustomerSignUpForm = ({ onBackToLogin }: CustomerSignUpFormProps) => {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <PersonalInfoFields form={form} />
           <ContactInfoFields form={form} />
-          <ConsentCheckboxes form={form} />
+          <ConsentCheckboxes form={form} type="customer" />
           <AntiSpamField form={form} />
           
           <Button 
@@ -83,14 +84,16 @@ const CustomerSignUpForm = ({ onBackToLogin }: CustomerSignUpFormProps) => {
             {isLoading ? "Inscription en cours..." : "S'inscrire"}
           </Button>
           
-          <Button 
-            type="button" 
-            variant="ghost" 
-            className="w-full" 
-            onClick={onBackToLogin}
-          >
-            Retour à la connexion
-          </Button>
+          {onBackToLogin && (
+            <Button 
+              type="button" 
+              variant="ghost" 
+              className="w-full" 
+              onClick={onBackToLogin}
+            >
+              Retour à la connexion
+            </Button>
+          )}
         </form>
       </Form>
     </div>

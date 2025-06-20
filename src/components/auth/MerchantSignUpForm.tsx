@@ -23,7 +23,7 @@ const formSchema = z.object({
 });
 
 interface MerchantSignUpFormProps {
-  onBackToLogin: () => void;
+  onBackToLogin?: () => void;
 }
 
 const MerchantSignUpForm = ({ onBackToLogin }: MerchantSignUpFormProps) => {
@@ -74,7 +74,7 @@ const MerchantSignUpForm = ({ onBackToLogin }: MerchantSignUpFormProps) => {
           <PersonalInfoFields form={form} />
           <BusinessInfoFields form={form} />
           <ContactInfoFields form={form} />
-          <ConsentCheckboxes form={form} />
+          <ConsentCheckboxes form={form} type="merchant" />
           <AntiSpamField form={form} />
           
           <Button 
@@ -85,14 +85,16 @@ const MerchantSignUpForm = ({ onBackToLogin }: MerchantSignUpFormProps) => {
             {isLoading ? "Inscription en cours..." : "S'inscrire"}
           </Button>
           
-          <Button 
-            type="button" 
-            variant="ghost" 
-            className="w-full" 
-            onClick={onBackToLogin}
-          >
-            Retour à la connexion
-          </Button>
+          {onBackToLogin && (
+            <Button 
+              type="button" 
+              variant="ghost" 
+              className="w-full" 
+              onClick={onBackToLogin}
+            >
+              Retour à la connexion
+            </Button>
+          )}
         </form>
       </Form>
     </div>

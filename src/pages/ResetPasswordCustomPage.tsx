@@ -92,28 +92,20 @@ const ResetPasswordCustomPage = () => {
     setIsUpdating(true);
     
     try {
-      // Utiliser l'API Admin de Supabase pour mettre à jour le mot de passe
-      // En production, ceci devrait être fait via une Edge Function sécurisée
-      
-      // Pour l'instant, on va essayer de se connecter temporairement avec l'ancien mot de passe
-      // puis mettre à jour. En production, il faudrait une Edge Function dédiée.
-      
-      // Créer une session temporaire pour cet utilisateur
-      const { data: users, error: listError } = await supabase.auth.admin.listUsers();
-      
-      if (listError) {
-        throw new Error('Impossible de vérifier l\'utilisateur');
-      }
-      
-      const user = users.users.find(u => u.email === email);
-      
-      if (!user) {
+      // Chercher l'utilisateur par email dans la table profiles
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .single();
+
+      if (profileError || !profile) {
         throw new Error('Utilisateur non trouvé');
       }
 
       // Utiliser l'API admin pour mettre à jour le mot de passe
       const { error: updateError } = await supabase.auth.admin.updateUserById(
-        user.id,
+        profile.id,
         { password: values.password }
       );
 
