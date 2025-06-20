@@ -117,7 +117,7 @@ const CustomerDashboard = () => {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>
-              <Link to="/customer-dashboard/preferences">
+              <Link to="/customer-preferences">
                 <Settings />
                 <span>Préférences</span>
               </Link>
@@ -167,7 +167,7 @@ const CustomerDashboard = () => {
                           <p className="text-sm" style={{ color: themeColor }}>points</p>
                         </div>
                         <Button asChild variant="ghost" className="hover:bg-transparent" style={{ color: themeColor }}>
-                          <Link to={`/customer-dashboard/merchant/${account.merchants.id}`}>
+                          <Link to={`/customer-merchant/${account.merchants.id}`}>
                             <span className="font-semibold">Voir détails</span>
                             <ArrowRight className="ml-2 h-5 w-5" />
                           </Link>
