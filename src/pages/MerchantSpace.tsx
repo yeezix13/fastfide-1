@@ -1,9 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MerchantLoginForm from "@/components/auth/MerchantLoginForm";
-import MerchantSignUpForm from "@/components/auth/MerchantSignUpForm";
 
 const MerchantSpace = () => {
   return (
@@ -20,24 +18,21 @@ const MerchantSpace = () => {
         </span>
       </div>
 
-      <Card className="w-full max-w-2xl">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Espace Commerçant</CardTitle>
-          <CardDescription>Connectez-vous ou créez votre compte commerçant pour gérer votre programme de fidélité.</CardDescription>
+          <CardDescription>
+            Connectez-vous à votre compte commerçant pour gérer votre programme de fidélité.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="connexion" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="connexion">Connexion</TabsTrigger>
-              <TabsTrigger value="inscription">Créer un compte</TabsTrigger>
-            </TabsList>
-            <TabsContent value="connexion">
-              <MerchantLoginForm />
-            </TabsContent>
-            <TabsContent value="inscription">
-              <MerchantSignUpForm />
-            </TabsContent>
-          </Tabs>
+          <MerchantLoginForm />
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <p className="text-sm text-blue-800 text-center">
+              <strong>Nouveau commerçant ?</strong><br />
+              Contactez-nous pour créer votre compte et rejoindre FastFide.
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

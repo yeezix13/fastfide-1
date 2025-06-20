@@ -1,5 +1,5 @@
 
--- Modifier la fonction handle_new_user pour créer merchants dans la table merchants
+-- Modifier la fonction handle_new_user pour créer seulement les customers automatiquement
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER 
 LANGUAGE plpgsql
@@ -19,16 +19,11 @@ BEGIN
         NEW.raw_user_meta_data->>'email',
         user_type;
 
-    -- Si c'est un merchant, créer SEULEMENT dans la table merchants
+    -- Si c'est un merchant, ne rien faire automatiquement (création manuelle uniquement)
     IF user_type = 'merchant' THEN
-        RAISE LOG 'Creating merchant entry for user: %', NEW.id;
+        RAISE LOG 'Merchant user created manually, no automatic profile creation';
         
-        -- Ne rien créer dans profiles, seulement dans merchants
-        -- Le formulaire s'occupera de créer l'entrée merchants
-        
-        RAISE LOG 'Merchant user created, waiting for merchant profile creation';
-        
-    -- Si c'est un customer, créer SEULEMENT dans la table profiles
+    -- Si c'est un customer, créer le profil automatiquement
     ELSE
         RAISE LOG 'Creating customer profile for user: %', NEW.id;
         
