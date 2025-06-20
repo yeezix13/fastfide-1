@@ -1,53 +1,19 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Form } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import CustomerDuplicateHandler from "./CustomerDuplicateHandler";
-
-// Fonction pour valider le format JJ/MM/AAAA
-const validateDateFormat = (dateString: string): boolean => {
-  const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-  const match = dateString.match(regex);
-  
-  if (!match) return false;
-  
-  const day = parseInt(match[1], 10);
-  const month = parseInt(match[2], 10);
-  const year = parseInt(match[3], 10);
-  
-  // Vérifier que les valeurs sont dans des plages valides
-  if (month < 1 || month > 12) return false;
-  if (day < 1 || day > 31) return false;
-  if (year < 1900 || year > new Date().getFullYear()) return false;
-  
-  // Vérifier que la date existe réellement
-  const date = new Date(year, month - 1, day);
-  return date.getDate() === day && date.getMonth() === month - 1 && date.getFullYear() === year;
-};
-
-const baseSchema = {
-  firstName: z.string().min(1, { message: "Le prénom est requis." }),
-  lastName: z.string().min(1, { message: "Le nom est requis." }),
-  phone: z.string().min(1, { message: "Le numéro de téléphone est requis." }),
-  email: z.string().email({ message: "Veuillez saisir une adresse e-mail valide." }),
-  password: z.string().min(6, { message: "Le mot de passe doit contenir au moins 6 caractères." }),
-  birth_date: z.string().optional().refine((val) => {
-    if (!val || val === '') return true; // Champ optionnel
-    return validateDateFormat(val);
-  }, { message: "Format de date invalide. Utilisez JJ/MM/AAAA (ex: 15/03/1990)" }),
-  rgpd_consent: z.boolean().refine(val => val === true, {
-    message: "Vous devez accepter le consentement RGPD pour créer votre compte."
-  }),
-  marketing_consent: z.boolean().optional(),
-};
+import { createCustomerFormSchema } from "@/utils/formValidation";
+import { checkDuplicates } from "@/utils/duplicateChecker";
+import PersonalInfoFields from "./form-fields/PersonalInfoFields";
+import ContactInfoFields from "./form-fields/ContactInfoFields";
+import PasswordFields from "./form-fields/PasswordFields";
+import ConsentCheckboxes from "./form-fields/ConsentCheckboxes";
 
 type Props = {
   merchantId?: string;
@@ -63,15 +29,9 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
     emailValue?: string;
   } | null>(null);
 
-  // Si merchantId est fourni, le code commerçant n'est pas demandé
-  const formSchema = z.object({
-    ...baseSchema,
-    ...(merchantId ? {} : {
-      merchantCode: z.string().min(1, { message: "Le code commerçant est requis." }),
-    }),
-  });
+  const formSchema = createCustomerFormSchema(!!merchantId);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       firstName: "",
@@ -86,22 +46,7 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
     } as any,
   });
 
-  // Fonction pour vérifier les doublons
-  const checkDuplicates = async (email: string, phone: string) => {
-    const [emailCheck, phoneCheck] = await Promise.all([
-      supabase.from("profiles").select("id").eq("email", email).maybeSingle(),
-      supabase.from("profiles").select("id").eq("phone", phone).maybeSingle()
-    ]);
-
-    return {
-      emailExists: !!emailCheck.data,
-      phoneExists: !!phoneCheck.data,
-      emailError: emailCheck.error,
-      phoneError: phoneCheck.error
-    };
-  };
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: any) {
     setFormLoading(true);
     setDuplicateInfo(null);
 
@@ -280,86 +225,10 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
-        <FormField control={form.control} name="firstName" render={({ field }) => (
-          <FormItem><FormLabel>Prénom *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
-        <FormField control={form.control} name="lastName" render={({ field }) => (
-          <FormItem><FormLabel>Nom *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
-        <FormField control={form.control} name="phone" render={({ field }) => (
-          <FormItem><FormLabel>N° de téléphone *</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
-        <FormField control={form.control} name="email" render={({ field }) => (
-          <FormItem><FormLabel>Email *</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
-        <FormField
-          control={form.control}
-          name="birth_date"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Date de naissance</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="JJ/MM/AAAA (ex: 15/03/1990)" 
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {!merchantId && (
-          <FormField control={form.control} name="merchantCode" render={({ field }) => (
-            <FormItem><FormLabel>Code commerçant *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-          )} />
-        )}
-        <FormField control={form.control} name="password" render={({ field }) => (
-          <FormItem><FormLabel>Mot de passe</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
-        
-        {/* Cases à cocher RGPD */}
-        <div className="space-y-3 border-t pt-4">
-          <FormField
-            control={form.control}
-            name="rgpd_consent"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel className="text-sm font-normal">
-                    J'accepte que mes données soient utilisées pour créer mon compte fidélité et bénéficier des services Fastfide. *
-                  </FormLabel>
-                  <FormMessage />
-                </div>
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="marketing_consent"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value || false}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel className="text-sm font-normal">
-                    J'accepte de recevoir des communications commerciales par email et SMS de la part du commerçant chez qui je m'inscris.
-                  </FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-        </div>
+        <PersonalInfoFields form={form} showBirthDate />
+        <ContactInfoFields form={form} showMerchantCode={!merchantId} />
+        <PasswordFields form={form} />
+        <ConsentCheckboxes form={form} type="customer" />
 
         <Button type="submit" className="w-full" disabled={formLoading}>
           {formLoading ? "Chargement..." : "Je m'inscris"}

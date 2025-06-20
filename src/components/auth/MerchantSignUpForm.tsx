@@ -1,55 +1,25 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Form } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-
-const formSchema = z.object({
-  email: z.string().email({ message: "Veuillez saisir une adresse e-mail valide." }),
-  password: z.string().min(6, { message: "Le mot de passe doit contenir au moins 6 caractères." }),
-  confirmPassword: z.string(),
-  firstName: z.string().min(1, { message: "Le prénom est requis." }),
-  lastName: z.string().min(1, { message: "Le nom est requis." }),
-  businessName: z.string().min(1, { message: "Le nom du commerce est requis." }),
-  address: z.string().min(1, { message: "L'adresse est requise." }),
-  phone: z.string().min(1, { message: "Le téléphone est requis." }),
-  rgpd_consent: z.boolean().refine(val => val === true, {
-    message: "Vous devez accepter le consentement RGPD pour créer votre compte."
-  }),
-  data_usage_commitment: z.boolean().refine(val => val === true, {
-    message: "Vous devez accepter l'engagement sur l'usage des données clients."
-  }),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Les mots de passe ne correspondent pas.",
-  path: ["confirmPassword"],
-});
-
-// Fonction pour générer le code d'inscription automatiquement
-const generateSignupCode = (businessName: string): string => {
-  return businessName
-    .toLowerCase()
-    .replace(/[àáâãäå]/g, 'a')
-    .replace(/[èéêë]/g, 'e')
-    .replace(/[ìíîï]/g, 'i')
-    .replace(/[òóôõö]/g, 'o')
-    .replace(/[ùúûü]/g, 'u')
-    .replace(/[ç]/g, 'c')
-    .replace(/[ñ]/g, 'n')
-    .replace(/[^a-z0-9]/g, '')
-    .toUpperCase();
-};
+import { generateSignupCode } from "@/utils/signupCodeGenerator";
+import { merchantFormSchema } from "@/utils/formValidation";
+import PersonalInfoFields from "./form-fields/PersonalInfoFields";
+import ContactInfoFields from "./form-fields/ContactInfoFields";
+import BusinessInfoFields from "./form-fields/BusinessInfoFields";
+import PasswordFields from "./form-fields/PasswordFields";
+import ConsentCheckboxes from "./form-fields/ConsentCheckboxes";
 
 const MerchantSignUpForm = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm({
+    resolver: zodResolver(merchantFormSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -64,7 +34,7 @@ const MerchantSignUpForm = () => {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: any) {
     setIsLoading(true);
     
     try {
@@ -213,164 +183,11 @@ const MerchantSignUpForm = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Prénom</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nom</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input type="email" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Mot de passe</FormLabel>
-                <FormControl>
-                  <Input type="password" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="confirmPassword"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Confirmer le mot de passe</FormLabel>
-                <FormControl>
-                  <Input type="password" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="businessName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nom du commerce</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Adresse</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="12 rue de la paix, 75015 Paris" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Téléphone</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="0123456789" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Cases à cocher RGPD */}
-        <div className="space-y-3 border-t pt-4">
-          <FormField
-            control={form.control}
-            name="rgpd_consent"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel className="text-sm font-normal">
-                    J'accepte que mes données soient utilisées pour la gestion de mon compte commerçant et de mon programme de fidélité. *
-                  </FormLabel>
-                  <FormMessage />
-                </div>
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="data_usage_commitment"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel className="text-sm font-normal">
-                    Je m'engage à respecter la réglementation en vigueur (RGPD) concernant les données des clients collectées via Fastfide, notamment en ce qui concerne les communications par email ou SMS. *
-                  </FormLabel>
-                  <FormMessage />
-                </div>
-              </FormItem>
-            )}
-          />
-        </div>
+        <PersonalInfoFields form={form} />
+        <ContactInfoFields form={form} />
+        <PasswordFields form={form} showConfirmPassword />
+        <BusinessInfoFields form={form} />
+        <ConsentCheckboxes form={form} type="merchant" />
 
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "Création en cours..." : "Créer mon compte commerçant"}
