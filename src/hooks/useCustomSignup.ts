@@ -30,35 +30,31 @@ export const useCustomSignup = () => {
       console.log('=== Début inscription personnalisée ===');
       console.log('Type:', data.userType, 'Email:', data.email);
 
-      // Créer le compte utilisateur SANS confirmation automatique
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      // Créer l'utilisateur directement via l'API admin pour éviter l'envoi d'email automatique
+      const { data: authData, error: signUpError } = await supabase.auth.admin.createUser({
         email: data.email,
         password: data.password,
-        options: {
-          emailRedirectTo: data.userType === 'merchant' 
-            ? `${window.location.origin}/merchant-dashboard`
-            : `${window.location.origin}/customer-dashboard`,
-          data: {
-            user_type: data.userType,
-            first_name: data.firstName,
-            last_name: data.lastName,
-            phone: data.phone,
-            email: data.email,
-            ...(data.businessName && { business_name: data.businessName }),
-            ...(data.address && { address: data.address }),
-            ...(data.birthDate && { birth_date: data.birthDate }),
-            rgpd_consent: data.rgpdConsent,
-            ...(data.marketingConsent !== undefined && { marketing_consent: data.marketingConsent }),
-            ...(data.dataUsageCommitment !== undefined && { data_usage_commitment: data.dataUsageCommitment }),
-            ...(data.merchantCode && { merchant_code: data.merchantCode }),
-          }
+        email_confirm: false, // Pas de confirmation automatique
+        user_metadata: {
+          user_type: data.userType,
+          first_name: data.firstName,
+          last_name: data.lastName,
+          phone: data.phone,
+          email: data.email,
+          ...(data.businessName && { business_name: data.businessName }),
+          ...(data.address && { address: data.address }),
+          ...(data.birthDate && { birth_date: data.birthDate }),
+          rgpd_consent: data.rgpdConsent,
+          ...(data.marketingConsent !== undefined && { marketing_consent: data.marketingConsent }),
+          ...(data.dataUsageCommitment !== undefined && { data_usage_commitment: data.dataUsageCommitment }),
+          ...(data.merchantCode && { merchant_code: data.merchantCode }),
         }
       });
 
       if (signUpError) {
-        console.error('Erreur inscription Supabase:', signUpError);
+        console.error('Erreur création utilisateur:', signUpError);
         
-        if (signUpError.message.includes('already registered') || 
+        if (signUpError.message.includes('already exists') || 
             signUpError.message.includes('User already registered') || 
             signUpError.code === 'user_already_exists') {
           toast({
