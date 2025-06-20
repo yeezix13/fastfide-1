@@ -51,8 +51,9 @@ const CustomerSignUpForm = ({ merchantId, onBackToLogin }: CustomerSignUpFormPro
     try {
       console.log("=== Vérification des doublons ===");
       
-      // Vérifier toujours l'email et le téléphone
-      const duplicates = await checkDuplicates(values.email, values.phone);
+      // Vérifier l'email et le téléphone seulement s'il est fourni
+      const phoneToCheck = values.phone && values.phone.trim() !== '' ? values.phone : null;
+      const duplicates = await checkDuplicates(values.email, phoneToCheck);
       
       if (duplicates.emailError || duplicates.phoneError) {
         console.error("Erreur lors de la vérification des doublons:", duplicates);
@@ -81,7 +82,7 @@ const CustomerSignUpForm = ({ merchantId, onBackToLogin }: CustomerSignUpFormPro
         password: values.password,
         firstName: values.firstName,
         lastName: values.lastName,
-        phone: values.phone || "",
+        phone: values.phone && values.phone.trim() !== '' ? values.phone : null,
         userType: 'customer',
         birthDate: formattedBirthDate,
         rgpdConsent: values.rgpd_consent,

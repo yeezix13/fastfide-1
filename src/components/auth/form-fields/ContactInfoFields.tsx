@@ -32,9 +32,9 @@ const ContactInfoFields = ({ form, showMerchantCode = false, showPhone = true }:
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Téléphone *</FormLabel>
+              <FormLabel>Téléphone</FormLabel>
               <FormControl>
-                <Input type="tel" placeholder="0123456789" {...field} />
+                <Input type="tel" placeholder="0123456789 (optionnel)" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
