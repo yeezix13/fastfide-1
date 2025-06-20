@@ -33,6 +33,13 @@ export type Database = {
             referencedRelation: "merchants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_customer_profile"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       merchants: {
@@ -169,6 +176,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fk_redemptions_customer_profile"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fk_reward"
             columns: ["reward_id"]
             isOneToOne: false
@@ -235,6 +249,13 @@ export type Database = {
           points_spent?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_visits_customer_profile"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "visits_merchant_id_fkey"
             columns: ["merchant_id"]

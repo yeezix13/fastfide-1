@@ -4,11 +4,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useErrorHandler } from './useErrorHandler';
 import type { User } from '@supabase/supabase-js';
 import type { ProfileFormValues } from '@/components/customer/CustomerPreferencesForm';
 
 export const useCustomerProfile = () => {
   const { toast } = useToast();
+  const { handleError } = useErrorHandler();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
@@ -31,15 +33,16 @@ export const useCustomerProfile = () => {
       if (!user) return null;
       const { data, error } = await supabase
         .from('profiles')
-        .select('first_name, last_name, phone, birth_date')
+        .select('first_name, last_name, phone, birth_date, client_code, email, rgpd_consent, marketing_consent')
         .eq('id', user.id)
         .single();
       if (error && error.code !== 'PGRST116') {
-        console.error("Error fetching profile:", error);
+        handleError(error, "Profile fetch", { showToast: false });
       }
       return data;
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
   });
 
   const updateProfileMutation = useMutation({
@@ -78,10 +81,8 @@ export const useCustomerProfile = () => {
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
     },
     onError: (error: any) => {
-      toast({
-        title: "Erreur",
-        description: error.message || "Une erreur est survenue lors de la mise à jour.",
-        variant: "destructive",
+      handleError(error, "Profile update", {
+        fallbackMessage: "Une erreur est survenue lors de la mise à jour."
       });
     },
   });

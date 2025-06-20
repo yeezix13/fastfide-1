@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useErrorHandler } from './useErrorHandler';
 
 interface CustomerSignupData {
   firstName: string;
@@ -18,9 +19,13 @@ interface Merchant {
 export const useCustomerSignup = (merchant: Merchant | null) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { handleError } = useErrorHandler();
 
   const signupCustomer = async (values: CustomerSignupData) => {
-    if (!merchant) return;
+    if (!merchant) {
+      handleError("Aucun commerçant sélectionné", "CustomerSignup");
+      return false;
+    }
 
     setIsLoading(true);
     console.log("=== Début inscription client ===");
@@ -28,16 +33,12 @@ export const useCustomerSignup = (merchant: Merchant | null) => {
     console.log("Commerçant:", merchant);
 
     try {
-      // Vérifier si l'email existe déjà dans les profils
-      const { data: existingProfile, error: profileError } = await supabase
+      // Vérifier si l'email existe déjà
+      const { data: existingProfile } = await supabase
         .from('profiles')
         .select('email')
         .eq('email', values.email)
         .maybeSingle();
-
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error("Erreur lors de la vérification des profils:", profileError);
-      }
 
       if (existingProfile) {
         console.log("Email déjà existant:", values.email);
@@ -46,14 +47,14 @@ export const useCustomerSignup = (merchant: Merchant | null) => {
           description: "Un compte avec cette adresse email existe déjà.",
           variant: "destructive",
         });
-        return;
+        return false;
       }
 
       // Générer un mot de passe temporaire
       const tempPassword = Math.random().toString(36).slice(-8);
       console.log("Mot de passe temporaire généré");
 
-      // Créer le compte utilisateur avec les métadonnées
+      // Créer le compte utilisateur
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
         password: tempPassword,
@@ -70,15 +71,15 @@ export const useCustomerSignup = (merchant: Merchant | null) => {
       console.log("Résultat inscription auth:", { authData, authError });
 
       if (authError) {
-        console.error("Erreur auth:", authError);
-        throw authError;
+        handleError(authError, "CustomerSignup - Auth");
+        return false;
       }
 
       if (authData.user) {
         console.log("Utilisateur créé avec ID:", authData.user.id);
 
-        // Attendre un peu pour que le trigger handle_new_user se termine
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Attendre le trigger handle_new_user
+        await new Promise(resolve => setTimeout(resolve, 1500));
 
         // Créer le lien client-commerçant
         const { error: linkError } = await supabase
@@ -90,8 +91,8 @@ export const useCustomerSignup = (merchant: Merchant | null) => {
           });
 
         if (linkError) {
-          console.error("Erreur création lien:", linkError);
-          throw linkError;
+          handleError(linkError, "CustomerSignup - Link creation");
+          return false;
         }
 
         console.log("Lien client-commerçant créé avec succès");
@@ -104,15 +105,15 @@ export const useCustomerSignup = (merchant: Merchant | null) => {
         return true;
       }
     } catch (error: any) {
-      console.error("Erreur lors de l'inscription:", error);
-      toast({
-        title: "Erreur",
-        description: error.message || "Une erreur est survenue lors de l'inscription.",
-        variant: "destructive",
+      handleError(error, "CustomerSignup", {
+        fallbackMessage: "Une erreur est survenue lors de l'inscription."
       });
+      return false;
     } finally {
       setIsLoading(false);
     }
+
+    return false;
   };
 
   return {
