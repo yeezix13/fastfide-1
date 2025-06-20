@@ -80,6 +80,9 @@ const MerchantSignUpForm = () => {
         last_name: values.lastName,
         email: values.email,
         phone: values.phone,
+        business_name: values.businessName,
+        address: values.address,
+        signup_code: signupCode,
         rgpd_consent: values.rgpd_consent,
         data_usage_commitment: values.data_usage_commitment,
         rgpd_consent_date: values.rgpd_consent ? currentDate : null,
@@ -127,10 +130,10 @@ const MerchantSignUpForm = () => {
           email: authData.user.email
         });
         
-        // Attendre un peu pour que le trigger handle_new_user se termine
+        // Attendre un peu pour que le système se stabilise
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Créer l'entrée commerçant
+        // Créer l'entrée commerçant directement ici
         const merchantData = {
           user_id: authData.user.id,
           name: values.businessName,
