@@ -13,6 +13,7 @@ import ContactInfoFields from "./form-fields/ContactInfoFields";
 import BusinessInfoFields from "./form-fields/BusinessInfoFields";
 import PasswordFields from "./form-fields/PasswordFields";
 import ConsentCheckboxes from "./form-fields/ConsentCheckboxes";
+import AntiSpamField from "./form-fields/AntiSpamField";
 
 const MerchantSignUpForm = () => {
   const { toast } = useToast();
@@ -31,6 +32,7 @@ const MerchantSignUpForm = () => {
       phone: "",
       rgpd_consent: false,
       data_usage_commitment: false,
+      antiSpam: "",
     },
   });
 
@@ -91,12 +93,12 @@ const MerchantSignUpForm = () => {
 
       console.log("Métadonnées utilisateur pour inscription:", userMetadata);
 
-      // Créer le compte utilisateur
+      // Créer le compte utilisateur - IMPORTANT: Pas de confirmation automatique
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/merchant`,
+          emailRedirectTo: `${window.location.origin}/merchant-dashboard`,
           data: userMetadata
         }
       });
@@ -127,48 +129,61 @@ const MerchantSignUpForm = () => {
       if (authData.user) {
         console.log("Utilisateur créé avec succès:", {
           userId: authData.user.id,
-          email: authData.user.email
+          email: authData.user.email,
+          emailConfirmed: authData.user.email_confirmed_at
         });
         
-        // Attendre un peu pour que le système se stabilise
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Créer l'entrée commerçant directement ici
-        const merchantData = {
-          user_id: authData.user.id,
-          name: values.businessName,
-          signup_code: signupCode,
-          address: values.address,
-          phone: values.phone,
-          contact_email: values.email,
-          points_per_euro: 1.0,
-          rgpd_consent: values.rgpd_consent,
-          data_usage_commitment: values.data_usage_commitment,
-          rgpd_consent_date: values.rgpd_consent ? currentDate : null,
-          data_usage_commitment_date: values.data_usage_commitment ? currentDate : null,
-        };
-
-        console.log("Création du profil commerçant:", merchantData);
-
-        const { error: merchantError } = await supabase
-          .from('merchants')
-          .insert(merchantData);
-
-        if (merchantError) {
-          console.error("Erreur lors de la création du profil commerçant:", merchantError);
+        // L'utilisateur doit confirmer son email avant de pouvoir se connecter
+        if (!authData.session) {
+          console.log("Email de confirmation envoyé, pas de session créée");
           toast({
-            title: "Erreur",
-            description: "Erreur lors de la création du profil commerçant. Veuillez réessayer.",
-            variant: "destructive",
+            title: "Inscription réussie !",
+            description: `Veuillez vérifier votre boîte de réception et cliquer sur le lien de confirmation avant de pouvoir vous connecter. Code d'inscription: ${signupCode}`,
           });
-          return;
-        }
+        } else {
+          // Si une session est créée (ne devrait pas arriver avec email confirmation activée)
+          console.log("Session créée immédiatement, créer le profil merchant");
+          
+          // Attendre un peu pour que le système se stabilise
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Créer l'entrée commerçant directement ici
+          const merchantData = {
+            user_id: authData.user.id,
+            name: values.businessName,
+            signup_code: signupCode,
+            address: values.address,
+            phone: values.phone,
+            contact_email: values.email,
+            points_per_euro: 1.0,
+            rgpd_consent: values.rgpd_consent,
+            data_usage_commitment: values.data_usage_commitment,
+            rgpd_consent_date: values.rgpd_consent ? currentDate : null,
+            data_usage_commitment_date: values.data_usage_commitment ? currentDate : null,
+          };
 
-        console.log("Profil commerçant créé avec succès");
-        toast({
-          title: "Inscription réussie !",
-          description: `Un email de validation a été envoyé à votre adresse. Votre code d'inscription généré est : ${signupCode}`,
-        });
+          console.log("Création du profil commerçant:", merchantData);
+
+          const { error: merchantError } = await supabase
+            .from('merchants')
+            .insert(merchantData);
+
+          if (merchantError) {
+            console.error("Erreur lors de la création du profil commerçant:", merchantError);
+            toast({
+              title: "Erreur",
+              description: "Erreur lors de la création du profil commerçant. Veuillez réessayer.",
+              variant: "destructive",
+            });
+            return;
+          }
+
+          console.log("Profil commerçant créé avec succès");
+          toast({
+            title: "Inscription réussie !",
+            description: `Votre compte a été créé avec succès. Code d'inscription: ${signupCode}`,
+          });
+        }
         
         form.reset();
       }
@@ -191,6 +206,7 @@ const MerchantSignUpForm = () => {
         <ContactInfoFields form={form} />
         <PasswordFields form={form} showConfirmPassword />
         <BusinessInfoFields form={form} />
+        <AntiSpamField form={form} />
         <ConsentCheckboxes form={form} type="merchant" />
 
         <Button type="submit" className="w-full" disabled={isLoading}>

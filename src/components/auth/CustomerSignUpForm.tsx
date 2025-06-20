@@ -14,6 +14,7 @@ import PersonalInfoFields from "./form-fields/PersonalInfoFields";
 import ContactInfoFields from "./form-fields/ContactInfoFields";
 import PasswordFields from "./form-fields/PasswordFields";
 import ConsentCheckboxes from "./form-fields/ConsentCheckboxes";
+import AntiSpamField from "./form-fields/AntiSpamField";
 
 type Props = {
   merchantId?: string;
@@ -42,6 +43,7 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
       birth_date: "",
       rgpd_consent: false,
       marketing_consent: false,
+      antiSpam: "",
       ...(merchantId ? {} : { merchantCode: "" }),
     } as any,
   });
@@ -135,6 +137,7 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
         marketing_consent: values.marketing_consent || false,
         rgpd_consent_date: values.rgpd_consent ? currentDate : null,
         marketing_consent_date: values.marketing_consent ? currentDate : null,
+        merchant_id: merchant.id, // Stocker l'ID du merchant pour l'associer après confirmation
       };
 
       console.log("Métadonnées utilisateur pour inscription:", userMetadata);
@@ -162,19 +165,22 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
 
       console.log("Inscription Supabase réussie:", {
         userId: authData.user?.id,
-        hasSession: !!authData.session
+        hasSession: !!authData.session,
+        emailConfirmed: authData.user?.email_confirmed_at
       });
 
+      // L'utilisateur doit toujours confirmer son email
       if (authData.user && !authData.session) {
         console.log("Utilisateur créé, email de confirmation envoyé");
         toast({
           title: "Inscription réussie !",
-          description: "Veuillez vérifier votre boîte de réception pour confirmer votre adresse e-mail.",
+          description: "Veuillez vérifier votre boîte de réception et cliquer sur le lien de confirmation avant de pouvoir vous connecter.",
         });
         setFormLoading(false);
         return;
       }
 
+      // Ce cas ne devrait pas arriver si la confirmation email est activée
       if (authData.user && authData.session) {
         console.log("Utilisateur connecté automatiquement, création du lien commerçant");
         // Associer au commerçant immédiatement
@@ -229,6 +235,7 @@ const CustomerSignUpForm = ({ merchantId }: Props) => {
         <PersonalInfoFields form={form} showBirthDate />
         <ContactInfoFields form={form} showMerchantCode={!merchantId} />
         <PasswordFields form={form} />
+        <AntiSpamField form={form} />
         <ConsentCheckboxes form={form} type="customer" />
 
         <Button type="submit" className="w-full" disabled={formLoading}>

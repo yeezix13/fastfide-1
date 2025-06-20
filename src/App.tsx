@@ -46,8 +46,9 @@ const App = () => (
             <Route path="/merchant-dashboard/customer-visits/:merchantId/:customerId" element={<CustomerVisits />} />
             <Route path="/merchant-dashboard/register-customer" element={<MerchantCustomerSignup />} />
             
-            {/* Auth routes */}
+            {/* Auth routes - FIXED: Added the missing route */}
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/reinitialiser-mot-de-passe" element={<ResetPasswordPage />} />
             
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
