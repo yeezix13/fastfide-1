@@ -38,7 +38,7 @@ const MerchantForgotPasswordForm = ({ onBackToLogin }: MerchantForgotPasswordFor
       
       form.reset();
     } finally {
-      setIs/false);
+      setIsLoading(false);
     }
   }
 
