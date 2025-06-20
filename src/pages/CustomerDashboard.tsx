@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Link, useNavigate } from 'react-router-dom';
@@ -8,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Settings, Store, ArrowRight } from 'lucide-react';
 import AddMerchantForm from '@/components/customer/AddMerchantForm';
+import ClientCodeDisplay from '@/components/customer/ClientCodeDisplay';
 import { Helmet } from 'react-helmet-async';
 
 const CustomerDashboard = () => {
@@ -123,7 +125,13 @@ const CustomerDashboard = () => {
             <Button onClick={handleLogout} variant="outline">Déconnexion</Button>
           </div>
         </header>
+
         <main>
+          {/* Nouveau composant Code Client */}
+          <div className="mb-8">
+            <ClientCodeDisplay customerId={user.id} />
+          </div>
+
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Mes cartes de fidélité</h2>
             <div className="flex justify-end">

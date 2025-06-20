@@ -1,3 +1,4 @@
+
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -8,6 +9,7 @@ import type { User } from '@supabase/supabase-js';
 import CustomerRewardsList from "@/components/customer/CustomerRewardsList";
 import CustomerLoyaltyHistoryTable from "@/components/customer/CustomerLoyaltyHistoryTable";
 import CustomerLoyaltyInfoCard from "@/components/customer/CustomerLoyaltyInfoCard";
+import DetailedVisitHistory from "@/components/customer/DetailedVisitHistory";
 import MerchantLogo from "@/components/ui/merchant-logo";
 
 const CustomerMerchantDetails = () => {
@@ -124,22 +126,23 @@ const CustomerMerchantDetails = () => {
 
   const isLoading = isLoadingAccount || isLoadingRewards || isLoadingVisits || isLoadingRedemptions;
 
-  // Nouvelle logique - fusion visites avec soit points gagnés, soit points dépensés (et indication du cas où rien de dépensé ni gagné)
+  // Logique simplifiée pour l'historique
   const historique = (() => {
     if (!visits && !rewardRedemptions) return [];
     const visitesMap = (visits || []).map(visit => {
       const pointsList: { value: number; label: string }[] = [];
       let mainType: "visit" | "redemption" = "visit";
       let rewardName: string | null = null;
-      // Si la visite est une consommation de points (récompense), on note type "redemption"
+      
       if (typeof visit.points_spent === "number" && visit.points_spent > 0) {
         mainType = "redemption";
         pointsList.push({ value: -Math.abs(visit.points_spent), label: "dépensés" });
       }
-      // Si la visite rapporte des points, normale
+      
       if (typeof visit.points_earned === "number" && visit.points_earned > 0) {
         pointsList.push({ value: visit.points_earned, label: "gagnés" });
       }
+      
       return {
         type: mainType,
         id: visit.id,
@@ -149,6 +152,7 @@ const CustomerMerchantDetails = () => {
         pointsList,
       };
     });
+    
     const redemptionsMap = (rewardRedemptions || []).map(redemption => ({
       type: "redemption" as const,
       id: redemption.id,
@@ -159,6 +163,7 @@ const CustomerMerchantDetails = () => {
         { value: -Math.abs(redemption.points_spent), label: "dépensés" }
       ],
     }));
+    
     return [...visitesMap, ...redemptionsMap].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
@@ -202,6 +207,10 @@ const CustomerMerchantDetails = () => {
               rewards={rewards || []}
               currentPoints={loyaltyAccount.loyalty_points}
             />
+            
+            {/* Nouveau composant d'historique détaillé */}
+            <DetailedVisitHistory customerId={user?.id || null} />
+            
             <CustomerLoyaltyHistoryTable
               historique={historique}
               isLoading={isLoadingVisits || isLoadingRedemptions}
