@@ -55,19 +55,20 @@ const ConfirmEmailCustomPage = () => {
         }
 
         // Rechercher l'utilisateur par email et vérifier le préfixe de l'ID
-        const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
+        const { data: usersData, error: usersError } = await supabase.auth.admin.listUsers();
         
         if (usersError) {
           console.error('Erreur récupération utilisateurs:', usersError);
           throw usersError;
         }
 
-        const user = users.users.find(u => 
+        // Trouver l'utilisateur correspondant
+        const matchingUser = usersData?.users?.find(u => 
           u.email === email && 
           u.id.substring(0, 8) === userIdPrefix
         );
 
-        if (!user) {
+        if (!matchingUser) {
           console.log('Utilisateur non trouvé');
           toast({
             title: "Lien invalide",
@@ -79,7 +80,7 @@ const ConfirmEmailCustomPage = () => {
         }
 
         // Confirmer l'utilisateur via l'API admin
-        const { data, error } = await supabase.auth.admin.updateUserById(user.id, {
+        const { data, error } = await supabase.auth.admin.updateUserById(matchingUser.id, {
           email_confirm: true
         });
 
