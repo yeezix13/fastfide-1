@@ -40,21 +40,69 @@ const ResetPasswordCustomPage = () => {
       const token = searchParams.get('token');
       const emailParam = searchParams.get('email');
 
+      console.log('Token and email from URL:', { token, emailParam });
+
       if (!token || !emailParam) {
+        console.log('Missing token or email');
         toast({
           title: "Lien invalide",
           description: "Le lien de réinitialisation est invalide.",
           variant: "destructive",
         });
-        navigate('/');
+        navigate('/customer');
         return;
       }
 
-      setEmail(emailParam);
-      // Ici vous pourriez valider le token côté serveur
-      // Pour l'instant, on considère le token valide s'il existe
-      setIsValidToken(true);
-      setIsLoading(false);
+      try {
+        // Décoder le token (qui est en base64)
+        const decodedToken = atob(token);
+        console.log('Decoded token:', decodedToken);
+        
+        // Le token contient email:timestamp
+        const [tokenEmail, timestamp] = decodedToken.split(':');
+        
+        // Vérifier que l'email correspond
+        if (tokenEmail !== emailParam) {
+          console.log('Email mismatch');
+          toast({
+            title: "Lien invalide",
+            description: "Le lien de réinitialisation est invalide.",
+            variant: "destructive",
+          });
+          navigate('/customer');
+          return;
+        }
+
+        // Vérifier que le token n'est pas expiré (24h)
+        const tokenTime = parseInt(timestamp);
+        const now = Date.now();
+        const twentyFourHours = 24 * 60 * 60 * 1000;
+        
+        if (now - tokenTime > twentyFourHours) {
+          console.log('Token expired');
+          toast({
+            title: "Lien expiré",
+            description: "Ce lien de réinitialisation a expiré. Veuillez en demander un nouveau.",
+            variant: "destructive",
+          });
+          navigate('/customer');
+          return;
+        }
+
+        setEmail(emailParam);
+        setIsValidToken(true);
+        console.log('Token validation successful');
+      } catch (error) {
+        console.error('Error validating token:', error);
+        toast({
+          title: "Lien invalide",
+          description: "Le lien de réinitialisation est invalide.",
+          variant: "destructive",
+        });
+        navigate('/customer');
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     validateToken();
@@ -64,27 +112,43 @@ const ResetPasswordCustomPage = () => {
     setIsLoading(true);
     
     try {
-      // Authentifier temporairement l'utilisateur pour changer le mot de passe
-      const { error } = await supabase.auth.updateUser({
-        password: values.password
+      console.log('Calling admin password update for email:', email);
+      
+      // Appeler la fonction edge pour mettre à jour le mot de passe via l'API admin
+      const { data, error } = await supabase.functions.invoke('send-auth-email', {
+        body: {
+          type: 'admin_password_update',
+          email: email,
+          newPassword: values.password,
+        },
       });
 
       if (error) {
+        console.error('Error from edge function:', error);
         toast({
           title: "Erreur",
           description: "Impossible de mettre à jour le mot de passe. " + error.message,
           variant: "destructive",
         });
+      } else if (data?.error) {
+        console.error('Error from admin update:', data.error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de mettre à jour le mot de passe: " + data.error,
+          variant: "destructive",
+        });
       } else {
+        console.log('Password update successful');
         toast({
           title: "Succès",
-          description: "Votre mot de passe a été mis à jour avec succès.",
+          description: "Votre mot de passe a été mis à jour avec succès. Vous pouvez maintenant vous connecter.",
         });
         
         // Rediriger vers la page de connexion
         navigate('/customer');
       }
     } catch (error: any) {
+      console.error('Unexpected error:', error);
       toast({
         title: "Erreur",
         description: "Une erreur inattendue est survenue.",
