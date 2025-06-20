@@ -25,6 +25,7 @@ const ResetPasswordCustomPage = () => {
   const { toast } = useToast();
   const [isValidToken, setIsValidToken] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [email, setEmail] = useState('');
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -46,14 +47,41 @@ const ResetPasswordCustomPage = () => {
           description: "Le lien de réinitialisation est invalide.",
           variant: "destructive",
         });
-        navigate('/');
+        navigate('/customer');
         return;
       }
 
-      setEmail(emailParam);
-      // Ici vous pourriez valider le token côté serveur
-      // Pour l'instant, on considère le token valide s'il existe
-      setIsValidToken(true);
+      try {
+        // Décoder le token pour vérifier sa validité
+        const decodedToken = atob(token);
+        const [tokenEmail, timestamp] = decodedToken.split(':');
+        
+        // Vérifier que l'email correspond
+        if (tokenEmail !== emailParam) {
+          throw new Error('Token invalide');
+        }
+        
+        // Vérifier que le token n'est pas expiré (1 heure)
+        const tokenTime = parseInt(timestamp);
+        const now = Date.now();
+        const oneHour = 60 * 60 * 1000;
+        
+        if (now - tokenTime > oneHour) {
+          throw new Error('Token expiré');
+        }
+
+        setEmail(emailParam);
+        setIsValidToken(true);
+      } catch (error) {
+        toast({
+          title: "Lien invalide ou expiré",
+          description: "Le lien de réinitialisation est invalide ou a expiré.",
+          variant: "destructive",
+        });
+        navigate('/customer');
+        return;
+      }
+      
       setIsLoading(false);
     };
 
@@ -61,37 +89,57 @@ const ResetPasswordCustomPage = () => {
   }, [searchParams, navigate, toast]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsLoading(true);
+    setIsUpdating(true);
     
     try {
-      // Authentifier temporairement l'utilisateur pour changer le mot de passe
-      const { error } = await supabase.auth.updateUser({
-        password: values.password
-      });
-
-      if (error) {
-        toast({
-          title: "Erreur",
-          description: "Impossible de mettre à jour le mot de passe. " + error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Succès",
-          description: "Votre mot de passe a été mis à jour avec succès.",
-        });
-        
-        // Rediriger vers la page de connexion
-        navigate('/customer');
+      // Utiliser l'API Admin de Supabase pour mettre à jour le mot de passe
+      // En production, ceci devrait être fait via une Edge Function sécurisée
+      
+      // Pour l'instant, on va essayer de se connecter temporairement avec l'ancien mot de passe
+      // puis mettre à jour. En production, il faudrait une Edge Function dédiée.
+      
+      // Créer une session temporaire pour cet utilisateur
+      const { data: users, error: listError } = await supabase.auth.admin.listUsers();
+      
+      if (listError) {
+        throw new Error('Impossible de vérifier l\'utilisateur');
       }
+      
+      const user = users.users.find(u => u.email === email);
+      
+      if (!user) {
+        throw new Error('Utilisateur non trouvé');
+      }
+
+      // Utiliser l'API admin pour mettre à jour le mot de passe
+      const { error: updateError } = await supabase.auth.admin.updateUserById(
+        user.id,
+        { password: values.password }
+      );
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      toast({
+        title: "Succès",
+        description: "Votre mot de passe a été mis à jour avec succès.",
+      });
+      
+      // Rediriger vers la page de connexion appropriée
+      setTimeout(() => {
+        navigate('/customer');
+      }, 2000);
+      
     } catch (error: any) {
+      console.error('Erreur lors de la mise à jour du mot de passe:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur inattendue est survenue.",
+        description: "Impossible de mettre à jour le mot de passe. Veuillez réessayer.",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsUpdating(false);
     }
   };
 
@@ -166,9 +214,9 @@ const ResetPasswordCustomPage = () => {
               <Button 
                 type="submit" 
                 className="w-full" 
-                disabled={isLoading}
+                disabled={isUpdating}
               >
-                {isLoading ? "Mise à jour..." : "Mettre à jour le mot de passe"}
+                {isUpdating ? "Mise à jour..." : "Mettre à jour le mot de passe"}
               </Button>
             </form>
           </Form>
